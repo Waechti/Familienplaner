@@ -124,7 +124,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 
 ### Abfall
 
-Die Termine stehen im Sensor `sensor.familienplaner_abfall` (Datei `familienplaner_paket.yaml`) als Liste `{d: Datum, t: Art}`. Die Daten der eigenen Gemeinde dort eintragen. Eine Push-Nachricht am Vorabend ist vorbereitet; dafür in der Automation die eigene `notify.…`-Entität eintragen und sie aktivieren.
+Die Termine stehen im Sensor `sensor.familienplaner_abfall` (Datei `familienplaner_paket.yaml`) als Liste `{d: Datum, t: Art}`. Die Daten der eigenen Gemeinde dort eintragen. Eine Push-Nachricht am Vorabend ist vorbereitet; dafür in der Automation die eigene `notify.mobile_app_…`-Aktion eintragen und sie aktivieren.
 
 ## Gut zu wissen
 

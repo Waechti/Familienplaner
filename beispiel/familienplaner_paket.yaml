@@ -57,10 +57,10 @@ template:
         attributes:
           termine: >
             {{ [
-              {'d': '2026-11-05', 't': 'Kehricht'},
-              {'d': '2026-11-10', 't': 'Grüngut'},
-              {'d': '2026-11-18', 't': 'Karton'},
-              {'d': '2026-12-02', 't': 'Papier'}
+              {'d': '2026-11-02', 't': 'Kehricht'},
+              {'d': '2026-11-04', 't': 'Grüngut'},
+              {'d': '2026-11-09', 't': 'Kehricht'},
+              {'d': '2026-11-13', 't': 'Papier'}
             ] }}
 
 automation:
@@ -120,8 +120,8 @@ automation:
                       item: "{{ repeat.item }}"
                       status: needs_action
 
-  # Optional: Push am Vorabend der Abfuhr. Entität unten durch dein Handy ersetzen
-  # (Einstellungen → Geräte & Dienste → Entitäten, nach «notify.» suchen) und
+  # Optional: Push am Vorabend der Abfuhr. Unten «mobile_app_mein_handy» durch dein Handy
+  # ersetzen (Entwicklerwerkzeuge → Aktionen, nach «notify.mobile_app» suchen) und
   # die Automation danach in Home Assistant aktivieren.
   - id: fp_abfall_vorabend
     alias: "Familienplaner: Abfall am Vorabend melden"
@@ -139,9 +139,7 @@ automation:
       - condition: template
         value_template: "{{ arten | count > 0 }}"
     actions:
-      - action: notify.send_message
-        target:
-          entity_id: notify.mein_handy   # <- anpassen
+      - action: notify.mobile_app_mein_handy   # <- anpassen
         data:
           title: Abfuhr morgen
           message: "{{ arten | join(', ') }} rausstellen"

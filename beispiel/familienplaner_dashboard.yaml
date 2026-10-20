@@ -75,8 +75,8 @@ views:
 
         # Schulferien: als Liste und/oder aus einem Kalender mit ganztägigen Terminen
         schulferien:
-          - { von: "2026-12-19", bis: "2027-01-03", name: Weihnachtsferien }
-          - { von: "2027-02-06", bis: "2027-02-21", name: Sportferien }
+          - { von: "2026-12-21", bis: "2027-01-03", name: Weihnachtsferien }
+          - { von: "2027-02-15", bis: "2027-02-26", name: Sportferien }
         schulferien_kalender: []
 
         # Feiertage (Auswahl, Standard = Schweiz/Deutschschweiz):

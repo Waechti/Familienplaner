@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.0.1";
+  const VERSION = "1.0.2";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -20,6 +20,8 @@
 
   // ---------- Hilfen ----------
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // Für url("…") in CSS: Zeichen, die aus der Zeichenkette ausbrechen könnten, kodieren
+  const cssUrl = (s) => String(s).replace(/["'()\\\s<>]/g, (c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0").toUpperCase());
   const pad = (n) => String(n).padStart(2, "0");
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const parseYmd = (s) => { const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
@@ -59,7 +61,7 @@
     stephanstag: (y) => [new Date(y, 11, 26), "Stephanstag"],
   };
   let FEIERTAGE = ["neujahr", "berchtoldstag", "karfreitag", "ostermontag", "auffahrt", "pfingstmontag", "bundesfeier", "weihnachten", "stephanstag"];
-  let EIGENE_FEIERTAGE = [];   // [{datum: "2026-07-03", name: "Maienzug"}]
+  let EIGENE_FEIERTAGE = [];   // z. B. [{datum: "2026-07-03", name: "Dorffest"}]
   let holidayCache = {};
   const holidays = (y) => {
     if (holidayCache[y]) return holidayCache[y];
@@ -98,20 +100,9 @@
     sunny: "mdi:weather-sunny", windy: "mdi:weather-windy", "windy-variant": "mdi:weather-windy-variant",
   };
 
-  // Bilder für Termine (Kinder): Stichwort im Titel → Emoji. Eigene Zuordnungen kommen aus der Liste «Planer Bilder».
-  const BILDER = [
-    ["waldspielgruppe|waldkindergarten|wald", "🌲"], ["kindergarten|chindsgi|kiga", "🧸"], ["spielgruppe", "🧩"], ["schule|unterricht", "🏫"],
-    ["kinderturnen|turnen|muki|vaki", "🤸"], ["schwimm", "🏊"], ["fussball|fußball|tschutten", "⚽"], ["ballett|tanz", "🩰"], ["reiten|pony|pferd", "🐴"],
-    ["musik|klavier|gitarre|flöte|singen|chor", "🎵"], ["\\bmalen|basteln|zeichnen", "🎨"], ["zahnarzt|dentist", "🦷"], ["arzt|kinderarzt|doktor|impf", "🩺"],
-    ["coiffeur|friseur|haare", "✂️"], ["geburtstag|🎂", "🎂"], ["party|fest|feier", "🎉"], ["grosi|\\boma\\b|grossmami|nonna", "👵"], ["\\bopa\\b|grosspapi|grossvater|nonno", "👴"],
-    ["zoo|tierpark", "🦁"], ["kino|film", "🎬"], ["bibliothek|ludothek|bücherei", "📚"], ["velo|fahrrad", "🚲"], ["ski|schlitteln|schnee", "⛷️"],
-    ["ferien|urlaub", "🏖️"], ["ausflug|reise", "🚗"], ["\\bzug\\b|zugfahrt|bahnfahrt", "🚆"], ["spielplatz", "🛝"], ["übernachten|pyjama", "🌙"], ["znüni|zmittag|essen|picknick", "🍎"],
-    ["foto", "📸"], ["badi|\\bbaden\\b", "🏖️"], ["einkauf|einkaufen", "🛒"],
-  ].map(([k, e]) => [new RegExp(k, "i"), e]);
   // Foto-Themen (Unsplash, frei verwendbar). Reihenfolge = Vorrang: das erste passende Thema gewinnt.
   const THEMEN = [
     ["Nachtschicht", "nachtdienst|nachtschicht|\\bnacht\\b", "1506606401543-2e73709cebb4"],
-    ["Presse / Medien", "presse|medien|interview", "1581548708095-7158f2e63857"],
     ["Laternenumzug", "laterne|räbeliechtli|räbe", "1628024564458-b3dfcceb3f34"],
     ["Weihnachten", "weihnacht|christkind|samichlaus", "1514377006585-6e7975371bd6"],
     ["1. August", "1\\.\\s?august|bundesfeier", "1549194400-06e6874c2fd1"],
@@ -123,33 +114,33 @@
     ["Kindergarten", "kindergarten|kiga|chindsgi", "1588075592446-265fd1e6e76f"],
     ["Spielgruppe", "spielgruppe", "1484820540004-14229fe36ca4"],
     ["Hüten / Grosseltern", "hüete|hueten|hüten|grosi|grossmami|grosspapi|\\boma\\b|\\bopa\\b|nonna", "1593100126453-19b562a800c1"],
-    ["Haustiere füttern", "hase|häsi|häsli|katze|meerschwein|füttern", "1729172311760-f50e9ec48b35"],
-    ["Physio / Therapie", "physio|cranio|therapie|massage", "1649751361457-01d3a696c7e6"],
+    ["Haustiere füttern", "hase|kaninchen|katze|meerschwein|füttern", "1729172311760-f50e9ec48b35"],
+    ["Physio / Therapie", "physio|osteo|therapie|massage", "1649751361457-01d3a696c7e6"],
     ["Zahnarzt", "zahnarzt|dentalhygiene", "1598256989800-fe5f95da9787"],
     ["Augen", "auge", "1576210117723-cd06449a467d"],
     ["Arzt", "arzt|doktor|impf|spital|klinik", "1632053002928-1919605ee6f7"],
     ["Coiffeur", "coiffeur|friseur|haare schneiden", "1704072650662-76df3af134a7"],
     ["Geburtstag", "geburi|geburtstag|🎂|🎁", "1545696563-af8f6ec2295a"],
     ["Kürbis", "kürbis", "1570586437263-ab629fccc818"],
-    ["Europa-Park", "europapark|europa-park|\\brust\\b", "1628835788312-41d61f5ddce8"],
-    ["Reisen / Flug", "reise|flug|flughafen|airport|losfahrt|abreise", "1436491865332-7a61a109cc05"],
+    ["Europa-Park", "europapark|europa-park|freizeitpark", "1628835788312-41d61f5ddce8"],
+    ["Reisen / Flug", "reise|flug|flughafen|airport|abreise", "1436491865332-7a61a109cc05"],
     ["Zug / Bahn", "\\bzug\\b|zugfahrt|bahnhof|\\bsbb\\b|\\bbahn\\b", "1593186344142-ef775a6e596f"],
-    ["Umzug", "\\bumzug|zügeln|zügle", "1714647211902-bb711d643a17"],
+    ["Umzug", "\\bumzug|zügeln|umziehen", "1714647211902-bb711d643a17"],
     ["Zoo / Tierpark", "zoo|tierpark|affen|wildpark", "1535489158666-8d856534a6ef"],
     ["Kino", "kino|movie|film", "1578849278619-e73505e9610f"],
     ["Jahrestag / Date", "jahrestag|\\bdate\\b|dinner|❤️|valentin", "1513279922550-250c2129b13a"],
     ["Konzert / Theater", "konzert|concert|musical|theater|\\boper\\b", "1470229722913-7c0e2dbbafd3"],
-    ["Fest / Party", "fest|party|feier|rave|turnerabend|maienzug|träff", "1504196606672-aef5c9cefc92"],
-    ["Essen", "zmittag|essen|brunch|restaurant|znacht|brötle|grill|fleischplatte|hans im glück", "1600891964599-f61ba0e24092"],
-    ["Garage / Werkstatt", "garage|werkstatt|reifen|pneu|\\bmfk\\b|(bmw|vw|auto)\\s*service|service bringen", "1727893119356-1702fe921cf9"],
+    ["Fest / Party", "fest|party|feier|apéro|apero", "1504196606672-aef5c9cefc92"],
+    ["Essen", "zmittag|essen|brunch|restaurant|znacht|brötle|grill|picknick", "1600891964599-f61ba0e24092"],
+    ["Garage / Werkstatt", "garage|werkstatt|reifen|pneu|\\bmfk\\b|\\btüv\\b|auto\\s*service", "1727893119356-1702fe921cf9"],
     ["Handwerker / Service", "boiler|handwerker|reparatur|installat|elektriker|zähler|monteur|sanitär|heizung|maler\\b|schreiner|service", "1426927308491-6380b6a9936f"],
     ["Auto laden", "\\bladen\\b|ladestation|wallbox|batterie|e-auto", "1593941707874-ef25b8b4a92b"],
-    ["Auto", "\\bauto\\b|\\bvw\\b|volkswagen|\\bbmw\\b|tesla|\\bid\\.?7\\b|\\bt7\\b|mercedes|autowasch|tanken", "1683444126212-50c0aa2a421b"],
+    ["Auto", "\\bauto\\b|autowasch|waschanlage|tanken|vignette", "1683444126212-50c0aa2a421b"],
     ["Einkauf", "einkauf|ikea|migros|coop|denner|\\blidl\\b|\\baldi\\b|shopping|\\bdm\\b|baumarkt|jumbo|hornbach", "1670684684445-a4504dca0bbc"],
     ["Meeting", "meeting|sitzung|besprechung|gespräch|\\bcall\\b|teams|zoom|termin mit", "1542744173-8e7e53415bb0"],
     ["Notar / Vertrag", "notar|vertrag|unterschrift", "1450101499163-c8848c66ca85"],
     ["Büro", "büro|buero|fokus|office", "1497215728101-856f4ea42174"],
-    ["Kurs / Weiterbildung", "weiterbildung|kurs|schulung|seminar|rapport|workshop|vortrag", "1524178232363-1fb2b075b655"],
+    ["Kurs / Weiterbildung", "weiterbildung|kurs|schulung|seminar|workshop|vortrag", "1524178232363-1fb2b075b655"],
     ["Schwimmen", "schwimm|badi", "1592484806287-7bc9c8af5405"],
     ["Fussball", "fussball|fußball|tschutten", "1622659097972-68f1d8c1829f"],
     ["Reiten", "reiten|pony|pferd", "1718045330352-7b800f3bba80"],
@@ -160,7 +151,7 @@
     ["Ski / Schnee", "\\bski|schlitteln|schnee", "1631779202803-7f1415c87a9d"],
     ["Bibliothek", "bibliothek|ludothek|bücherei", "1767356326735-2da0a10cf1f0"],
     ["Garten", "garten|rasen|dünger|hecke|mähen|pflanzen|gärtner", "1642541744624-7a2a89545a32"],
-    ["Hund", "hund|mops|gassi|tierarzt|hundeschule", "1517849845537-4d257902454a"],
+    ["Hund", "hund|gassi|tierarzt|hundeschule", "1517849845537-4d257902454a"],
     ["Wandern / Ausflug", "wander|ausflug|\\balp\\b|berg\\b|bergtour", "1527095655060-4026c4af2b25"],
     ["Fitness / Sport", "fitness|\\bgym\\b|training|joggen|\\blauf|lauf\\b|crossfit|sport", "1534438327276-14e5300c3a48"],
     ["Familie", "familie|family", "1679274742187-1aa949703203"],
@@ -184,7 +175,7 @@
       this._view = lsGet("fp-view", "woche");
       this._orient = lsGet("fp-orient", "auto");
       this._anchor = sod(new Date());
-      this._hidden = new Set(JSON.parse(lsGet("fp-hidden", "[]")));
+      this._hidden = new Set((() => { try { const v = JSON.parse(lsGet("fp-hidden", "[]")); return Array.isArray(v) ? v : []; } catch (e) { return []; } })());
       this._events = {};       // key -> [events]
       this._range = null;
       this._todos = {};        // entity -> items
@@ -346,16 +337,19 @@
       if (!this._hass || !this._config) return;
       const [s, e] = this._visibleRange();
       const key = `${ymd(s)}_${ymd(e)}`;
-      if (!force && this._range === key) return;
+      if (!force && this._reqKey === key) return;
+      this._reqKey = key;
       const c = this._config;
       const groups = { familie: this._cals(c.familie?.kalender), essen: this._cals([c.essensplan]) };
       c.personen.forEach((p, i) => (groups["p" + i] = this._cals(p.kalender)));
       this._calSig = this._allCalendars().join(",");
+      const seq = (this._calSeq = (this._calSeq || 0) + 1);
       const out = {};
       await Promise.all(Object.entries(groups).map(async ([g, ids]) => {
         const lists = await Promise.all(ids.map((id) => this._fetchCal(id, s, e)));
         out[g] = lists.flat().sort((a, b) => a.start - b.start);
       }));
+      if (seq !== this._calSeq) return;   // inzwischen wurde ein neuerer Bereich angefragt
       this._events = out;
       this._range = key;
       this._render();
@@ -448,7 +442,7 @@
     _bildBg(val) {
       if (!val) return "";
       const src = this._bildSrc(val);
-      if (src) { const u = `background-image:url('${esc(src)}')`; return `<span class="bgimg" style="${u}"></span><span class="bgblur" style="${u}"></span><span class="bgtint"></span>`; }
+      if (src) { const u = `background-image:url('${esc(cssUrl(src))}')`; return `<span class="bgimg" style="${u}"></span><span class="bgblur" style="${u}"></span><span class="bgtint"></span>`; }
       return `<span class="bgemo" aria-hidden="true">${esc(val)}</span>`;
     }
     _bildHtml(val, cls = "pic") {
@@ -674,7 +668,6 @@
 
     _weekView() {
       const [s] = this._visibleRange();
-      const ps = this._visiblePersons();
       const all = this._config.personen.map((p, i) => ({ ...p, i }));
       const fam = this._config.familie;
       const cols = `var(--daycol) ${all.map((p) => (this._hidden.has(p.name) ? "var(--hidcol)" : "minmax(0,1fr)")).join(" ")}`;
