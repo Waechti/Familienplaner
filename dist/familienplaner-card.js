@@ -1164,7 +1164,7 @@
       const def = this._themaFor(ev.title);
       let wahl = cur ? cur.val : def ? "url:" + def.url : "";
       const keyDefault = fixedKey === "" ? "" : fixedKey || (cur ? cur.key : ev.title.replace(/\s*\(.*?\)\s*/g, " ").trim());
-      const prev = () => { const el = this.shadowRoot.querySelector("#fp-prev"); if (el) el.innerHTML = wahl ? this._bildHtml(wahl, "big") : `<span class="big empty">?</span>`; };
+      const prev = () => { const el = this.shadowRoot.querySelector("#fp-prev"); if (el) el.innerHTML = wahl ? this._bildHtml(wahl, "bigpic") : `<span class="bigpic empty">?</span>`; };
       const save = async (val) => {
         const key = this.shadowRoot.querySelector("#fp-in").value.trim();
         if (!key) return;
@@ -1434,7 +1434,7 @@
   .tev.bg .bgemo { font-size:110px; }
   .ev .pic { flex:none; width:40px; height:40px; border-radius:10px; background:var(--paper); display:grid; place-items:center; font-size:28px; line-height:1; overflow:hidden; }
   .ev.ad .pic { background:rgba(255,255,255,.9); }
-  .ev .pic img, .tpic img, .mpic img, .big img { width:100%; height:100%; object-fit:cover; display:block; }
+  .ev .pic img, .tpic img, .mpic img, .bigpic img { width:100%; height:100%; object-fit:cover; display:block; }
   .ev .txt { display:flex; flex-direction:column; min-width:0; flex:1 1 auto; width:100%; }
   .ev.bg .tt { padding-right:18px; }
   .tpic { width:30px; height:30px; border-radius:8px; background:var(--paper); display:grid; place-items:center; font-size:22px; overflow:hidden; margin-bottom:2px; flex:none; }
@@ -1450,8 +1450,8 @@
   .bt span { color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bchg { position:absolute; top:4px; right:6px; font-size:10px; font-weight:700; background:var(--todayline); color:#2a2100; padding:1px 5px; border-radius:5px; }
   .bildtop { display:flex; gap:14px; align-items:center; }
-  .big { width:84px; height:84px; border-radius:18px; background:var(--soft); display:grid; place-items:center; font-size:56px; overflow:hidden; flex:none; }
-  .big.empty { color:var(--ink3); font-size:36px; }
+  .bigpic { width:84px; height:84px; border-radius:18px; background:var(--soft); display:grid; place-items:center; font-size:56px; overflow:hidden; flex:none; }
+  .bigpic.empty { color:var(--ink3); font-size:36px; }
   .kw { flex:1; display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--ink2); }
   .sect { font-size:13px; color:var(--ink2); margin-top:4px; }
   .thm { display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:6px; max-height:236px; overflow:auto; padding:2px; grid-auto-rows:max-content; }
