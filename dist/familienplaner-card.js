@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.1.0";
+  const VERSION = "1.1.1";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -593,7 +593,7 @@
                   ${tom ? `<div><span class="lbl">Morgen</span><ha-icon icon="${WX[tom.condition] || "mdi:weather-cloudy"}"></ha-icon><b>${Math.round(tom.temperature)}°</b> / ${Math.round(tom.templow ?? 0)}°</div>` : ""}
                 </div></div>`;
             })() : ""}
-            ${this._config.zuhause_link ? `<button class="ib orient home" data-act="zuhause" title="Zum Dashboard «${esc(this._config.zuhause_name || "Zuhause")}»"><ha-icon icon="mdi:home-outline"></ha-icon><span>${esc(this._config.zuhause_name || "Zuhause")}</span></button>` : ""}
+            ${this._config.zuhause_link ? `<button class="homebtn" data-act="zuhause" title="Zum Dashboard «${esc(this._config.zuhause_name || "Zuhause")}»" aria-label="${esc(this._config.zuhause_name || "Zuhause")}"><ha-icon icon="mdi:home"></ha-icon><span>${esc(this._config.zuhause_name || "Zuhause")}</span></button>` : ""}
             <button class="ib" data-act="bilder" title="Bilder zu Terminen"><ha-icon icon="mdi:image-multiple-outline"></ha-icon></button>
             <button class="ib orient" data-act="orient" title="Format: ${orientLabel}"><ha-icon icon="${orientIcon}" class="${this._orient === "quer" ? "rot" : ""}"></ha-icon><span>${orientLabel}</span></button>
           </div>
@@ -1329,7 +1329,10 @@
   .orient { width:auto; padding:0 10px; gap:4px; display:inline-flex; border:1px solid var(--line); margin-left:6px; font-size:12px; color:var(--ink2); }
   .orient ha-icon { --mdc-icon-size:18px; }
   .orient .rot { transform:rotate(90deg); }
-  .orient.home { margin-left:0; }
+  .homebtn { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:76px; height:72px; border-radius:20px; background:var(--accent); color:var(--bg); box-shadow:0 2px 6px rgba(20,30,45,.18); flex:none; text-align:center; }
+  .homebtn ha-icon { --mdc-icon-size:40px; }
+  .homebtn span { font-size:12px; font-weight:700; line-height:1; }
+  .homebtn:active { transform:scale(.95); }
   .alerts { display:flex; gap:8px; padding:0 20px 8px; flex-wrap:wrap; }
   .al { display:inline-flex; align-items:center; gap:6px; background:var(--today); border-radius:10px; padding:6px 12px; font-size:14px; }
   .setup { display:flex; align-items:center; gap:12px; margin:0 20px 10px; padding:10px 14px; background:var(--paper); border:1px dashed var(--ink3); border-radius:12px; font-size:14px; }
@@ -1602,6 +1605,7 @@
     .ev.bg { min-height:52px; }
     .bgemo { font-size:64px; }
     .orient span { display:none; }
+    .homebtn { width:56px; height:54px; border-radius:16px; } .homebtn ha-icon { --mdc-icon-size:30px; } .homebtn span { font-size:10px; }
   }
   @media (prefers-reduced-motion: reduce) { .burst { display:none; } .av .ring { transition:none; } }
 
