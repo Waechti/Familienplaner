@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.0.0";
+  const VERSION = "1.0.1";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -1469,7 +1469,8 @@
   .dstrip { display:flex; flex-wrap:wrap; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line); align-items:center; }
   .chipx { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:10px; background:var(--soft); font-size:14px; font-weight:600; }
   .chipx ha-icon { color:var(--c, var(--ink2)); }
-  .meal.big { margin:0 0 0 auto; padding:6px 12px; font-size:15px; background:var(--soft); }
+  .meal.big { margin:0 0 0 auto; padding:6px 12px; font-size:15px; background:var(--soft); flex:0 1 auto; min-width:180px; max-width:60%; align-items:center; }
+  .meal.big span { -webkit-line-clamp:1; overflow-wrap:normal; hyphens:none; -webkit-hyphens:none; }
   .dhead, .dall, .tgrid { display:grid; padding:0 10px; }
   .dhead { padding-top:12px; padding-bottom:8px; }
   .dall { border-bottom:1px solid var(--line); padding-bottom:8px; }
