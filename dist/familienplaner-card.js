@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.1.1";
+  const VERSION = "1.2.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -485,7 +485,13 @@
       const v = this._hass?.states[p.foto]?.state;
       if (!v || v === "unknown" || v === "unavailable") return null;
       if (v.startsWith("/") || v.startsWith("http")) return v;
-      return `/api/image/serve/${v}/512x512`;
+      return `/api/image/serve/${v.split("|")[0]}/512x512`;
+    }
+    _photoInfo(p) {
+      const v = this._hass?.states[p.foto]?.state || "";
+      const [crop, orig, z, x, y] = v.split("|");
+      if (!orig) return null;
+      return { orig, z: +z || 1, x: +x || 0.5, y: +y || 0.5 };
     }
     _visiblePersons() { return this._config.personen.map((p, i) => ({ ...p, i })).filter((p) => !this._hidden.has(p.name)); }
     _isQuer() {
@@ -1228,6 +1234,7 @@
       this._mh = {
         pick: () => this.shadowRoot.querySelector("#fp-file").click(),
         remove: async () => { await h.callService("input_text", "set_value", { entity_id: p.foto, value: "" }); this._modal(""); },
+        crop: () => { const inf = this._photoInfo(p); this._openCrop(p, inf ? `/api/image/serve/${inf.orig}/original` : img, null, inf); },
         farbe: async (el) => { setC(el.dataset.v); await this._setFarbe(p, el.dataset.v); },
         farbstd: async () => { setC(p.farbeStandard); await this._setFarbe(p, null); },
       };
@@ -1243,23 +1250,109 @@
           <input id="fp-file" type="file" accept="image/*" hidden>
           <div class="flash"></div>
         </div>
-        <div class="dlg-f">${img ? `<button class="btn ghost" data-m="remove">Foto entfernen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="pick">Foto wählen</button></div>`);
+        <div class="dlg-f">${img ? `<button class="btn ghost" data-m="remove">Foto entfernen</button><button class="btn ghost" data-m="crop">Ausschnitt</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="pick">Foto wählen</button></div>`);
       this.shadowRoot.querySelector("#fp-col").addEventListener("change", async (e4) => { const c = e4.target.value; setC(c); await this._setFarbe(p, c); });
-      this.shadowRoot.querySelector("#fp-file").addEventListener("change", async (ev) => {
+      this.shadowRoot.querySelector("#fp-file").addEventListener("change", (ev) => {
         const f = ev.target.files[0];
-        if (!f) return;
-        this._flash("Lade hoch …");
-        try {
-          const blob = await this._squareJpeg(f, 640);
-          const fd = new FormData();
-          fd.append("file", blob, `${p.name.toLowerCase()}.jpg`);
-          const res = await h.fetchWithAuth("/api/image/upload", { method: "POST", body: fd });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const j = await res.json();
-          await h.callService("input_text", "set_value", { entity_id: p.foto, value: j.id });
-          this._modal("");
-        } catch (err) { this._flash(`Hochladen fehlgeschlagen: ${err.message || err}`); }
+        if (f) this._openCrop(p, URL.createObjectURL(f), f, null);
       });
+    }
+
+    // Zuschneiden: Bild verschieben (ziehen), vergrössern (Regler oder zwei Finger)
+    _openCrop(p, src, file, info) {
+      const h = this._hass;
+      const S = 280;
+      let im = null, base = 1, z = info?.z || 1, ox = 0, oy = 0;
+      this._mh = {
+        zin: () => setZoom(z * 1.25), zout: () => setZoom(z / 1.25),
+        back: () => this._openPhoto(p),
+        ok: () => save(),
+      };
+      this._modal(`
+        <div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>Ausschnitt für ${esc(p.name)}</h2></div>
+        <div class="dlg-b center">
+          <div class="cropstage" style="width:${S}px;height:${S}px"><img id="fp-cimg" alt="" draggable="false"><span class="cropmask"></span></div>
+          <div class="cropzoom"><button class="add" data-m="zout" aria-label="Kleiner"><ha-icon icon="mdi:minus"></ha-icon></button>
+            <input id="fp-z" type="range" min="1" max="5" step="0.01" value="${z}" aria-label="Vergrössern">
+            <button class="add" data-m="zin" aria-label="Grösser"><ha-icon icon="mdi:plus"></ha-icon></button></div>
+          <p class="hint2">Bild mit dem Finger verschieben, mit dem Regler oder zwei Fingern vergrössern.</p>
+          <div class="flash"></div>
+        </div>
+        <div class="dlg-f"><button class="btn ghost" data-m="back">Zurück</button><span class="sp"></span><button class="btn" data-m="ok">Übernehmen</button></div>`);
+      const root = this.shadowRoot;
+      const el = root.querySelector("#fp-cimg"), stage = root.querySelector(".cropstage"), zr = root.querySelector("#fp-z");
+      const clamp = () => {
+        const dw = im.naturalWidth * base * z, dh = im.naturalHeight * base * z;
+        ox = Math.min(0, Math.max(S - dw, ox)); oy = Math.min(0, Math.max(S - dh, oy));
+        el.style.width = `${dw}px`; el.style.height = `${dh}px`; el.style.transform = `translate(${ox}px, ${oy}px)`;
+      };
+      const setZoom = (nz, cx = S / 2, cy = S / 2) => {
+        if (!im) return;
+        nz = Math.min(5, Math.max(1, nz));
+        ox = cx - (cx - ox) * (nz / z); oy = cy - (cy - oy) * (nz / z);
+        z = nz; zr.value = z; clamp();
+      };
+      el.onload = () => {
+        im = el; base = S / Math.min(im.naturalWidth, im.naturalHeight);
+        const dw = im.naturalWidth * base * z, dh = im.naturalHeight * base * z;
+        ox = S / 2 - (info ? info.x : 0.5) * dw; oy = S / 2 - (info ? info.y : 0.5) * dh;
+        clamp();
+      };
+      el.onerror = () => this._flash("Bild konnte nicht geladen werden.");
+      el.src = src;
+      zr.addEventListener("input", () => setZoom(+zr.value));
+      // Ziehen und Zwei-Finger-Zoom
+      const pts = new Map();
+      let last = null, pinch = null;
+      stage.addEventListener("pointerdown", (e) => { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); last = [e.clientX, e.clientY]; pinch = null; });
+      stage.addEventListener("pointermove", (e) => {
+        if (!pts.has(e.pointerId) || !im) return;
+        pts.set(e.pointerId, [e.clientX, e.clientY]);
+        if (pts.size >= 2) {
+          const [a, b] = [...pts.values()];
+          const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+          const r = stage.getBoundingClientRect();
+          if (pinch) setZoom(pinch.z * d / pinch.d, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+          else pinch = { d, z };
+          return;
+        }
+        ox += e.clientX - last[0]; oy += e.clientY - last[1]; last = [e.clientX, e.clientY]; clamp();
+      });
+      const up = (e) => { pts.delete(e.pointerId); pinch = null; if (pts.size === 1) last = [...pts.values()][0]; };
+      stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+      stage.addEventListener("wheel", (e) => { e.preventDefault(); const r = stage.getBoundingClientRect(); setZoom(z * (e.deltaY < 0 ? 1.1 : 1 / 1.1), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+
+      const upload = async (blob, name) => {
+        const fd = new FormData();
+        fd.append("file", blob, name);
+        const res = await h.fetchWithAuth("/api/image/upload", { method: "POST", body: fd });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()).id;
+      };
+      const toBlob = (cv) => new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no(new Error("Bild konnte nicht erstellt werden"))), "image/jpeg", 0.88));
+      const save = async () => {
+        if (!im) return;
+        this._flash("Speichere …");
+        try {
+          const k = base * z, sx = -ox / k, sy = -oy / k, ss = S / k;
+          const cv = document.createElement("canvas"); cv.width = cv.height = 640;
+          cv.getContext("2d").drawImage(im, sx, sy, ss, ss, 0, 0, 640, 640);
+          const slug = p.name.toLowerCase().replace(/[^a-z0-9äöü]+/g, "-");
+          const cropId = await upload(await toBlob(cv), `${slug}.jpg`);
+          let origId = info?.orig;
+          if (file || !origId) {
+            // Original verkleinert aufbewahren, damit der Ausschnitt später wieder geändert werden kann
+            const m = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
+            const ov = document.createElement("canvas"); ov.width = Math.round(im.naturalWidth * m); ov.height = Math.round(im.naturalHeight * m);
+            ov.getContext("2d").drawImage(im, 0, 0, ov.width, ov.height);
+            origId = await upload(await toBlob(ov), `${slug}-original.jpg`);
+          }
+          const cx = (S / 2 - ox) / (im.naturalWidth * k), cy = (S / 2 - oy) / (im.naturalHeight * k);
+          await h.callService("input_text", "set_value", { entity_id: p.foto, value: `${cropId}|${origId}|${z.toFixed(2)}|${cx.toFixed(3)}|${cy.toFixed(3)}` });
+          if (file) URL.revokeObjectURL(src);
+          this._modal("");
+        } catch (err) { this._flash(`Speichern fehlgeschlagen: ${err.message || err}`); }
+      };
     }
 
     _squareJpeg(file, size) {
@@ -1640,6 +1733,11 @@
   .sw.eigene { display:grid; place-items:center; background:conic-gradient(#e03131, #f08c00, #fab005, #2f9e44, #1971c2, #7048e8, #e03131); color:#fff; cursor:pointer; overflow:hidden; }
   .sw.eigene input { position:absolute; inset:0; opacity:0; cursor:pointer; }
   .lnk { font-size:13px; color:var(--ink2); text-decoration:underline; padding:4px 6px; }
+  .cropstage { position:relative; overflow:hidden; border-radius:16px; background:var(--soft); touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; }
+  .cropstage img { position:absolute; left:0; top:0; max-width:none; pointer-events:none; transform-origin:0 0; }
+  .cropmask { position:absolute; inset:0; border-radius:50%; box-shadow:0 0 0 999px rgba(12,18,26,.55); border:2px solid #fff; pointer-events:none; }
+  .cropzoom { display:flex; align-items:center; gap:10px; width:280px; }
+  .cropzoom input { flex:1; padding:0; border:0; background:none; accent-color:var(--accent); }
   .bigav { width:180px; height:180px; border-radius:50%; padding:5px; background:var(--c); }
   .bigav img, .bigav .ini { width:100%; height:100%; border-radius:50%; border:5px solid var(--paper); object-fit:cover; display:grid; place-items:center; font-family:var(--f-disp); font-size:72px; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 15%, var(--paper)); }
   `;

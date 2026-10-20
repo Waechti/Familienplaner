@@ -98,7 +98,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | Was | Wie |
 |---|---|
 | Person aus- oder einblenden | Foto antippen |
-| Foto und Farbe ändern | lange auf das Foto drücken |
+| Foto, Ausschnitt und Farbe ändern | lange auf das Foto drücken (Foto verschieben und vergrössern) |
 | Termin ansehen, Bild zuweisen | Termin antippen → «Bild zuweisen» (oder lange drücken) |
 | Alle Bild-Themen ansehen und ändern | Knopf mit dem Bildsymbol oben rechts |
 | Essen eintragen | beim Tag auf «Essen planen» tippen |
