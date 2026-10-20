@@ -1,0 +1,147 @@
+# ==============================================================================
+#  FAMILIENPLANER – Helfer für Home Assistant
+#  Datei nach /config/packages/familienplaner.yaml kopieren.
+#  In configuration.yaml muss stehen:
+#    homeassistant:
+#      packages: !include_dir_named packages
+#  Danach Home Assistant neu starten.
+# ==============================================================================
+
+input_text:
+  # Fotos der Personen. Werden von der Karte gesetzt (lange auf das Foto drücken).
+  fp_foto_1:
+    name: Familienplaner Foto Person 1
+    max: 255
+  fp_foto_2:
+    name: Familienplaner Foto Person 2
+    max: 255
+  fp_foto_3:
+    name: Familienplaner Foto Person 3
+    max: 255
+  fp_foto_4:
+    name: Familienplaner Foto Person 4
+    max: 255
+  # Pinnwand (Post-it)
+  fp_notiz:
+    name: Familienplaner Pinnwand
+    max: 255
+    icon: mdi:pin
+
+# Sterne für die Ämtli der Kinder (optional)
+counter:
+  fp_sterne_3:
+    name: Sterne Person 3
+    icon: mdi:star
+    initial: 0
+    step: 1
+    restore: true
+  fp_sterne_4:
+    name: Sterne Person 4
+    icon: mdi:star
+    initial: 0
+    step: 1
+    restore: true
+
+# Abfallkalender (optional)
+# Trage die Abfuhrtermine deiner Gemeinde ein: d = Datum (JJJJ-MM-TT), t = Art.
+# Bekannte Arten mit eigenem Symbol: Kehricht, Restmüll, Grüngut, Bioabfall, Papier, Altpapier,
+# Karton, Metall, Glas, Gelber Sack, Sonderabfall. Andere Namen gehen auch (Standardsymbol).
+template:
+  - sensor:
+      - name: Familienplaner Abfall
+        unique_id: fp_abfall
+        icon: mdi:trash-can-outline
+        state: >
+          {% set t = (this.attributes.termine | default([])) | selectattr('d', '>=', now().date() | string) | list %}
+          {{ t[0].d if t else 'keine' }}
+        attributes:
+          termine: >
+            {{ [
+              {'d': '2026-11-05', 't': 'Kehricht'},
+              {'d': '2026-11-10', 't': 'Grüngut'},
+              {'d': '2026-11-18', 't': 'Karton'},
+              {'d': '2026-12-02', 't': 'Papier'}
+            ] }}
+
+automation:
+  # Remote-Kalender (z. B. Google per iCal-Adresse) holen sonst nur einmal pro Tag neue Termine.
+  - id: fp_kalender_aktualisieren
+    alias: "Familienplaner: Kalender alle 15 Minuten aktualisieren"
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/15"
+    variables:
+      kalender: "{{ integration_entities('remote_calendar') | list }}"
+    conditions:
+      - condition: template
+        value_template: "{{ kalender | count > 0 }}"
+    actions:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: "{{ kalender }}"
+        continue_on_error: true
+
+  # Erledigte Ämtli (Listen, deren Name mit «Ämtli» beginnt) jede Nacht wieder öffnen.
+  - id: fp_aemtli_reset
+    alias: "Familienplaner: Ämtli täglich zurücksetzen"
+    mode: single
+    triggers:
+      - trigger: time
+        at: "03:30:00"
+    variables:
+      listen: >
+        {{ states.todo | selectattr('attributes.friendly_name', 'defined')
+           | selectattr('attributes.friendly_name', 'match', 'Ämtli')
+           | map(attribute='entity_id') | list }}
+    conditions:
+      - condition: template
+        value_template: "{{ listen | count > 0 }}"
+    actions:
+      - action: todo.get_items
+        target:
+          entity_id: "{{ listen }}"
+        data:
+          status: completed
+        response_variable: erledigt
+      - repeat:
+          for_each: "{{ listen }}"
+          sequence:
+            - variables:
+                liste: "{{ repeat.item }}"
+                uids: "{{ erledigt[repeat.item]['items'] | map(attribute='uid') | list }}"
+            - repeat:
+                for_each: "{{ uids }}"
+                sequence:
+                  - action: todo.update_item
+                    target:
+                      entity_id: "{{ liste }}"
+                    data:
+                      item: "{{ repeat.item }}"
+                      status: needs_action
+
+  # Optional: Push am Vorabend der Abfuhr. Entität unten durch dein Handy ersetzen
+  # (Einstellungen → Geräte & Dienste → Entitäten, nach «notify.» suchen) und
+  # die Automation danach in Home Assistant aktivieren.
+  - id: fp_abfall_vorabend
+    alias: "Familienplaner: Abfall am Vorabend melden"
+    initial_state: false
+    mode: single
+    triggers:
+      - trigger: time
+        at: "19:00:00"
+    variables:
+      morgen: "{{ (now().date() + timedelta(days=1)) | string }}"
+      arten: >
+        {{ state_attr('sensor.familienplaner_abfall', 'termine') | default([], true)
+           | selectattr('d', 'eq', morgen) | map(attribute='t') | list }}
+    conditions:
+      - condition: template
+        value_template: "{{ arten | count > 0 }}"
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id: notify.mein_handy   # <- anpassen
+        data:
+          title: Abfuhr morgen
+          message: "{{ arten | join(', ') }} rausstellen"

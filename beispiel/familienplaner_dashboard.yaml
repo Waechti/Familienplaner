@@ -1,0 +1,88 @@
+# Beispiel-Dashboard für den Familienplaner (YAML-Modus)
+# Datei nach /config/dashboards/familienplaner.yaml kopieren und in configuration.yaml eintragen:
+#
+#   lovelace:
+#     dashboards:
+#       familien-planer:
+#         mode: yaml
+#         title: Familienplaner
+#         icon: mdi:calendar-heart
+#         show_in_sidebar: true
+#         filename: dashboards/familienplaner.yaml
+#
+# Wer lieber ein normales Dashboard nutzt: neue Ansicht vom Typ «Panel» anlegen, eine Karte
+# «Manuell» hinzufügen und nur den Teil ab «type: custom:familienplaner-card» einfügen.
+
+title: Familienplaner
+views:
+  - title: Familienplaner
+    path: planer
+    icon: mdi:calendar-heart
+    type: panel
+    cards:
+      - type: custom:familienplaner-card
+
+        # Bis zu 4 Personen (mehr geht auch, wird aber eng).
+        # kalender: Name(n) oder Entity-ID(s) der Kalender dieser Person. Ein Teil des Namens genügt.
+        personen:
+          - name: Mama
+            farbe: "#d6336c"
+            foto: input_text.fp_foto_1
+            kalender: [Mama]
+            aemtli: Ämtli Mama
+            bilder: true
+          - name: Papa
+            farbe: "#e8590c"
+            foto: input_text.fp_foto_2
+            kalender: [Papa, Arbeit]
+            aemtli: Ämtli Papa
+            bilder: true
+          - name: Kind 1
+            farbe: "#2b8a3e"
+            foto: input_text.fp_foto_3
+            kalender: [Kind 1]
+            aemtli: Ämtli Kind 1
+            sterne: counter.fp_sterne_3
+            bilder: true
+          - name: Kind 2
+            farbe: "#7048e8"
+            foto: input_text.fp_foto_4
+            kalender: [Kind 2]
+            aemtli: Ämtli Kind 2
+            sterne: counter.fp_sterne_4
+            bilder: true
+
+        # Gemeinsamer Kalender: erscheint als Band über alle Personen (leer lassen, wenn keiner)
+        familie:
+          name: Familie
+          farbe: "#1971c2"
+          kalender: [Familie]
+
+        # Kalender mit Geburtstagen (zusätzlich werden Termine mit «Geburtstag», «Geburi», 🎂 oder 🎁 erkannt)
+        geburtstage: [Geburtstag]
+
+        # Diese Listen/Kalender legt die Karte selbst an («Jetzt anlegen»)
+        essensplan: Essensplan
+        countdowns: Countdowns
+        bilderliste: Planer Bilder
+
+        # Einkaufslisten (z. B. Bring!). Leer lassen = alle Bring!-Listen automatisch.
+        bring: []
+
+        wetter: weather.forecast_home
+        abfall: sensor.familienplaner_abfall
+        notiz: input_text.fp_notiz
+
+        # Schulferien: als Liste und/oder aus einem Kalender mit ganztägigen Terminen
+        schulferien:
+          - { von: "2026-12-19", bis: "2027-01-03", name: Weihnachtsferien }
+          - { von: "2027-02-06", bis: "2027-02-21", name: Sportferien }
+        schulferien_kalender: []
+
+        # Feiertage (Auswahl, Standard = Schweiz/Deutschschweiz):
+        # neujahr, berchtoldstag, heilige_drei_koenige, josefstag, karfreitag, ostermontag,
+        # tag_der_arbeit, auffahrt, pfingstmontag, fronleichnam, bundesfeier, maria_himmelfahrt,
+        # tag_der_deutschen_einheit, nationalfeiertag_at, allerheiligen, maria_empfaengnis,
+        # weihnachten, stephanstag
+        feiertage: [neujahr, berchtoldstag, karfreitag, ostermontag, auffahrt, pfingstmontag, bundesfeier, weihnachten, stephanstag]
+        eigene_feiertage: []   # z. B. [{ datum: "2026-07-03", name: Jugendfest }]
