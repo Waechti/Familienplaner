@@ -73,6 +73,10 @@ views:
         abfall: sensor.familienplaner_abfall
         notiz: input_text.fp_notiz
 
+        # Optional: Knopf oben, der zu einem anderen Dashboard wechselt (Pfad aus der Adresszeile)
+        # zuhause_link: /dashboard-zuhause
+        # zuhause_name: Zuhause
+
         # Schulferien: als Liste und/oder aus einem Kalender mit ganztägigen Terminen
         schulferien:
           - { von: "2026-12-21", bis: "2027-01-03", name: Weihnachtsferien }

@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.0.2";
+  const VERSION = "1.1.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -211,6 +211,8 @@
         wetter: "weather.forecast_home",
         abfall: "sensor.familienplaner_abfall",
         notiz: "input_text.fp_notiz",
+        zuhause_link: null,
+        zuhause_name: "Zuhause",
       };
       this._config = { ...def, ...config };
       FERIEN = (this._config.schulferien || []).filter((f) => f && f.von && f.bis).map((f) => [String(f.von), String(f.bis), f.name || "Ferien"]);
@@ -591,6 +593,7 @@
                   ${tom ? `<div><span class="lbl">Morgen</span><ha-icon icon="${WX[tom.condition] || "mdi:weather-cloudy"}"></ha-icon><b>${Math.round(tom.temperature)}°</b> / ${Math.round(tom.templow ?? 0)}°</div>` : ""}
                 </div></div>`;
             })() : ""}
+            ${this._config.zuhause_link ? `<button class="ib orient home" data-act="zuhause" title="Zum Dashboard «${esc(this._config.zuhause_name || "Zuhause")}»"><ha-icon icon="mdi:home-outline"></ha-icon><span>${esc(this._config.zuhause_name || "Zuhause")}</span></button>` : ""}
             <button class="ib" data-act="bilder" title="Bilder zu Terminen"><ha-icon icon="mdi:image-multiple-outline"></ha-icon></button>
             <button class="ib orient" data-act="orient" title="Format: ${orientLabel}"><ha-icon icon="${orientIcon}" class="${this._orient === "quer" ? "rot" : ""}"></ha-icon><span>${orientLabel}</span></button>
           </div>
@@ -963,6 +966,13 @@
         }
         case "setup": this._runSetup(); break;
         case "bilder": this._openBilderListe(); break;
+        case "zuhause": {
+          const z = String(this._config.zuhause_link || "");
+          if (!z.startsWith("/")) break;
+          history.pushState(null, "", z);
+          window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+          break;
+        }
       }
     }
 
@@ -1319,6 +1329,7 @@
   .orient { width:auto; padding:0 10px; gap:4px; display:inline-flex; border:1px solid var(--line); margin-left:6px; font-size:12px; color:var(--ink2); }
   .orient ha-icon { --mdc-icon-size:18px; }
   .orient .rot { transform:rotate(90deg); }
+  .orient.home { margin-left:0; }
   .alerts { display:flex; gap:8px; padding:0 20px 8px; flex-wrap:wrap; }
   .al { display:inline-flex; align-items:center; gap:6px; background:var(--today); border-radius:10px; padding:6px 12px; font-size:14px; }
   .setup { display:flex; align-items:center; gap:12px; margin:0 20px 10px; padding:10px 14px; background:var(--paper); border:1px dashed var(--ink3); border-radius:12px; font-size:14px; }

@@ -121,6 +121,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | `schulferien_kalender` | Kalender mit ganztägigen Ferienterminen, z. B. ein iCal der Schule |
 | `feiertage` | Auswahl der Feiertage (siehe Beispiel-Dashboard); `[]` blendet alle aus |
 | `eigene_feiertage` | zusätzliche Tage `{datum, name}` |
+| `zuhause_link`, `zuhause_name` | Knopf oben, der zu einem anderen Dashboard wechselt, z. B. `zuhause_link: /dashboard-zuhause` (Pfad aus der Adresszeile). Ohne `zuhause_link` kein Knopf |
 
 ### Abfall
 
