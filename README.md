@@ -6,7 +6,21 @@ Ein Wochenplaner für die ganze Familie, gemacht für ein Wandtablet oder Touchd
 
 Der Familienplaner ist kostenlos. Wenn er euch gefällt, freue ich mich über einen Kaffee.
 
-![Hochformat](bilder/hochformat.png)
+| Hell | Dunkel |
+| --- | --- |
+| ![Wochenansicht hell](bilder/hochformat-hell.jpg) | ![Wochenansicht dunkel](bilder/hochformat-dunkel.jpg) |
+
+<details>
+<summary>Weitere Ansichten: Querformat, Tag, Monat</summary>
+
+![Querformat hell](bilder/querformat-hell.jpg)
+![Querformat dunkel](bilder/querformat-dunkel.jpg)
+![Tagesansicht](bilder/tag-hell.jpg)
+![Monatsansicht dunkel](bilder/monat-dunkel.jpg)
+
+</details>
+
+Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assistant.
 
 ## Was er kann
 
