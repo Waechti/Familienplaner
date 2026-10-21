@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.4.2";
+  const VERSION = "1.5.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -230,6 +230,8 @@
       holidayCache = {};
       // Kopien, damit Farben am Tablet geändert werden können (Original bleibt als Standard)
       this._config.personen = (this._config.personen || []).map((p) => ({ ...p, farbeStandard: p.farbe }));
+      this._basePersonen = this._config.personen.slice();
+      this._extraSig = "";
       this._render();
     }
 
@@ -415,6 +417,7 @@
       try {
         const r = await this._hass.callWS({ type: "todo/item/list", entity_id: id });
         this._todos[id] = r.items || [];
+        if (id === this._bildListe()) this._syncPersons();
         this._render();
       } catch (e) { console.warn("Familienplaner: Liste", id, e); }
     }
@@ -439,7 +442,7 @@
     _bildListe() { return this._findByName("todo", this._config.bilderliste); }
     _customBilder() {
       const id = this._bildListe();
-      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
+      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
         .sort((a, b) => b.key.length - a.key.length);
     }
     _themaFor(title) { return THEMEN.find((t) => t.re.test(title || "")) || null; }
@@ -497,14 +500,105 @@
       return t.filter((x) => x.d === s).map((x) => x.t);
     }
     _wx(day) { const s = ymd(day); return this._forecast.find((f) => ymd(new Date(f.datetime)) === s); }
+    // ---------- Weitere Familienmitglieder (am Tablet hinzugefügt, gespeichert in «Planer Bilder») ----------
+    _extraPersons() {
+      const out = [];
+      (this._todos[this._bildListe()] || []).forEach((i) => {
+        const m = /^Person (.+)$/.exec(i.summary || "");
+        if (!m) return;
+        let d = {};
+        try { d = JSON.parse(i.description || "{}") || {}; } catch (e) { d = {}; }
+        const farbe = /^#[0-9a-f]{6}$/i.test(d.farbe || "") ? d.farbe : "#1971c2";
+        out.push({ name: m[1].trim(), farbe, farbeStandard: farbe, kalender: Array.isArray(d.kalender) ? d.kalender : [], bilder: d.bilder !== false, extra: true, uid: i.uid });
+      });
+      const base = new Set((this._basePersonen || []).map((p) => p.name.toLowerCase()));
+      return out.filter((p) => !base.has(p.name.toLowerCase()));
+    }
+    _syncPersons() {
+      const ex = this._extraPersons();
+      const sig = JSON.stringify(ex.map((p) => [p.name, p.farbe, p.kalender, p.bilder]));
+      if (sig === this._extraSig) return;
+      this._extraSig = sig;
+      this._config.personen = [...(this._basePersonen || []), ...ex];
+      this._refreshCalendars(true);
+      this._loadExtras();
+    }
+    _photoValue(p) {
+      if (p.foto) return this._hass?.states[p.foto]?.state;
+      return (this._todos[this._bildListe()] || []).find((i) => i.summary === `Foto ${p.name}`)?.description;
+    }
+    async _setPhotoValue(p, value) {
+      const h = this._hass;
+      if (p.foto) { await h.callService("input_text", "set_value", { entity_id: p.foto, value }); return; }
+      const liste = this._bildListe();
+      if (!liste) throw new Error("Liste «Planer Bilder» fehlt");
+      const it = (this._todos[liste] || []).find((i) => i.summary === `Foto ${p.name}`);
+      if (!value) { if (it) await h.callService("todo", "remove_item", { item: it.uid }, { entity_id: liste }); }
+      else if (it) await h.callService("todo", "update_item", { item: it.uid, description: value }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: `Foto ${p.name}`, description: value }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    _openPerson(p) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
+      const FARBEN = ["#d6336c", "#e8590c", "#2b8a3e", "#7048e8", "#1971c2", "#0c8599", "#f08c00", "#c92a2a", "#a61e4d", "#5f3dc4", "#66a80f", "#495057"];
+      const used = new Set(this._config.personen.map((x) => x.farbe));
+      let farbe = p?.farbe || FARBEN.find((c) => !used.has(c)) || FARBEN[0];
+      const cals = Object.keys(h.states).filter((id) => id.startsWith("calendar.")).map((id) => ({ id, name: h.states[id].attributes.friendly_name || id }))
+        .filter((c) => !this._cals([this._config.essensplan]).includes(c.id)).sort((a, b) => a.name.localeCompare(b.name));
+      const sel = new Set(p ? this._cals(p.kalender) : []);
+      this._mh = {
+        farbe: (el) => { farbe = el.dataset.v; this.shadowRoot.querySelectorAll("#modal .sw").forEach((b) => b.classList.toggle("on", b === el)); this.shadowRoot.querySelector("#modal .dlg-h").style.setProperty("--c", farbe); },
+        save: async () => {
+          const name = this.shadowRoot.querySelector("#fp-in").value.trim();
+          const fl = this.shadowRoot.querySelector("#modal .flash");
+          if (!name) { fl.textContent = "Bitte einen Namen eingeben."; return; }
+          if (/[|]/.test(name) || name.length > 30) { fl.textContent = "Der Name darf höchstens 30 Zeichen haben."; return; }
+          const clash = this._config.personen.some((x) => x.name.toLowerCase() === name.toLowerCase() && x !== p);
+          if (clash) { fl.textContent = `«${name}» gibt es schon.`; return; }
+          const kal = [...this.shadowRoot.querySelectorAll("#modal .calpick input:checked")].map((i) => i.value);
+          const bilder = this.shadowRoot.querySelector("#fp-bilder").checked;
+          const description = JSON.stringify({ farbe, kalender: kal, bilder });
+          if (p?.uid) {
+            if (p.name !== name) {
+              await h.callService("todo", "update_item", { item: p.uid, rename: `Person ${name}`, description }, { entity_id: liste });
+              const foto = (this._todos[liste] || []).find((i) => i.summary === `Foto ${p.name}`);
+              if (foto) await h.callService("todo", "update_item", { item: foto.uid, rename: `Foto ${name}` }, { entity_id: liste });
+            } else await h.callService("todo", "update_item", { item: p.uid, description }, { entity_id: liste });
+          } else await h.callService("todo", "add_item", { item: `Person ${name}`, description }, { entity_id: liste });
+          await this._loadTodo(liste);
+          this._modal("");
+        },
+        del: () => this._openConfirm(`${p.name} aus dem Planer entfernen? Die Kalender selbst bleiben unverändert.`, "Entfernen", async () => {
+          await h.callService("todo", "remove_item", { item: p.uid }, { entity_id: liste });
+          const foto = (this._todos[liste] || []).find((i) => i.summary === `Foto ${p.name}`);
+          if (foto) await h.callService("todo", "remove_item", { item: foto.uid }, { entity_id: liste });
+          await this._loadTodo(liste);
+        }),
+      };
+      this._modal(`
+        <div class="dlg-h" style="--c:${farbe}"><span class="bar"></span><h2>${p ? `${esc(p.name)} bearbeiten` : "Familienmitglied hinzufügen"}</h2></div>
+        <div class="dlg-b">
+          <label class="kw">Name<input id="fp-in" type="text" maxlength="30" autofocus placeholder="z. B. Grosi, Leo" value="${esc(p?.name || "")}"></label>
+          <div class="farben left"><span class="lbl">Farbe</span>
+            ${FARBEN.map((c) => `<button class="sw ${c === farbe ? "on" : ""}" data-m="farbe" data-v="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join("")}</div>
+          <div class="sect">Kalender dieser Person</div>
+          <div class="calpick">${cals.length ? cals.map((c) => `<label><input type="checkbox" value="${esc(c.id)}" ${sel.has(c.id) ? "checked" : ""}><span>${esc(c.name)}</span></label>`).join("") : `<p class="hint2">Noch keine Kalender in Home Assistant. Zuerst einen Kalender einbinden (z. B. «Remote Calendar»).</p>`}</div>
+          <label class="chk"><input id="fp-bilder" type="checkbox" ${p?.bilder === false ? "" : "checked"}><span>Bilder auf den Terminen zeigen</span></label>
+          <p class="hint2">Foto und Farbe lassen sich danach wie gewohnt ändern: lange auf das Foto drücken.</p>
+          <div class="flash"></div>
+        </div>
+        <div class="dlg-f">${p?.uid ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">${p ? "Speichern" : "Hinzufügen"}</button></div>`);
+    }
+
     _photo(p) {
-      const v = this._hass?.states[p.foto]?.state;
+      const v = this._photoValue(p);
       if (!v || v === "unknown" || v === "unavailable") return null;
       if (v.startsWith("/") || v.startsWith("http")) return v;
       return `/api/image/serve/${v.split("|")[0]}/512x512`;
     }
     _photoInfo(p) {
-      const v = this._hass?.states[p.foto]?.state || "";
+      const v = this._photoValue(p) || "";
       const [crop, orig, z, x, y] = v.split("|");
       if (!orig) return null;
       return { orig, z: +z || 1, x: +x || 0.5, y: +y || 0.5 };
@@ -755,7 +849,7 @@
       }
       return `<div class="week">
         <div class="whead" style="grid-template-columns:${cols}">
-          ${this._cals(fam.kalender).length ? `<div class="famlegend" style="--c:${fam.farbe}"><span class="dot"></span>${esc(fam.name)}</div>` : "<div></div>"}
+          <div class="wcorner">${this._cals(fam.kalender).length ? `<div class="famlegend" style="--c:${fam.farbe}"><span class="dot"></span>${esc(fam.name)}</div>` : ""}${this._config.personen_hinzufuegen !== false ? `<button class="addp" data-act="addperson" title="Familienmitglied hinzufügen"><ha-icon icon="mdi:account-plus"></ha-icon><span>Person</span></button>` : ""}</div>
           ${all.map((p) => `<div class="hcell">${this._avatar(p, this._hidden.has(p.name) ? "mini" : "")}</div>`).join("")}
         </div>
         <div class="wbody" data-scroll="week">${rows}</div>
@@ -1150,6 +1244,7 @@
         }
         case "setup": this._runSetup(); break;
         case "bilder": this._openBilderListe(); break;
+        case "addperson": this._openPerson(null); break;
         case "stargive": case "reward": case "redeem": {
           const p = this._config.personen.find((x) => x.name === el.dataset.name);
           if (!p || !p.sterne) break;
@@ -1529,7 +1624,8 @@
       const setC = (c) => { this.shadowRoot.querySelectorAll("#modal [style*='--c']").forEach((el) => el.style.setProperty("--c", c)); this.shadowRoot.querySelectorAll(".sw").forEach((b) => b.classList.toggle("on", b.dataset.v === c)); };
       this._mh = {
         pick: () => this.shadowRoot.querySelector("#fp-file").click(),
-        remove: async () => { await h.callService("input_text", "set_value", { entity_id: p.foto, value: "" }); this._modal(""); },
+        remove: async () => { await this._setPhotoValue(p, ""); this._modal(""); },
+        edit: () => this._openPerson(p),
         crop: () => { const inf = this._photoInfo(p); this._openCrop(p, inf ? `/api/image/serve/${inf.orig}/original` : img, null, inf); },
         farbe: async (el) => { setC(el.dataset.v); await this._setFarbe(p, el.dataset.v); },
         farbstd: async () => { setC(p.farbeStandard); await this._setFarbe(p, null); },
@@ -1546,7 +1642,7 @@
           <input id="fp-file" type="file" accept="image/*" hidden>
           <div class="flash"></div>
         </div>
-        <div class="dlg-f">${img ? `<button class="btn ghost" data-m="remove">Foto entfernen</button><button class="btn ghost" data-m="crop">Ausschnitt</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="pick">Foto wählen</button></div>`);
+        <div class="dlg-f">${p.extra ? `<button class="btn ghost" data-m="edit">Name &amp; Kalender</button>` : ""}${img ? `<button class="btn ghost" data-m="remove">Foto entfernen</button><button class="btn ghost" data-m="crop">Ausschnitt</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="pick">Foto wählen</button></div>`);
       this.shadowRoot.querySelector("#fp-col").addEventListener("change", async (e4) => { const c = e4.target.value; setC(c); await this._setFarbe(p, c); });
       this.shadowRoot.querySelector("#fp-file").addEventListener("change", (ev) => {
         const f = ev.target.files[0];
@@ -1644,7 +1740,7 @@
             origId = await upload(await toBlob(ov), `${slug}-original.jpg`);
           }
           const cx = (S / 2 - ox) / (im.naturalWidth * k), cy = (S / 2 - oy) / (im.naturalHeight * k);
-          await h.callService("input_text", "set_value", { entity_id: p.foto, value: `${cropId}|${origId}|${z.toFixed(2)}|${cx.toFixed(3)}|${cy.toFixed(3)}` });
+          await this._setPhotoValue(p, `${cropId}|${origId}|${z.toFixed(2)}|${cx.toFixed(3)}|${cy.toFixed(3)}`);
           if (file) URL.revokeObjectURL(src);
           this._modal("");
         } catch (err) { this._flash(`Speichern fehlgeschlagen: ${err.message || err}`); }
@@ -1842,6 +1938,17 @@
   .whead, .wrow { display:grid; }
   .whead { padding:14px 12px 10px 6px; border-bottom:1px solid var(--line); align-items:end; }
   .whead .famlegend { padding-left:10px; padding-bottom:4px; align-self:end; }
+  .wcorner { display:flex; flex-direction:column; justify-content:flex-end; gap:8px; align-self:stretch; }
+  .addp { display:inline-flex; align-items:center; gap:5px; align-self:flex-start; margin-left:8px; padding:6px 10px; border-radius:10px; border:1.5px dashed var(--ink3); color:var(--ink2); font-size:13px; font-weight:600; }
+  .addp ha-icon { --mdc-icon-size:18px; }
+  .addp:active { background:var(--soft); }
+  .whead .wcorner .famlegend { padding-bottom:0; }
+  .farben.left { justify-content:flex-start; max-width:none; }
+  .farben.left .lbl { text-align:left; }
+  .calpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:6px; max-height:220px; overflow:auto; }
+  .calpick label, .chk { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px; background:var(--soft); font-size:14px; cursor:pointer; }
+  .dlg-b .calpick input, .dlg-b .chk input { width:20px; height:20px; padding:0; margin:0; border:0; flex:none; accent-color:var(--accent); }
+  .chk { background:none; padding:4px 0; }
   .hcell { display:flex; justify-content:center; }
   /* Jeder Tag als eigener Block mit Abstand */
   .wbody { overflow:auto; flex:1; min-height:0; overscroll-behavior:contain; background:color-mix(in srgb, var(--ink) 10%, var(--paper)); padding:8px; display:flex; flex-direction:column; gap:8px; }

@@ -22,7 +22,8 @@ views:
     cards:
       - type: custom:familienplaner-card
 
-        # Bis zu 4 Personen (mehr geht auch, wird aber eng).
+        # Personen aus dieser Liste. Weitere lassen sich am Tablet mit «+ Person» hinzufügen
+        # (ausblenden mit: personen_hinzufuegen: false). Ab 6 Personen wird es eng.
         # kalender: Name(n) oder Entity-ID(s) der Kalender dieser Person. Ein Teil des Namens genügt.
         personen:
           - name: Mama

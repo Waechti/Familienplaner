@@ -25,6 +25,7 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 ## Was er kann
 
 - **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto. Die Woche beginnt mit heute, vergangene Tage werden nicht angezeigt. Auf grossen Displays zeigt sie automatisch mehr Tage.
+- **Weitere Familienmitglieder** direkt am Tablet hinzufügen (Name, Farbe, Kalender), z. B. Grosi oder ein Au-pair
 - **Wischen** nach links oder rechts blättert zur nächsten oder vorherigen Woche (bzw. Tag, Monat)
 - **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen.
 - **Essensplan**: pro Tag ein Gericht. Vorschläge lernen eure Gewohnheiten (z. B. Pizza am Freitag), berücksichtigen Lieblingsessen (Herz) und Abwechslung; «Woche füllen» plant die leeren Tage mit einem Tipp
@@ -100,6 +101,8 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 
 | Was | Wie |
 |---|---|
+| Familienmitglied hinzufügen | Knopf «+ Person» oben links in der Wochenansicht |
+| Hinzugefügte Person ändern oder entfernen | lange auf ihr Foto drücken → «Name & Kalender» |
 | Person aus- oder einblenden | Foto antippen |
 | Foto, Ausschnitt und Farbe ändern | lange auf das Foto drücken (Foto verschieben und vergrössern) |
 | Termin ansehen, Bild zuweisen | Termin antippen → «Bild zuweisen» (oder lange drücken) |
@@ -128,6 +131,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | `schulferien_kalender` | Kalender mit ganztägigen Ferienterminen, z. B. ein iCal der Schule |
 | `feiertage` | Auswahl der Feiertage (siehe Beispiel-Dashboard); `[]` blendet alle aus |
 | `eigene_feiertage` | zusätzliche Tage `{datum, name}` |
+| `personen_hinzufuegen` | `false` blendet den Knopf «+ Person» aus (Standard: sichtbar). Am Tablet hinzugefügte Personen werden in der Liste «Planer Bilder» gespeichert |
 | `dunkel` | `auto` (wie Home Assistant, Standard), `sonne` (dunkel zwischen Sonnenuntergang und -aufgang), `hell` oder `dunkel` |
 | `zuhause_link`, `zuhause_name` | Knopf oben, der zu einem anderen Dashboard wechselt, z. B. `zuhause_link: /dashboard-zuhause` (Pfad aus der Adresszeile). Ohne `zuhause_link` kein Knopf |
 
