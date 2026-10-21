@@ -32,7 +32,7 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 - **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
 - **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
 - **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung mit Bild und Ziel; kleine Belohnungen (Lolli, Spielzeugauto, Heftli …) lassen sich mit einem Tipp wählen; Sterne gibt es per Tipp oder über die Ämtli
-- **Kinder-Ansicht** (Foto beim Sterne-Bereich antippen): grosses Sternenglas, Tagesaufgaben als Bildkarten (Morgen/Tag/Abend, täglich neu), grosse Ziele wie «4× Töpfchen → Monstertruck» oder «7 Nächte im eigenen Bett» mit eigenen Sternen und eigener Belohnung (jedes Mal oder einmal pro Tag), Sticker-Album, Bonus-Stern nach 5 Tagen am Stück 🔥, Feier mit Konfetti und Ton. Optional zählen Sterne erst nach Eltern-Bestätigung (mit 4-stelligem Code)
+- **Sterne & Belohnungen** (Kachel «Sterne» antippen, dann Kind wählen): grosses Sternenglas, Tagesaufgaben als Bildkarten (Morgen/Tag/Abend, täglich neu), grosse Ziele wie «4× Töpfchen → Monstertruck» oder «7 Nächte im eigenen Bett» mit eigenen Sternen und eigener Belohnung (jedes Mal oder einmal pro Tag), Sticker-Album, Bonus-Stern nach 5 Tagen am Stück 🔥, Feier mit Konfetti und Ton. Optional zählen Sterne erst nach Eltern-Bestätigung (mit 4-stelligem Code)
 - **Mond-Countdown** für Kinder: «noch 3× schlafen» bis zum Geburtstag oder zu den Ferien (bis 5 Tage)
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
@@ -115,7 +115,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | Hoch- oder Querformat fest einstellen | Knopf oben rechts (Auto / Hoch / Quer) |
 | Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
 | Stern geben | Stern-Knopf beim Kind |
-| Kinder-Ansicht öffnen | beim Sterne-Bereich auf Foto oder Namen des Kindes tippen |
+| Sterne & Belohnungen öffnen | Kachel «Sterne» antippen, dann das Kind wählen |
 | Aufgaben, Ziele, Eltern-Code einstellen | in der Kinder-Ansicht auf ⚙️ |
 | Belohnung festlegen oder einlösen | auf die Sterne oder die Belohnung tippen |
 | Lieblingsessen markieren | im Essen-Fenster auf das Herz tippen; ✕ bei einem Vorschlag = nicht mehr vorschlagen |

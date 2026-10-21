@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.7.0";
+  const VERSION = "1.8.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -983,7 +983,7 @@
     }
     _sideClass() {
       const ch = this._hasChores(), stv = this._hasStars();
-      return !ch && !stv ? "nochores" : ch && stv ? "both" : "";
+      return !ch && !stv ? "nochores" : ch && stv ? "both" : stv ? "tileonly" : "";
     }
 
     // ---------- Sterne und Belohnungen ----------
@@ -1003,31 +1003,17 @@
       else await h.callService("todo", "add_item", { item: `Belohnung ${p.name}`, description }, { entity_id: liste });
       await this._loadTodo(liste);
     }
+    _kids() { return this._config.personen.filter((p) => p.sterne && this._hass.states[p.sterne]); }
     _starsPanel() {
-      const ps = this._config.personen.map((p, i) => ({ ...p, i })).filter((p) => p.sterne && this._hass.states[p.sterne]);
-      return `<div class="panel starsp">
+      const ks = this._kids();
+      return `<button class="panel starsp tile" data-act="rewards" aria-label="Sterne und Belohnungen öffnen">
         <div class="ph"><ha-icon icon="mdi:star-circle-outline"></ha-icon><h3>Sterne</h3></div>
-        <div class="stlist">${ps.map((p) => {
-          const n = Math.max(0, parseInt(this._hass.states[p.sterne].state, 10) || 0);
-          const r = this._reward(p);
-          const done = n >= r.ziel;
-          const shown = Math.min(n, r.ziel);
-          const many = r.ziel > 12;
-          const track = many
-            ? `<span class="stbar"><span style="width:${Math.round((shown / r.ziel) * 100)}%"></span></span><span class="stnum">${n} / ${r.ziel}</span>`
-            : Array.from({ length: r.ziel }, (_, k) => `<ha-icon class="${k < shown ? "on" : ""}" icon="${k < shown ? "mdi:star" : "mdi:star-outline"}"></ha-icon>`).join("");
-          return `<div class="strow ${done ? "done" : ""}" style="--c:${p.farbe}">
-            <div class="sthead"><button class="kidopen" data-act="kidview" data-name="${esc(p.name)}" aria-label="Kinder-Ansicht ${esc(p.name)}">${this._kidAvatar(p, 30)}<span>${esc(p.name)}</span>${this._kid(p).streak.n >= 2 ? `<span class="fire">🔥${this._kid(p).streak.n}</span>` : ""}<ha-icon icon="mdi:chevron-right"></ha-icon></button>
-              <button class="stgive" data-act="stargive" data-name="${esc(p.name)}" aria-label="Stern für ${esc(p.name)}"><ha-icon icon="mdi:star-plus"></ha-icon></button></div>
-            <button class="sttrack" data-act="reward" data-name="${esc(p.name)}">${track}</button>
-            ${(() => { const zs = this._kid(p).ziele.filter((z) => !z.fertig).slice(0, 3); return zs.length ? `<button class="stgoals" data-act="kidview" data-name="${esc(p.name)}">${zs.map((z) => `<span>${esc(z.bild)} ${z.n}/${z.ziel} → ${esc(z.belohnung?.bild || "🎁")}</span>`).join("")}</button>` : ""; })()}
-            <button class="streward" data-act="${done ? "redeem" : "reward"}" data-name="${esc(p.name)}">
-              ${r.bild ? this._bildHtml(r.bild, "rwpic") : `<span class="rwpic empty"><ha-icon icon="mdi:gift-outline"></ha-icon></span>`}
-              <span class="rwtxt">${done ? `<b>Geschafft!</b> ${esc(r.text || "Belohnung")} einlösen` : r.text ? `${esc(r.text)}<small>noch ${r.ziel - n} ${r.ziel - n === 1 ? "Stern" : "Sterne"}</small>` : "Belohnung festlegen"}</span>
-            </button>
-          </div>`;
-        }).join("")}</div>
-      </div>`;
+        <div class="tilebody">
+          <span class="tilestar">⭐</span>
+          <span class="tilekids">${ks.map((p) => this._kidAvatar(p, 46)).join("")}</span>
+          <span class="tilehint">Aufgaben &amp; Belohnungen</span>
+        </div>
+      </button>`;
     }
     // ================= Kinder: Aufgaben, grosse Ziele, Sticker =================
     _kidSettings() {
@@ -1112,6 +1098,12 @@
       draw();
     }
 
+    _openRewards() {
+      const ks = this._kids();
+      if (ks.length === 1) return this._openKid(ks[0]);
+      if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
+      this._kidOpen = "__menu__"; this._renderKid(); this._kidTouch();
+    }
     _openKid(p) {
       if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
       this._kidOpen = p.name; this._kidTab = "heute";
@@ -1134,6 +1126,27 @@
     }
     _renderKid() {
       const k = this.shadowRoot.querySelector("#kid");
+      if (k && this._kidOpen === "__menu__") {
+        const app0 = this.shadowRoot.querySelector("#app");
+        k.className = `kidview ${app0?.classList.contains("dark") ? "dark" : ""}`;
+        const today0 = ymd(new Date());
+        k.innerHTML = `<div class="kwrap">
+          <header class="khead"><div class="kname">⭐ Sterne &amp; Belohnungen</div><button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
+          <div class="kmenu">${this._kids().map((p) => {
+            const d = this._kid(p), n = this._stars(p), r = this._reward(p);
+            const offen = d.aufgaben.filter((a) => !d.heute.done[a.id]).length;
+            const ziele = d.ziele.filter((z) => !z.fertig);
+            return `<button class="kmcard" data-k="pick" data-name="${esc(p.name)}" style="--c:${p.farbe}">
+              ${this._kidAvatar(p, 120)}
+              <span class="kmname">${esc(p.name)}${d.streak.n >= 2 ? ` <span class="fire">🔥${d.streak.n}</span>` : ""}</span>
+              <span class="kmstars">${n} ★ <small>${r.text ? `→ ${esc(r.bild && !/^(url:|img:)/.test(r.bild) ? r.bild : "🎁")} ${esc(r.text)}` : ""}</small></span>
+              <span class="kminfo">${d.aufgaben.length ? (offen ? `noch ${offen} ${offen === 1 ? "Aufgabe" : "Aufgaben"} heute` : "Alle Aufgaben erledigt ✓") : ""}</span>
+              ${ziele.length ? `<span class="kmgoals">${ziele.slice(0, 3).map((z) => `<span>${esc(z.bild)} ${z.n}/${z.ziel}</span>`).join("")}</span>` : ""}
+            </button>`;
+          }).join("")}</div>
+        </div>`;
+        return;
+      }
       const p = this._config.personen.find((x) => x.name === this._kidOpen);
       if (!k || !p) return;
       const app = this.shadowRoot.querySelector("#app");
@@ -1168,7 +1181,7 @@
       const done = n >= r.ziel;
       k.innerHTML = `
         <div class="kwrap" style="--c:${p.farbe}">
-          <header class="khead">${this._kidAvatar(p, 84)}<div class="kname">${esc(p.name)}${d.streak.n >= 2 ? `<span class="fire big">🔥 ${d.streak.n}</span>` : ""}</div>
+          <header class="khead">${this._kids().length > 1 ? `<button class="kbtn" data-k="menu" aria-label="Zurück zur Übersicht">←</button>` : ""}${this._kidAvatar(p, 84)}<div class="kname">${esc(p.name)}${d.streak.n >= 2 ? `<span class="fire big">🔥 ${d.streak.n}</span>` : ""}</div>
             <button class="kbtn" data-k="album" aria-label="Sticker-Album">📒</button>
             <button class="kbtn" data-k="settings" aria-label="Einstellungen für Eltern">⚙️</button>
             <button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
@@ -1195,10 +1208,12 @@
     async _kidClick(e) {
       const el = e.target.closest("[data-k]");
       if (!el) return;
+      if (el.dataset.k === "close") return this._closeKid();
+      if (el.dataset.k === "pick") { this._kidOpen = el.dataset.name; this._kidTab = "heute"; return this._renderKid(); }
+      if (el.dataset.k === "menu") { this._kidOpen = "__menu__"; return this._renderKid(); }
       const p = this._config.personen.find((x) => x.name === this._kidOpen);
       if (!p) return;
       const k = el.dataset.k, st = this._kidSettings(), today = ymd(new Date());
-      if (k === "close") return this._closeKid();
       if (k === "tab") { this._kidTab = el.dataset.v; return this._renderKid(); }
       if (k === "album") { this._kidTab = this._kidTab === "album" ? "heute" : "album"; return this._renderKid(); }
       if (k === "settings") return this._parent("Einstellungen für Eltern", () => this._openKidSettings(p));
@@ -1667,6 +1682,7 @@
         case "bilder": this._openBilderListe(); break;
         case "addperson": this._openPerson(null); break;
         case "kidview": { const p = this._config.personen.find((x) => x.name === el.dataset.name); if (p) this._openKid(p); break; }
+        case "rewards": this._openRewards(); break;
         case "stargive": case "reward": case "redeem": {
           const p = this._config.personen.find((x) => x.name === el.dataset.name);
           if (!p || !p.sterne) break;
@@ -2669,6 +2685,25 @@
   .kstpic { width:84px; height:64px; border-radius:14px; overflow:hidden; display:grid; place-items:center; font-size:52px; }
   .khint { color:var(--ink2); font-size:17px; }
   .kback { align-self:flex-start; padding:12px 16px; border-radius:14px; background:var(--paper); font-weight:700; margin-top:8px; }
+  .starsp.tile { cursor:pointer; text-align:left; width:100%; }
+  .hoch .side.tileonly { grid-template-columns:1fr 1.3fr .62fr; }
+  .quer .starsp.tile .tilebody { flex-direction:row; justify-content:flex-start; }
+  .starsp.tile:active { transform:scale(.98); }
+  .tilebody { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:4px 0 6px; }
+  .tilestar { font-size:46px; line-height:1; }
+  .tilekids { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .tilekids .kav { font-size:20px; box-shadow:0 0 0 3px var(--paper), 0 0 0 5px var(--c); }
+  .tilehint { font-size:13px; font-weight:700; color:var(--ink2); text-align:center; }
+  .kmenu { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:22px; align-content:start; }
+  .kmcard { display:flex; flex-direction:column; align-items:center; gap:10px; padding:28px 18px 22px; border-radius:30px; background:var(--paper); box-shadow:0 4px 12px rgba(0,0,0,.08), inset 0 -6px 0 color-mix(in srgb, var(--c) 35%, transparent); text-align:center; }
+  .kmcard:active { transform:scale(.97); }
+  .kmcard .kav { font-size:56px; }
+  .kmname { font-family:var(--f-disp); font-size:34px; font-weight:800; margin-top:6px; }
+  .kmstars { font-family:var(--f-disp); font-size:30px; font-weight:800; color:#e0a200; display:flex; flex-direction:column; align-items:center; }
+  .kmstars small { font-family:var(--f-ui); font-size:15px; color:var(--ink2); font-weight:700; }
+  .kminfo { font-size:15px; font-weight:600; color:var(--ink2); }
+  .kmgoals { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .kmgoals span { font-size:15px; font-weight:700; padding:4px 10px; border-radius:12px; background:var(--soft); }
   .kidopen { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-right:auto; padding:2px 6px 2px 2px; border-radius:20px; }
   .kidopen ha-icon { --mdc-icon-size:18px; color:var(--ink3); }
   .kidopen .kav { box-shadow:0 0 0 2px var(--paper), 0 0 0 4px var(--c); font-size:14px; }
