@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.3.1";
+  const VERSION = "1.4.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -213,6 +213,7 @@
         notiz: "input_text.fp_notiz",
         zuhause_link: null,
         zuhause_name: "Zuhause",
+        dunkel: "auto",
       };
       this._config = { ...def, ...config };
       FERIEN = (this._config.schulferien || []).filter((f) => f && f.von && f.bis).map((f) => [String(f.von), String(f.bis), f.name || "Ferien"]);
@@ -299,7 +300,7 @@
     _watchIds() {
       if (!this._hass) return [];
       const c = this._config;
-      const ids = [c.wetter, c.abfall, c.notiz];
+      const ids = [c.wetter, c.abfall, c.notiz, "sun.sun"];
       c.personen.forEach((p) => { ids.push(p.foto); if (p.sterne) ids.push(p.sterne); const a = this._aemtliId(p); if (a) ids.push(a); });
       const cd = this._findByName("todo", c.countdowns); if (cd) ids.push(cd);
       const bl = this._bildListe(); if (bl) ids.push(bl);
@@ -313,7 +314,10 @@
       const a = this._anchor;
       if (this._view === "tag") return [a, addDays(a, 1)];
       if (this._view === "monat") { const f = sow(new Date(a.getFullYear(), a.getMonth(), 1)); return [f, addDays(f, 42)]; }
-      const s = sow(a); return [s, addDays(s, this._weekDays || 7)];
+      const today = sod(new Date());
+      const s0 = sow(a);
+      const s = today >= s0 && today < addDays(s0, 7) ? today : s0;   // laufende Woche: ab heute
+      return [s, addDays(s, this._weekDays || 7)];
     }
 
     async _refreshAll() {
@@ -384,7 +388,8 @@
         .filter((e) => { const k = e.title + ymd(e.start); if (seen.has(k)) return false; seen.add(k); return true; });
       const ess = this._cals([c.essensplan]);
       if (ess.length) {
-        const past = await this._fetchCal(ess[0], addDays(t, -120), addDays(t, 30));
+        const past = await this._fetchCal(ess[0], addDays(t, -365), addDays(t, 60));
+        this._mealHist = past.map((e) => ({ title: (e.title || "").trim(), d: sod(e.start) })).filter((e) => e.title);
         const cnt = {};
         past.forEach((e) => (cnt[e.title] = (cnt[e.title] || 0) + 1));
         this._suggest = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 40);
@@ -426,7 +431,7 @@
     _bildListe() { return this._findByName("todo", this._config.bilderliste); }
     _customBilder() {
       const id = this._bildListe();
-      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
+      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
         .sort((a, b) => b.key.length - a.key.length);
     }
     _themaFor(title) { return THEMEN.find((t) => t.re.test(title || "")) || null; }
@@ -497,6 +502,14 @@
       return { orig, z: +z || 1, x: +x || 0.5, y: +y || 0.5 };
     }
     _visiblePersons() { return this._config.personen.map((p, i) => ({ ...p, i })).filter((p) => !this._hidden.has(p.name)); }
+    // Design: "sonne" = dunkel zwischen Sonnenuntergang und -aufgang, "auto" = wie Home Assistant, "hell", "dunkel"
+    _isDark() {
+      const m = String(this._config.dunkel || "auto").toLowerCase();
+      if (m === "dunkel") return true;
+      if (m === "hell") return false;
+      if (m === "sonne") { const sun = this._hass?.states["sun.sun"]; if (sun) return sun.state === "below_horizon"; }
+      return !!this._hass?.themes?.darkMode;
+    }
     _isQuer() {
       if (this._orient === "quer") return true;
       if (this._orient === "hoch") return false;
@@ -534,22 +547,24 @@
         root.querySelector("#app").addEventListener("click", (e) => this._click(e));
         root.querySelector("#modal").addEventListener("click", (e) => this._modalClick(e));
         this._bindLongPress(root.querySelector("#app"));
+        this._bindSwipe(root.querySelector("#app"));
       }
       if (!this._hass) return;
       const app = root.querySelector("#app");
       const scrolls = {};
       app.querySelectorAll("[data-scroll]").forEach((el) => (scrolls[el.dataset.scroll] = el.scrollTop));
       const quer = this._isQuer();
-      const dark = !!this._hass.themes?.darkMode;
+      const dark = this._isDark();
       app.className = `fp ${quer ? "quer" : "hoch"} ${dark ? "dark" : ""}`;
       app.innerHTML = `
         ${this._header()}
         ${this._setupBanner()}
         <div class="body">
           <section class="main">${this._view === "tag" ? this._dayView() : this._view === "monat" ? this._monthView() : this._weekView()}</section>
-          <aside class="side ${this._hasChores() ? "" : "nochores"}" data-scroll="side">${this._sidePanels()}</aside>
+          <aside class="side ${this._sideClass()}" data-scroll="side">${this._sidePanels()}</aside>
         </div>`;
       app.querySelectorAll("[data-scroll]").forEach((el) => { if (scrolls[el.dataset.scroll] != null) el.scrollTop = scrolls[el.dataset.scroll]; });
+      if (this._slide) { const m = app.querySelector(".main"); if (m) m.classList.add(this._slide > 0 ? "slide-l" : "slide-r"); this._slide = 0; }
       if (this._view === "woche") requestAnimationFrame(() => this._fitWeek());
       if (this._needScrollNow) { this._needScrollNow = false; const nl = app.querySelector(".nowline"); if (nl) nl.closest("[data-scroll]").scrollTop = Math.max(0, nl.offsetTop - 120); }
     }
@@ -610,9 +625,7 @@
               ${["tag", "woche", "monat"].map((v) => `<button data-act="view" data-v="${v}" class="${this._view === v ? "on" : ""}">${{ tag: "Tag", woche: "Woche", monat: "Monat" }[v]}</button>`).join("")}
             </div>
             <div class="pager">
-              <button class="ib" data-act="prev" aria-label="Zurück"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
               <button class="today" data-act="heute">Heute</button>
-              <button class="ib" data-act="next" aria-label="Weiter"><ha-icon icon="mdi:chevron-right"></ha-icon></button>
             </div>
             <div class="range">${label}</div>
           </div>
@@ -842,8 +855,95 @@
     _hasChores() {
       return this._config.personen.some((p) => { const id = this._aemtliId(p); return id && (this._todos[id] || []).length > 0; });
     }
+    _hasStars() { return this._config.personen.some((p) => p.sterne && this._hass.states[p.sterne]); }
     _sidePanels() {
-      return `${this._notePanel()}${this._soonPanel()}${this._shopPanel()}${this._hasChores() ? this._choresPanel() : ""}`;
+      return `${this._notePanel()}${this._soonPanel()}${this._shopPanel()}${this._hasChores() ? this._choresPanel() : ""}${this._hasStars() ? this._starsPanel() : ""}`;
+    }
+    _sideClass() {
+      const ch = this._hasChores(), stv = this._hasStars();
+      return !ch && !stv ? "nochores" : ch && stv ? "both" : "";
+    }
+
+    // ---------- Sterne und Belohnungen ----------
+    _rewardItem(p) { return (this._todos[this._bildListe()] || []).find((i) => i.summary === `Belohnung ${p.name}`); }
+    _reward(p) {
+      const it = this._rewardItem(p);
+      let r = {};
+      try { r = JSON.parse(it?.description || "{}") || {}; } catch (e) { r = {}; }
+      return { ziel: Math.max(1, Math.min(50, +r.ziel || 10)), text: r.text || "", bild: r.bild || "" };
+    }
+    async _setReward(p, r) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste) return;
+      const it = this._rewardItem(p);
+      const description = JSON.stringify(r);
+      if (it) await h.callService("todo", "update_item", { item: it.uid, description }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: `Belohnung ${p.name}`, description }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    _starsPanel() {
+      const ps = this._config.personen.map((p, i) => ({ ...p, i })).filter((p) => p.sterne && this._hass.states[p.sterne]);
+      return `<div class="panel starsp">
+        <div class="ph"><ha-icon icon="mdi:star-circle-outline"></ha-icon><h3>Sterne</h3></div>
+        <div class="stlist">${ps.map((p) => {
+          const n = Math.max(0, parseInt(this._hass.states[p.sterne].state, 10) || 0);
+          const r = this._reward(p);
+          const done = n >= r.ziel;
+          const shown = Math.min(n, r.ziel);
+          const many = r.ziel > 12;
+          const track = many
+            ? `<span class="stbar"><span style="width:${Math.round((shown / r.ziel) * 100)}%"></span></span><span class="stnum">${n} / ${r.ziel}</span>`
+            : Array.from({ length: r.ziel }, (_, k) => `<ha-icon class="${k < shown ? "on" : ""}" icon="${k < shown ? "mdi:star" : "mdi:star-outline"}"></ha-icon>`).join("");
+          return `<div class="strow ${done ? "done" : ""}" style="--c:${p.farbe}">
+            <div class="sthead">${this._avatar(p, "xs")}
+              <button class="stgive" data-act="stargive" data-name="${esc(p.name)}" aria-label="Stern für ${esc(p.name)}"><ha-icon icon="mdi:star-plus"></ha-icon></button></div>
+            <button class="sttrack" data-act="reward" data-name="${esc(p.name)}">${track}</button>
+            <button class="streward" data-act="${done ? "redeem" : "reward"}" data-name="${esc(p.name)}">
+              ${r.bild ? this._bildHtml(r.bild, "rwpic") : `<span class="rwpic empty"><ha-icon icon="mdi:gift-outline"></ha-icon></span>`}
+              <span class="rwtxt">${done ? `<b>Geschafft!</b> ${esc(r.text || "Belohnung")} einlösen` : r.text ? `${esc(r.text)}<small>noch ${r.ziel - n} ${r.ziel - n === 1 ? "Stern" : "Sterne"}</small>` : "Belohnung festlegen"}</span>
+            </button>
+          </div>`;
+        }).join("")}</div>
+      </div>`;
+    }
+    _openReward(p) {
+      const h = this._hass;
+      if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
+      const r = this._reward(p);
+      let wahl = r.bild, ziel = r.ziel;
+      const n = Math.max(0, parseInt(h.states[p.sterne]?.state, 10) || 0);
+      // Für Belohnungen passende Themen zuerst, Arbeit/Arzt/Handwerker weglassen
+      const PREF = ["zoo", "kino", "europa", "spielplatz", "schwimm", "ferien", "essen", "velo", "ski", "bibliothek", "reiten", "musik", "malen", "fest", "geburtstag", "wander", "fussball", "ballett", "turnen", "haustier", "zug", "reisen", "konzert", "kürbis", "weihnacht", "laterne", "familie", "einkauf"];
+      const rank = (n) => { const i = PREF.findIndex((k) => n.toLowerCase().includes(k)); return i < 0 ? 99 : i; };
+      const themen = THEMEN.filter((t) => rank(t.name) < 99).sort((x, y) => rank(x.name) - rank(y.name)).map((t) => ({ name: t.name, val: "url:" + t.url }));
+      const prev = () => { const el = this.shadowRoot.querySelector("#fp-prev"); if (el) el.innerHTML = wahl ? this._bildHtml(wahl, "bigpic") : `<span class="bigpic empty"><ha-icon icon="mdi:gift-outline"></ha-icon></span>`; };
+      const setZ = (z) => { ziel = Math.max(1, Math.min(50, z)); const el = this.shadowRoot.querySelector("#fp-ziel"); if (el) el.textContent = ziel; };
+      const mark = (el) => this.shadowRoot.querySelectorAll(".emo button, .thm button").forEach((b) => b.classList.toggle("on", b === el));
+      this._mh = {
+        zp: () => setZ(ziel + 1), zm: () => setZ(ziel - 1),
+        pick: (el) => { wahl = el.dataset.v; prev(); mark(el); },
+        thema: (el) => { wahl = themen[+el.dataset.i].val; prev(); mark(el); },
+        minus: async () => { await h.callService("counter", "decrement", { entity_id: p.sterne }); this._modal(""); },
+        reset: () => this._openConfirm(`Sterne von ${p.name} auf 0 setzen?`, "Auf 0 setzen", () => h.callService("counter", "reset", { entity_id: p.sterne })),
+        save: async () => { await this._setReward(p, { ziel, text: this.shadowRoot.querySelector("#fp-in").value.trim(), bild: wahl }); this._modal(""); },
+      };
+      this._modal(`
+        <div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>Belohnung für ${esc(p.name)}</h2></div>
+        <div class="dlg-b">
+          <div class="bildtop"><div id="fp-prev"></div>
+            <label class="kw">Worauf sammelt ${esc(p.name)}?<input id="fp-in" type="text" maxlength="60" placeholder="z. B. Zoo-Besuch, Glace, Kino" value="${esc(r.text)}"></label></div>
+          <div class="zielrow"><span>Sterne bis zur Belohnung</span>
+            <button class="add" data-m="zm" aria-label="Weniger"><ha-icon icon="mdi:minus"></ha-icon></button><b id="fp-ziel">${ziel}</b>
+            <button class="add" data-m="zp" aria-label="Mehr"><ha-icon icon="mdi:plus"></ha-icon></button>
+            <span class="have">aktuell ${n} ${n === 1 ? "Stern" : "Sterne"}</span></div>
+          <div class="sect">Bild wählen</div>
+          <div class="thm">${themen.map((t, i) => `<button data-m="thema" data-i="${i}" class="${t.val === wahl ? "on" : ""}">${this._bildHtml(t.val, "thpic")}<span>${esc(t.name)}</span></button>`).join("")}</div>
+          <div class="sect">Oder ein Emoji</div>
+          <div class="emo">${EMOJI_WAHL.map((e) => `<button data-m="pick" data-v="${e}" class="${e === wahl ? "on" : ""}">${e}</button>`).join("")}</div>
+        </div>
+        <div class="dlg-f"><button class="btn ghost" data-m="minus">Stern abziehen</button><button class="btn ghost" data-m="reset">Auf 0</button><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
+      this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
+      prev();
     }
 
     _notePanel() {
@@ -872,7 +972,7 @@
       items.sort((a, b) => a.n - b.n);
       return `<div class="panel soon">
         <div class="ph"><ha-icon icon="mdi:timer-sand"></ha-icon><h3>Bald</h3>${cd ? `<button class="add" data-act="addcd" aria-label="Countdown hinzufügen"><ha-icon icon="mdi:plus"></ha-icon></button>` : ""}</div>
-        <ul class="cd">${items.slice(0, 6).map((i) => `<li ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}><ha-icon icon="${i.icon}"></ha-icon><span class="tt">${esc(i.title)}</span><span class="n">${i.live ? "jetzt" : inTage(i.n)}</span></li>`).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
+        <ul class="cd">${items.slice(0, 6).map((i) => `<li ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}><ha-icon icon="${i.icon}"></ha-icon><span class="tt">${esc(i.title)}</span>${!i.live && i.n >= 1 && i.n <= 7 ? `<span class="moons" title="noch ${i.n}× schlafen">${Array.from({ length: i.n }, () => `<ha-icon icon="mdi:moon-waning-crescent"></ha-icon>`).join("")}</span>` : `<span class="n">${i.live ? "jetzt" : inTage(i.n)}</span>`}</li>`).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
         ${nextAb.length ? `<div class="abf">${nextAb.map((x) => { const d = parseYmd(x.d); const st = ABFALL[x.t] || {}; return `<span class="abx" style="--c:${st.color}"><ha-icon icon="${st.icon}"></ha-icon><b>${esc(x.t)}</b> ${daysUntil(d) <= 1 ? inTage(daysUntil(d)) : `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`}</span>`; }).join("")}</div>` : ""}
       </div>`;
     }
@@ -940,24 +1040,55 @@
       }
     }
 
+    // Vor/zurück (Wischen). Vergangene Tage werden nicht angezeigt.
+    _go(dir) {
+      const today = sod(new Date());
+      let a;
+      if (this._view === "tag") { a = addDays(this._anchor, dir); if (a < today) a = today; }
+      else if (this._view === "monat") { a = new Date(this._anchor.getFullYear(), this._anchor.getMonth() + dir, 1); if (a < new Date(today.getFullYear(), today.getMonth(), 1)) a = today; }
+      else {
+        const start = this._visibleRange()[0];
+        a = dir > 0 ? addDays(sow(start), 7) : addDays(sow(start), -7);
+        if (addDays(a, 7) <= today) a = today;
+        if (dir < 0 && +this._visibleRange()[0] === +today) { this._bump(dir); return; }
+      }
+      if (+a === +this._anchor) { this._bump(dir); return; }
+      this._anchor = a; this._slide = dir; this._dayScrolled = null;
+      this._refreshCalendars(); this._render();
+    }
+    _bump(dir) {
+      const m = this.shadowRoot.querySelector(".main");
+      if (!m) return;
+      m.classList.remove("bump-l", "bump-r"); void m.offsetWidth; m.classList.add(dir > 0 ? "bump-l" : "bump-r");
+    }
+    _bindSwipe(root) {
+      let st = null;
+      root.addEventListener("pointerdown", (e) => {
+        if (!e.target.closest(".main") || e.target.closest("input,textarea")) { st = null; return; }
+        st = { x: e.clientX, y: e.clientY, t: Date.now() };
+      });
+      root.addEventListener("pointerup", (e) => {
+        if (!st) return;
+        const dx = e.clientX - st.x, dy = e.clientY - st.y, dt = Date.now() - st.t;
+        st = null;
+        if (Math.abs(dx) > 70 && Math.abs(dx) > 2 * Math.abs(dy) && dt < 900) { this._swiped = true; this._go(dx < 0 ? 1 : -1); }
+      });
+      root.addEventListener("pointercancel", () => (st = null));
+    }
+
     _click(e) {
       if (this._lpFired) { this._lpFired = false; return; }
+      if (this._swiped) { this._swiped = false; return; }
       const el = e.target.closest("[data-act]");
       if (!el) return;
       const a = el.dataset.act;
       const h = this._hass;
       switch (a) {
         case "view": this._view = el.dataset.v; lsSet("fp-view", this._view); this._refreshCalendars(); this._render(); break;
-        case "prev": case "next": {
-          const dir = a === "next" ? 1 : -1;
-          if (this._view === "tag") this._anchor = addDays(this._anchor, dir);
-          else if (this._view === "monat") this._anchor = new Date(this._anchor.getFullYear(), this._anchor.getMonth() + dir, 1);
-          else this._anchor = addDays(this._anchor, 7 * dir);
-          this._refreshCalendars(); this._render(); break;
-        }
+        case "prev": case "next": this._go(a === "next" ? 1 : -1); break;
         case "heute": this._anchor = sod(new Date()); this._dayScrolled = null; this._refreshCalendars(); this._render(); break;
         case "orient": this._orient = { auto: "hoch", hoch: "quer", quer: "auto" }[this._orient]; lsSet("fp-orient", this._orient); this._render(); break;
-        case "goday": this._anchor = parseYmd(el.dataset.day); this._view = "tag"; lsSet("fp-view", "tag"); this._refreshCalendars(); this._render(); break;
+        case "goday": this._anchor = parseYmd(el.dataset.day); if (this._anchor < sod(new Date())) this._anchor = sod(new Date()); this._view = "tag"; lsSet("fp-view", "tag"); this._refreshCalendars(); this._render(); break;
         case "person": {
           const n = el.dataset.name;
           this._hidden.has(n) ? this._hidden.delete(n) : this._hidden.add(n);
@@ -1002,6 +1133,24 @@
         }
         case "setup": this._runSetup(); break;
         case "bilder": this._openBilderListe(); break;
+        case "stargive": case "reward": case "redeem": {
+          const p = this._config.personen.find((x) => x.name === el.dataset.name);
+          if (!p || !p.sterne) break;
+          if (a === "stargive") {
+            const before = Math.max(0, parseInt(h.states[p.sterne]?.state, 10) || 0);
+            h.callService("counter", "increment", { entity_id: p.sterne });
+            this._celebrate(el, before + 1 >= this._reward(p).ziel ? 9 : 1);
+          } else if (a === "reward") this._openReward(p);
+          else {
+            const r = this._reward(p);
+            this._openConfirm(`${p.name} hat ${r.ziel} Sterne gesammelt! Belohnung «${r.text || "Belohnung"}» einlösen? Danach beginnt das Sammeln wieder bei 0.`, "Einlösen", async () => {
+              await h.callService("counter", "reset", { entity_id: p.sterne });
+              const app = this.shadowRoot.querySelector("#app");
+              if (app) this._celebrate(app.querySelector(".starsp") || app, 14);
+            });
+          }
+          break;
+        }
         case "zuhause": {
           const z = String(this._config.zuhause_link || "");
           if (!z.startsWith("/")) break;
@@ -1012,15 +1161,20 @@
       }
     }
 
-    _celebrate(el) {
+    _celebrate(el, count = 1) {
       const r = el.getBoundingClientRect();
-      const host = this.shadowRoot.querySelector("#app").getBoundingClientRect();
-      const s = document.createElement("div");
-      s.className = "burst";
-      s.style.left = `${r.left - host.left + 14}px`; s.style.top = `${r.top - host.top + r.height / 2}px`;
-      s.innerHTML = `<ha-icon icon="mdi:star"></ha-icon>`;
-      this.shadowRoot.querySelector("#app").appendChild(s);
-      setTimeout(() => s.remove(), 900);
+      const app = this.shadowRoot.querySelector("#app");
+      const host = app.getBoundingClientRect();
+      for (let k = 0; k < count; k++) {
+        const s = document.createElement("div");
+        s.className = "burst";
+        const dx = count > 1 ? (Math.random() - 0.5) * Math.min(260, r.width) : 0;
+        s.style.left = `${r.left - host.left + (count > 1 ? r.width / 2 : 14) + dx}px`; s.style.top = `${r.top - host.top + r.height / 2}px`;
+        s.style.animationDelay = `${k * 60}ms`;
+        s.innerHTML = `<ha-icon icon="mdi:star"></ha-icon>`;
+        app.appendChild(s);
+        setTimeout(() => s.remove(), 1000 + k * 60);
+      }
     }
 
     async _runSetup() {
@@ -1088,13 +1242,70 @@
         <div class="dlg-f"><button class="btn ghost" data-m="bild">${this._bildFor(e.title) ? "Bild ändern" : "Bild zuweisen"}</button><span class="hint">Termine werden in Google Kalender bearbeitet.</span><button class="btn" data-m="close">Schliessen</button></div>`);
     }
 
+    // ---------- Essen: Vorlieben und Vorschläge ----------
+    _mealPrefs() {
+      const fav = new Map(), no = new Set();
+      (this._todos[this._bildListe()] || []).forEach((i) => {
+        const m = /^Essen ([♥✗]) (.+)$/.exec(i.summary || "");
+        if (!m) return;
+        if (m[1] === "♥") fav.set(m[2].trim().toLowerCase(), { title: m[2].trim(), uid: i.uid });
+        else no.add(m[2].trim().toLowerCase());
+      });
+      return { fav, no };
+    }
+    _noItem(title) { return (this._todos[this._bildListe()] || []).find((i) => i.summary === `Essen ✗ ${title}`); }
+    async _toggleMealPref(kind, title) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste || !title) return;
+      const it = (this._todos[liste] || []).find((i) => i.summary === `Essen ${kind} ${title}`);
+      if (it) await h.callService("todo", "remove_item", { item: it.uid }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: `Essen ${kind} ${title}`, description: "essen" }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    // Bewertet alle bekannten Gerichte für einen Tag: Lieblingsessen, Wochentag-Gewohnheit, Häufigkeit, Abwechslung
+    _mealSuggest(day, n = 8, extra = []) {
+      const { fav, no } = this._mealPrefs();
+      const hist = [...(this._mealHist || []), ...extra];
+      const ds = sod(day);
+      const by = new Map();
+      hist.forEach((e) => {
+        const k = e.title.toLowerCase();
+        const o = by.get(k) || { title: e.title, cnt: 0, dow: 0, last: null, near: false };
+        if (e.d < ds) { o.cnt++; if (e.d.getDay() === ds.getDay()) o.dow++; if (!o.last || e.d > o.last) o.last = e.d; }
+        if (Math.abs(e.d - ds) <= 3 * 864e5 && +e.d !== +ds) o.near = true;
+        by.set(k, o);
+      });
+      fav.forEach((f, k) => { if (!by.has(k)) by.set(k, { title: f.title, cnt: 0, dow: 0, last: null, near: false }); });
+      const out = [];
+      by.forEach((o, k) => {
+        if (no.has(k)) return;
+        const isFav = fav.has(k);
+        let score = Math.log(1 + o.cnt) + (isFav ? 2.5 : 0);
+        let why = isFav ? "Lieblingsessen" : "";
+        if (o.cnt >= 2 && o.dow / o.cnt >= 0.4) { score += 1.5 * (o.dow / o.cnt); why = why || `oft am ${WDL[ds.getDay()]}`; }
+        if (o.last) {
+          const since = Math.round((ds - o.last) / 864e5);
+          if (since < 7) score -= 4; else if (since < 14) score -= 1.5; else { score += Math.min(since, 90) / 90; if (since >= 30) why = why || "lange nicht mehr"; }
+        }
+        if (o.near) score -= 3;
+        if (!why && o.cnt >= 3) why = "oft gekocht";
+        out.push({ title: o.title, score, why, fav: isFav, cnt: o.cnt });
+      });
+      return out.sort((x, y) => y.score - x.score).slice(0, n);
+    }
+
     _openMeal(day) {
       const ess = this._cals([this._config.essensplan])[0];
       const cur = this._meal(day);
       const label = `${WDL[day.getDay()]}, ${day.getDate()}. ${MO[day.getMonth()]}`;
       if (!ess) { this._mh = {}; this._modal(`<div class="dlg-h"><h2>Essensplan</h2></div><div class="dlg-b"><p>Der Kalender «${esc(this._config.essensplan)}» fehlt noch. Oben auf «Jetzt anlegen» tippen.</p></div><div class="dlg-f"><button class="btn" data-m="close">OK</button></div>`); return; }
-      const sug = this._suggest.filter((s) => s !== cur?.title).slice(0, 12);
       const h = this._hass;
+      const { fav } = this._mealPrefs();
+      const vors = this._mealSuggest(day, 8).filter((x) => x.title !== cur?.title);
+      const shown = new Set(vors.map((x) => x.title.toLowerCase()));
+      const favs = [...fav.values()].map((f) => f.title).filter((t) => !shown.has(t.toLowerCase()) && t !== cur?.title);
+      favs.forEach((t) => shown.add(t.toLowerCase()));
+      const rest = this._suggest.filter((x) => !shown.has(x.toLowerCase()) && x !== cur?.title).slice(0, 12);
       const save = async (v) => {
         v = (v || "").trim();
         const ev = { summary: v, dtstart: ymd(day), dtend: ymd(addDays(day, 1)) };
@@ -1106,21 +1317,59 @@
         } catch (err) { this._msg = `Essen nicht gespeichert: ${err.message || err.code || err}`; }
         this._modal("");
         this._refreshCalendars(true);
-        if (v && !this._suggest.includes(v)) this._suggest.unshift(v);
+        this._loadExtras();
       };
+      const inp = () => this.shadowRoot.querySelector("#fp-in");
+      const favBtn = () => { const t = inp().value.trim(); const b = this.shadowRoot.querySelector('[data-m="fav"]'); if (b) { const on = this._mealPrefs().fav.has(t.toLowerCase()); b.classList.toggle("on", on); b.innerHTML = `<ha-icon icon="${on ? "mdi:heart" : "mdi:heart-outline"}"></ha-icon>${on ? "Lieblingsessen" : "Als Lieblingsessen"}`; } };
       this._mh = {
-        save: () => save(this.shadowRoot.querySelector("#fp-in").value),
+        save: () => save(inp().value),
         del: () => save(""),
-        pick: (el) => { this.shadowRoot.querySelector("#fp-in").value = el.dataset.v; save(el.dataset.v); },
+        pick: (el) => { inp().value = el.dataset.v; save(el.dataset.v); },
+        fav: async () => { const t = inp().value.trim(); if (!t) return; await this._toggleMealPref("♥", t); favBtn(); },
+        nope: async (el) => { const t = el.dataset.v; await this._toggleMealPref("✗", t); el.closest(".mchip")?.remove(); },
+        fill: () => this._openFillWeek(),
       };
+      const chip = (x, why) => `<span class="mchip ${x.fav ? "fav" : ""}"><button data-m="pick" data-v="${esc(x.title)}">${x.fav ? '<ha-icon icon="mdi:heart"></ha-icon>' : ""}${esc(x.title)}${why ? `<small>${esc(why)}</small>` : ""}</button><button class="nope" data-m="nope" data-v="${esc(x.title)}" aria-label="${esc(x.title)} nicht mehr vorschlagen" title="Nicht mehr vorschlagen"><ha-icon icon="mdi:close"></ha-icon></button></span>`;
       this._modal(`
         <div class="dlg-h"><ha-icon icon="mdi:silverware-fork-knife"></ha-icon><h2>Essen am ${label}</h2></div>
         <div class="dlg-b">
-          <input id="fp-in" type="text" autofocus placeholder="Was gibt es?" value="${esc(cur?.title || "")}" enterkeyhint="done">
-          ${sug.length ? `<div class="sug"><span class="lbl">Schon gekocht</span>${sug.map((s) => `<button data-m="pick" data-v="${esc(s)}">${esc(s)}</button>`).join("")}</div>` : ""}
+          <div class="mealin"><input id="fp-in" type="text" autofocus placeholder="Was gibt es?" value="${esc(cur?.title || "")}" enterkeyhint="done">
+            <button class="btn ghost favbtn" data-m="fav"></button></div>
+          ${vors.length ? `<div class="sug"><span class="lbl">Vorschläge für ${WDL[day.getDay()]}</span>${vors.map((x) => chip(x, x.why)).join("")}</div>` : `<p class="hint2">Noch keine Vorschläge: Sobald ein paar Wochen geplant sind, lernt der Planer eure Gewohnheiten. Lieblingsessen mit dem Herz markieren.</p>`}
+          ${favs.length ? `<div class="sug"><span class="lbl">Weitere Lieblingsessen</span>${favs.map((t) => chip({ title: t, fav: true }, "")).join("")}</div>` : ""}
+          ${rest.length ? `<div class="sug"><span class="lbl">Schon gekocht</span>${rest.map((t) => chip({ title: t }, "")).join("")}</div>` : ""}
         </div>
-        <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
-      this.shadowRoot.querySelector("#fp-in").addEventListener("keydown", (e) => { if (e.key === "Enter") this._mh.save(); });
+        <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<button class="btn ghost" data-m="fill"><ha-icon icon="mdi:auto-fix"></ha-icon>Woche füllen</button><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
+      this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
+      favBtn();
+      inp().addEventListener("input", favBtn);
+      inp().addEventListener("keydown", (e) => { if (e.key === "Enter") this._mh.save(); });
+    }
+
+    // Leere Tage der nächsten 7 Tage mit Vorschlägen füllen (mit Vorschau)
+    _openFillWeek() {
+      const ess = this._cals([this._config.essensplan])[0];
+      const h = this._hass;
+      const today = sod(new Date());
+      const plan = [], extra = [];
+      for (let k = 0; k < 7; k++) {
+        const d = addDays(today, k);
+        if (this._meal(d) || (this._mealHist || []).some((e) => +e.d === +d)) continue;
+        const best = this._mealSuggest(d, 6, extra).find((x) => !plan.some((p) => p.title.toLowerCase() === x.title.toLowerCase()));
+        if (best) { plan.push({ d, title: best.title }); extra.push({ title: best.title, d }); }
+      }
+      if (!plan.length) { this._openConfirm(this._mealHist?.length ? "Die nächsten 7 Tage sind schon geplant." : "Noch zu wenig Erfahrung: Plane zuerst ein paar Essen von Hand oder markiere Lieblingsessen.", "OK", async () => {}); return; }
+      this._mh = {
+        ok: async () => {
+          for (const p of plan) { try { await h.callWS({ type: "calendar/event/create", entity_id: ess, event: { summary: p.title, dtstart: ymd(p.d), dtend: ymd(addDays(p.d, 1)) } }); } catch (e) { /* weiter */ } }
+          this._modal(""); this._refreshCalendars(true); this._loadExtras();
+        },
+      };
+      this._modal(`
+        <div class="dlg-h"><ha-icon icon="mdi:auto-fix"></ha-icon><h2>Vorschlag für die Woche</h2></div>
+        <div class="dlg-b"><ul class="fillist">${plan.map((p) => `<li><span>${WD[p.d.getDay()]} ${p.d.getDate()}.${p.d.getMonth() + 1}.</span><b>${esc(p.title)}</b></li>`).join("")}</ul>
+          <p class="hint2">Bereits geplante Tage bleiben, wie sie sind. Einzelne Essen kannst du danach wie gewohnt ändern.</p></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="ok">Übernehmen</button></div>`);
     }
 
     _openText({ title, value = "", placeholder = "", max = 255, multiline = false, clear = false, repeat = false, save }) {
@@ -1483,6 +1732,66 @@
   .hoch .side .shop { grid-column:2; grid-row:1 / span 2; }
   .hoch .side .chores { grid-column:3; grid-row:1 / span 2; }
   .hoch .side.nochores { grid-template-columns:1fr 1.3fr; }
+  .hoch .side .starsp { grid-column:3; grid-row:1 / span 2; }
+  .hoch .side.both .chores { grid-row:1; } .hoch .side.both .starsp { grid-row:2; }
+  /* Sterne */
+  .starsp { overflow:hidden; }
+  .stlist { display:flex; flex-direction:column; gap:10px; overflow:auto; min-height:0; }
+  .strow { display:grid; grid-template-columns:1fr; gap:4px; padding:8px; border-radius:12px; background:color-mix(in srgb, var(--c) 8%, var(--paper)); }
+  .strow.done { background:color-mix(in srgb, #f2b400 22%, var(--paper)); box-shadow:inset 0 0 0 2px #f2b400; }
+  .sthead { display:flex; align-items:center; gap:8px; }
+  .sthead .av { margin-right:auto; }
+  .stgive { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:#fff1bf; color:#c48a00; }
+  .dark .stgive { background:#3d3311; color:#ffd866; }
+  .stgive ha-icon { --mdc-icon-size:24px; }
+  .stgive:active { transform:scale(.92); }
+  .sttrack { display:flex; flex-wrap:wrap; gap:1px; align-items:center; color:var(--ink3); }
+  .sttrack ha-icon { --mdc-icon-size:20px; }
+  .sttrack ha-icon.on { color:#f2b400; }
+  .stbar { flex:1; height:12px; border-radius:6px; background:var(--soft); overflow:hidden; min-width:80px; }
+  .stbar span { display:block; height:100%; background:#f2b400; border-radius:6px; }
+  .stnum { font-weight:700; font-size:13px; margin-left:8px; color:var(--ink2); }
+  .streward { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; }
+  .rwpic { width:44px; height:30px; border-radius:7px; overflow:hidden; flex:none; display:grid; place-items:center; font-size:22px; background:var(--paper); }
+  .rwpic img { width:100%; height:100%; object-fit:cover; display:block; }
+  .rwpic.empty { color:var(--ink3); } .rwpic ha-icon { --mdc-icon-size:20px; }
+  .rwtxt { display:flex; flex-direction:column; min-width:0; line-height:1.2; }
+  .rwtxt small { color:var(--ink2); font-weight:500; }
+  .zielrow { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--ink2); flex-wrap:wrap; }
+  .zielrow b { font-size:22px; color:var(--ink); min-width:28px; text-align:center; }
+  .zielrow .have { margin-left:auto; }
+  .bigpic ha-icon { --mdc-icon-size:40px; }
+  /* Mond-Countdown */
+  .moons { display:inline-flex; gap:0; color:#7a6cc9; flex:none; }
+  .dark .moons { color:#b9b0ff; }
+  .moons ha-icon { --mdc-icon-size:15px; }
+  /* Wischen */
+  .main { touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+  .main img { -webkit-user-drag:none; user-drag:none; }
+  .main.slide-l > * { animation:slidel .22s ease-out; }
+  .main.slide-r > * { animation:slider .22s ease-out; }
+  .main.bump-l > * { animation:bumpl .25s ease-out; }
+  .main.bump-r > * { animation:bumpr .25s ease-out; }
+  @keyframes slidel { from { transform:translateX(40px); opacity:.3; } }
+  @keyframes slider { from { transform:translateX(-40px); opacity:.3; } }
+  @keyframes bumpl { 40% { transform:translateX(-12px); } }
+  @keyframes bumpr { 40% { transform:translateX(12px); } }
+  /* Essen */
+  .mealin { display:flex; gap:8px; align-items:stretch; }
+  .mealin input { flex:1; }
+  .favbtn { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .favbtn.on { color:#d6336c; border-color:#d6336c; }
+  .favbtn ha-icon { --mdc-icon-size:18px; }
+  .mchip { display:inline-flex; align-items:stretch; border-radius:20px; background:var(--soft); overflow:hidden; }
+  .mchip > button:first-child { padding:6px 4px 6px 12px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:5px; }
+  .mchip small { font-weight:500; color:var(--ink2); font-size:11.5px; margin-left:4px; }
+  .mchip.fav ha-icon { --mdc-icon-size:14px; color:#d6336c; }
+  .mchip .nope { padding:0 9px 0 4px; color:var(--ink3); display:grid; place-items:center; }
+  .mchip .nope ha-icon { --mdc-icon-size:14px; }
+  .dlg-f .btn ha-icon { --mdc-icon-size:18px; margin-right:4px; vertical-align:-3px; }
+  .fillist { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .fillist li { display:flex; gap:12px; padding:8px 10px; border-radius:10px; background:var(--soft); font-size:15px; }
+  .fillist li span { width:70px; color:var(--ink2); font-weight:600; }
 
   /* Avatare */
   .av { display:flex; flex-direction:column; align-items:center; gap:6px; }
@@ -1693,7 +2002,7 @@
   .cper li .box { border-color:var(--c); width:20px; height:20px; }
   .cper li.done .box { background:var(--c); color:#fff; } .cper li.done .box ha-icon { --mdc-icon-size:14px; }
   .cper li.done .tt { color:var(--ink3); text-decoration:line-through; }
-  .burst { position:absolute; pointer-events:none; color:#f2b400; animation:burst .9s ease-out forwards; z-index:5; }
+  .burst { position:absolute; pointer-events:none; color:#f2b400; animation:burst .9s ease-out both; z-index:5; }
   .burst ha-icon { --mdc-icon-size:30px; }
   @keyframes burst { 0% { transform:translate(-50%,-50%) scale(.4); opacity:1; } 70% { opacity:1; } 100% { transform:translate(-50%,-160%) scale(1.5) rotate(40deg); opacity:0; } }
 
@@ -1768,6 +2077,7 @@
   .cropstage img { position:absolute; left:0; top:0; max-width:none; pointer-events:none; transform-origin:0 0; }
   .cropmask { position:absolute; inset:0; border-radius:50%; box-shadow:0 0 0 999px rgba(12,18,26,.55); border:2px solid #fff; pointer-events:none; }
   .cropzoom { display:flex; align-items:center; gap:10px; width:280px; }
+  .zielrow .add, .cropzoom .add { flex:none; }
   .cropzoom input { flex:1; padding:0; border:0; background:none; accent-color:var(--accent); }
   .bigav { width:180px; height:180px; border-radius:50%; padding:5px; background:var(--c); }
   .bigav img, .bigav .ini { width:100%; height:100%; border-radius:50%; border:5px solid var(--paper); object-fit:cover; display:grid; place-items:center; font-family:var(--f-disp); font-size:72px; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 15%, var(--paper)); }

@@ -24,15 +24,18 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 
 ## Was er kann
 
-- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto. Auf grossen Displays zeigt die Woche automatisch mehr Tage.
+- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto. Die Woche beginnt mit heute, vergangene Tage werden nicht angezeigt. Auf grossen Displays zeigt sie automatisch mehr Tage.
+- **Wischen** nach links oder rechts blättert zur nächsten oder vorherigen Woche (bzw. Tag, Monat)
 - **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen.
-- **Essensplan**: pro Tag ein Gericht, mit Vorschlägen aus den letzten Wochen
+- **Essensplan**: pro Tag ein Gericht. Vorschläge lernen eure Gewohnheiten (z. B. Pizza am Freitag), berücksichtigen Lieblingsessen (Herz) und Abwechslung; «Woche füllen» plant die leeren Tage mit einem Tipp
 - **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
 - **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
+- **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung (z. B. Zoo-Besuch) mit Bild und Ziel; Sterne gibt es per Tipp oder über die Ämtli
+- **Mond-Countdown** für Kinder: «noch 3× schlafen» bis zum Geburtstag oder zu den Ferien
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
 - Nachtdienste über Mitternacht erscheinen nur einmal («18:00–06:00»)
-- Hoch- und Querformat, helles und dunkles Design
+- Hoch- und Querformat, helles und dunkles Design (wahlweise automatisch nach Sonnenuntergang)
 
 Termine werden nur angezeigt; bearbeitet werden sie wie gewohnt im Kalender (z. B. Google Kalender).
 
@@ -106,6 +109,10 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | Countdown hinzufügen | «+» bei «Bald» |
 | Eintrag bei «Bald» ausblenden | Eintrag antippen |
 | Hoch- oder Querformat fest einstellen | Knopf oben rechts (Auto / Hoch / Quer) |
+| Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
+| Stern geben | Stern-Knopf beim Kind |
+| Belohnung festlegen oder einlösen | auf die Sterne oder die Belohnung tippen |
+| Lieblingsessen markieren | im Essen-Fenster auf das Herz tippen; ✕ bei einem Vorschlag = nicht mehr vorschlagen |
 
 ## Einstellungen der Karte
 
@@ -121,6 +128,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | `schulferien_kalender` | Kalender mit ganztägigen Ferienterminen, z. B. ein iCal der Schule |
 | `feiertage` | Auswahl der Feiertage (siehe Beispiel-Dashboard); `[]` blendet alle aus |
 | `eigene_feiertage` | zusätzliche Tage `{datum, name}` |
+| `dunkel` | `auto` (wie Home Assistant, Standard), `sonne` (dunkel zwischen Sonnenuntergang und -aufgang), `hell` oder `dunkel` |
 | `zuhause_link`, `zuhause_name` | Knopf oben, der zu einem anderen Dashboard wechselt, z. B. `zuhause_link: /dashboard-zuhause` (Pfad aus der Adresszeile). Ohne `zuhause_link` kein Knopf |
 
 ### Abfall

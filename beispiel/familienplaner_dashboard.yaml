@@ -73,6 +73,9 @@ views:
         abfall: sensor.familienplaner_abfall
         notiz: input_text.fp_notiz
 
+        # Design: auto (wie Home Assistant), sonne (dunkel nach Sonnenuntergang), hell, dunkel
+        dunkel: auto
+
         # Optional: Knopf oben, der zu einem anderen Dashboard wechselt (Pfad aus der Adresszeile)
         # zuhause_link: /dashboard-zuhause
         # zuhause_name: Zuhause
