@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.5.0";
+  const VERSION = "1.6.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -165,6 +165,18 @@
     ["Länger aufbleiben", "🌙", 6], ["Kuchen backen", "🧁", 8], ["Pizza essen", "🍕", 10], ["Freund einladen", "👫", 10],
     ["Spielplatz", "🛝", 6], ["Badi", "🏊", 10], ["Velotour", "🚲", 10], ["Kino", "🎬", 15], ["Zoo", "🦁", 20], ["Ausflug", "🚂", 20],
   ];
+  // Kinder: Vorlagen für Tagesaufgaben [Text, Bild, Zeit] und grosse Ziele [Text, Bild, Anzahl Tage]
+  const TAGES_VORLAGEN = [
+    ["Zähne putzen", "🪥", "morgen"], ["Anziehen", "👕", "morgen"], ["Bett machen", "🛏️", "morgen"], ["Frühstück essen", "🥣", "morgen"],
+    ["Znüni einpacken", "🍎", "morgen"], ["Schuhe anziehen", "👟", "morgen"], ["Hände waschen", "🧼", "tag"], ["Haustiere füttern", "🐰", "tag"],
+    ["Pflanzen giessen", "🪴", "tag"], ["Tisch decken", "🍽️", "abend"], ["Aufräumen", "🧸", "abend"], ["Zähne putzen", "🪥", "abend"],
+    ["Pyjama anziehen", "🌙", "abend"], ["Buch anschauen", "📚", "abend"], ["Baden / Duschen", "🛁", "abend"],
+  ];
+  const LANG_VORLAGEN = [
+    ["Töpfchentraining", "🚽", 14], ["Schläft im eigenen Bett", "🛏️", 14], ["Trocken in der Nacht", "🌙", 14], ["Ohne Nuggi", "🍼", 14],
+    ["Selber anziehen", "👕", 10], ["Allein Zähne putzen", "🪥", 14], ["Schuhe selber binden", "👟", 10], ["Velo ohne Stützräder", "🚲", 10], ["Schwimmen üben", "🏊", 10],
+  ];
+  const KIND_EMOJIS = ["🪥", "👕", "🛏️", "🥣", "🍎", "👟", "🧼", "🐰", "🪴", "🍽️", "🧸", "🌙", "📚", "🛁", "🚽", "🍼", "🚲", "🏊", "🎒", "🧹", "🧺", "🗑️", "🎹", "⚽", "🖍️", "🙏", "😴", "🥦", "💧", "⭐"];
   const EMOJI_WAHL = ["🧸", "🏫", "🧩", "🌲", "🤸", "🏊", "⚽", "🩰", "🐴", "🎵", "🎨", "🦷", "🩺", "✂️", "🎂", "🎉", "👵", "👴", "🦁", "🎬", "📚", "🚲", "⛷️", "🏖️", "🚗", "🚆", "🛝", "🌙", "🍎", "🛒", "🐶", "⭐", "🍭", "🍫", "🍦", "🍟", "🍕", "🧁", "🎈", "🫧", "📖", "🖍️", "🧩", "🦖", "🎧", "👫", "🏊", "🎁"];
 
   const WXDE = {
@@ -442,7 +454,7 @@
     _bildListe() { return this._findByName("todo", this._config.bilderliste); }
     _customBilder() {
       const id = this._bildListe();
-      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
+      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen)/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
         .sort((a, b) => b.key.length - a.key.length);
     }
     _themaFor(title) { return THEMEN.find((t) => t.re.test(title || "")) || null; }
@@ -645,9 +657,12 @@
       this._farbenAnwenden();
       const root = this.shadowRoot;
       if (!root.querySelector("#app")) {
-        root.innerHTML = `<style>${STYLE}</style><div id="app" lang="de"></div><div id="modal"></div>`;
+        root.innerHTML = `<style>${STYLE}</style><div id="app" lang="de"></div><div id="kid"></div><div id="party"></div><div id="modal"></div>`;
         root.querySelector("#app").addEventListener("click", (e) => this._click(e));
         root.querySelector("#modal").addEventListener("click", (e) => this._modalClick(e));
+        root.querySelector("#kid").addEventListener("click", (e) => this._kidClick(e));
+        root.querySelector("#kid").addEventListener("pointerdown", () => this._kidTouch());
+        root.querySelector("#party").addEventListener("click", () => this._partyClose());
         this._bindLongPress(root.querySelector("#app"));
         this._bindSwipe(root.querySelector("#app"));
       }
@@ -668,6 +683,7 @@
       app.querySelectorAll("[data-scroll]").forEach((el) => { if (scrolls[el.dataset.scroll] != null) el.scrollTop = scrolls[el.dataset.scroll]; });
       if (this._slide) { const m = app.querySelector(".main"); if (m) m.classList.add(this._slide > 0 ? "slide-l" : "slide-r"); this._slide = 0; }
       if (this._view === "woche") requestAnimationFrame(() => this._fitWeek());
+      if (this._kidOpen) this._renderKid();
       if (this._needScrollNow) { this._needScrollNow = false; const nl = app.querySelector(".nowline"); if (nl) nl.closest("[data-scroll]").scrollTop = Math.max(0, nl.offsetTop - 120); }
     }
 
@@ -998,7 +1014,7 @@
             ? `<span class="stbar"><span style="width:${Math.round((shown / r.ziel) * 100)}%"></span></span><span class="stnum">${n} / ${r.ziel}</span>`
             : Array.from({ length: r.ziel }, (_, k) => `<ha-icon class="${k < shown ? "on" : ""}" icon="${k < shown ? "mdi:star" : "mdi:star-outline"}"></ha-icon>`).join("");
           return `<div class="strow ${done ? "done" : ""}" style="--c:${p.farbe}">
-            <div class="sthead">${this._avatar(p, "xs")}
+            <div class="sthead"><button class="kidopen" data-act="kidview" data-name="${esc(p.name)}" aria-label="Kinder-Ansicht ${esc(p.name)}">${this._kidAvatar(p, 30)}<span>${esc(p.name)}</span>${this._kid(p).streak.n >= 2 ? `<span class="fire">🔥${this._kid(p).streak.n}</span>` : ""}<ha-icon icon="mdi:chevron-right"></ha-icon></button>
               <button class="stgive" data-act="stargive" data-name="${esc(p.name)}" aria-label="Stern für ${esc(p.name)}"><ha-icon icon="mdi:star-plus"></ha-icon></button></div>
             <button class="sttrack" data-act="reward" data-name="${esc(p.name)}">${track}</button>
             <button class="streward" data-act="${done ? "redeem" : "reward"}" data-name="${esc(p.name)}">
@@ -1009,6 +1025,329 @@
         }).join("")}</div>
       </div>`;
     }
+    // ================= Kinder: Aufgaben, grosse Ziele, Sticker =================
+    _kidSettings() {
+      const it = (this._todos[this._bildListe()] || []).find((i) => i.summary === "Sterne-Einstellungen");
+      let d = {};
+      try { d = JSON.parse(it?.description || "{}") || {}; } catch (e) { d = {}; }
+      return { bestaetigen: !!d.bestaetigen, pin: /^\d{4}$/.test(d.pin || "") ? d.pin : "", ton: d.ton !== false, uid: it?.uid };
+    }
+    async _saveKidSettings(v) {
+      const h = this._hass, liste = this._bildListe();
+      const cur = this._kidSettings();
+      const description = JSON.stringify({ bestaetigen: v.bestaetigen, pin: v.pin, ton: v.ton });
+      if (cur.uid) await h.callService("todo", "update_item", { item: cur.uid, description }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: "Sterne-Einstellungen", description }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    _kidItem(p) { return (this._todos[this._bildListe()] || []).find((i) => i.summary === `Kind ${p.name}`); }
+    _kid(p) {
+      let d = null;
+      const it = this._kidItem(p);
+      if (it) { try { d = JSON.parse(it.description || "{}"); } catch (e) { d = null; } }
+      const today = ymd(new Date());
+      if (!d || typeof d !== "object") d = {};
+      if (!Array.isArray(d.aufgaben)) d.aufgaben = [
+        { id: "a1", text: "Zähne putzen", bild: "🪥", zeit: "morgen" }, { id: "a2", text: "Anziehen", bild: "👕", zeit: "morgen" },
+        { id: "a3", text: "Zähne putzen", bild: "🪥", zeit: "abend" }, { id: "a4", text: "Pyjama anziehen", bild: "🌙", zeit: "abend" }];
+      if (!Array.isArray(d.ziele)) d.ziele = [];
+      if (!Array.isArray(d.sticker)) d.sticker = [];
+      if (!d.streak) d.streak = { n: 0, last: "" };
+      if (!d.heute || d.heute.datum !== today) d.heute = { datum: today, done: {} };
+      // Flamme erlischt, wenn gestern nicht alles erledigt war
+      const yest = ymd(addDays(new Date(), -1));
+      if (d.streak.last && d.streak.last !== today && d.streak.last !== yest) d.streak = { n: 0, last: "" };
+      return d;
+    }
+    async _saveKid(p, d) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste) return;
+      const it = this._kidItem(p);
+      const description = JSON.stringify(d);
+      if (it) await h.callService("todo", "update_item", { item: it.uid, description }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: `Kind ${p.name}`, description }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    _stars(p) { return Math.max(0, parseInt(this._hass.states[p.sterne]?.state, 10) || 0); }
+    async _addStars(p, n) { for (let k = 0; k < n; k++) await this._hass.callService("counter", "increment", { entity_id: p.sterne }); }
+    _kidAvatar(p, size) {
+      const img = this._photo(p);
+      return `<span class="kav" style="--c:${p.farbe};width:${size}px;height:${size}px">${img ? `<img src="${esc(img)}" alt="">` : `<span>${esc(p.name[0])}</span>`}</span>`;
+    }
+    // Eltern-Bestätigung: mit PIN (falls gesetzt), sonst einfache Rückfrage
+    _parent(text, ok) {
+      const st = this._kidSettings();
+      if (!st.pin) {
+        this._mh = { ok: async () => { this._modal(""); await ok(); } };
+        this._modal(`<div class="dlg-b"><p class="q">${esc(text)}</p></div><div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="ok">Bestätigen</button></div>`);
+        return;
+      }
+      let code = "";
+      const draw = () => { const el = this.shadowRoot.querySelector("#fp-pin"); if (el) el.innerHTML = [0, 1, 2, 3].map((k) => `<span class="${k < code.length ? "on" : ""}"></span>`).join(""); };
+      this._mh = {
+        key: async (el) => {
+          const v = el.dataset.v;
+          if (v === "del") code = code.slice(0, -1); else if (code.length < 4) code += v;
+          draw();
+          if (code.length === 4) {
+            if (code === st.pin) { this._modal(""); await ok(); }
+            else { code = ""; draw(); const f = this.shadowRoot.querySelector("#modal .flash"); if (f) f.textContent = "Falscher Code"; }
+          }
+        },
+      };
+      this._modal(`<div class="dlg-h"><ha-icon icon="mdi:lock-outline"></ha-icon><h2>Eltern-Code</h2></div>
+        <div class="dlg-b center"><p class="hint2">${esc(text)}</p><div id="fp-pin" class="pindots"></div><div class="flash"></div>
+          <div class="pinpad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"].map((k) => k ? `<button data-m="key" data-v="${k}">${k === "del" ? "⌫" : k}</button>` : "<span></span>").join("")}</div></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button></div>`);
+      draw();
+    }
+
+    _openKid(p) {
+      if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
+      this._kidOpen = p.name; this._kidTab = "heute";
+      this._renderKid(); this._kidTouch();
+    }
+    _closeKid() { this._kidOpen = null; clearTimeout(this._kidT); const k = this.shadowRoot.querySelector("#kid"); if (k) { k.className = ""; k.innerHTML = ""; } }
+    _kidTouch() { clearTimeout(this._kidT); this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, 60000); }
+    _jar(n, ziel) {
+      const r = Math.max(0, Math.min(1, n / Math.max(1, ziel)));
+      const top = 40, bottom = 196, hgt = (bottom - top) * r;
+      return `<svg class="jar" viewBox="0 0 160 210" aria-label="${n} von ${ziel} Sternen">
+        <defs><clipPath id="jarclip"><path d="M40 30 h80 v14 c22 10 30 28 30 50 v86 c0 14 -10 24 -24 24 h-92 c-14 0 -24 -10 -24 -24 v-86 c0 -22 8 -40 30 -50 z"/></clipPath>
+          <linearGradient id="jarfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84d"/><stop offset="1" stop-color="#f2a900"/></linearGradient></defs>
+        <g clip-path="url(#jarclip)"><rect x="0" y="0" width="160" height="210" fill="var(--jarbg)"/>
+          <rect x="0" y="${bottom - hgt + 8}" width="160" height="${hgt + 10}" fill="url(#jarfill)"/>
+          ${Array.from({ length: Math.min(n, 30) }, (_, k) => { const x = 22 + ((k * 37) % 116), y = bottom - 10 - ((k * 23) % Math.max(12, hgt - 14)); return y > bottom - hgt + 10 ? `<text x="${x}" y="${y}" font-size="16" fill="#fff8d6">★</text>` : ""; }).join("")}</g>
+        <path d="M40 30 h80 v14 c22 10 30 28 30 50 v86 c0 14 -10 24 -24 24 h-92 c-14 0 -24 -10 -24 -24 v-86 c0 -22 8 -40 30 -50 z" fill="none" stroke="var(--jarline)" stroke-width="5"/>
+        <rect x="34" y="16" width="92" height="18" rx="6" fill="var(--jarlid)"/>
+      </svg>`;
+    }
+    _renderKid() {
+      const k = this.shadowRoot.querySelector("#kid");
+      const p = this._config.personen.find((x) => x.name === this._kidOpen);
+      if (!k || !p) return;
+      const app = this.shadowRoot.querySelector("#app");
+      k.className = `kidview ${app?.classList.contains("dark") ? "dark" : ""}`;
+      const d = this._kid(p), st = this._kidSettings(), r = this._reward(p), n = this._stars(p);
+      const today = ymd(new Date());
+      const hour = new Date().getHours();
+      const zeitIcon = { morgen: "☀️", abend: "🌙", tag: "🕐" };
+      const waiting = Object.values(d.heute.done).filter((v) => v === "wait").length + d.ziele.filter((z) => z.wait === today).length;
+      const card = (a) => {
+        const state = d.heute.done[a.id];
+        return `<button class="kcard ${state === "ok" ? "ok" : state === "wait" ? "wait" : ""}" data-k="task" data-id="${esc(a.id)}">
+          <span class="kpic">${esc(a.bild)}</span><span class="ktxt">${esc(a.text)}</span>
+          <span class="kstate">${state === "ok" ? "✓" : state === "wait" ? "⏳" : zeitIcon[a.zeit] || ""}</span></button>`;
+      };
+      const groups = [["morgen", "Am Morgen"], ["tag", "Am Tag"], ["abend", "Am Abend"]].map(([z, t]) => [z, t, d.aufgaben.filter((a) => (a.zeit || "tag") === z)]).filter((g) => g[2].length);
+      // aktuelle Tageszeit zuerst
+      if (hour >= 16) groups.sort((a, b) => (b[0] === "abend") - (a[0] === "abend"));
+      const zielCard = (z) => {
+        const doneToday = z.last === today || z.wait === today;
+        const dots = Array.from({ length: z.ziel }, (_, i) => `<span class="${i < z.n ? "on" : ""}"></span>`).join("");
+        return `<div class="kgoal ${z.fertig ? "fertig" : ""}">
+          <span class="kpic">${esc(z.bild)}</span>
+          <div class="kgbody"><b>${esc(z.text)}</b><div class="kdots">${dots}</div><small>${z.fertig ? "Geschafft! 🏆" : `${z.n} von ${z.ziel}`}</small></div>
+          ${z.fertig ? "" : `<button class="kgbtn ${doneToday ? "done" : ""}" data-k="goal" data-id="${esc(z.id)}" ${doneToday ? "disabled" : ""}>${z.wait === today ? "⏳" : doneToday ? "✓ Heute" : "Heute geschafft"}</button>`}
+        </div>`;
+      };
+      const done = n >= r.ziel;
+      k.innerHTML = `
+        <div class="kwrap" style="--c:${p.farbe}">
+          <header class="khead">${this._kidAvatar(p, 84)}<div class="kname">${esc(p.name)}${d.streak.n >= 2 ? `<span class="fire big">🔥 ${d.streak.n}</span>` : ""}</div>
+            <button class="kbtn" data-k="album" aria-label="Sticker-Album">📒</button>
+            <button class="kbtn" data-k="settings" aria-label="Einstellungen für Eltern">⚙️</button>
+            <button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
+          <div class="kmain">
+            <section class="kleft">
+              ${this._jar(Math.min(n, r.ziel), r.ziel)}
+              <div class="kcount">${n} ★</div>
+              <button class="kreward ${done ? "ready" : ""}" data-k="${done ? "redeem" : "reward"}">
+                ${r.bild ? this._bildHtml(r.bild, "krpic") : `<span class="krpic">🎁</span>`}
+                <span>${done ? `<b>Geschafft!</b>${esc(r.text || "Belohnung")}` : r.text ? `${esc(r.text)}<small>noch ${r.ziel - n} ★</small>` : "Belohnung wählen"}</span></button>
+              ${waiting ? `<button class="kconfirm" data-k="confirm">✓ Eltern bestätigen (${waiting})</button>` : ""}
+            </section>
+            <section class="kright">
+              ${this._kidTab === "album" ? `
+                <h3 class="ksect">Meine Sticker</h3>
+                ${d.sticker.length ? `<div class="kalbum">${d.sticker.slice().reverse().map((x) => `<div class="kst">${this._bildHtml(x.bild, "kstpic")}<span>${esc(x.text)}</span><small>${esc(x.datum.slice(8, 10) + "." + x.datum.slice(5, 7) + ".")}</small></div>`).join("")}</div>` : `<p class="khint">Noch keine Sticker. Für jede Belohnung und jedes grosse Ziel gibt es einen.</p>`}
+                <button class="kback" data-k="tab" data-v="heute">← Zurück</button>` : `
+                ${groups.map(([z, t, list]) => `<h3 class="ksect">${zeitIcon[z]} ${t}</h3><div class="kcards">${list.map(card).join("")}</div>`).join("") || `<p class="khint">Noch keine Aufgaben. Eltern: ⚙️ antippen.</p>`}
+                ${d.ziele.length ? `<h3 class="ksect">🏆 Grosse Ziele</h3><div class="kgoals">${d.ziele.map(zielCard).join("")}</div>` : ""}`}
+            </section>
+          </div>
+        </div>`;
+    }
+    async _kidClick(e) {
+      const el = e.target.closest("[data-k]");
+      if (!el) return;
+      const p = this._config.personen.find((x) => x.name === this._kidOpen);
+      if (!p) return;
+      const k = el.dataset.k, st = this._kidSettings(), today = ymd(new Date());
+      if (k === "close") return this._closeKid();
+      if (k === "tab") { this._kidTab = el.dataset.v; return this._renderKid(); }
+      if (k === "album") { this._kidTab = this._kidTab === "album" ? "heute" : "album"; return this._renderKid(); }
+      if (k === "settings") return this._parent("Einstellungen für Eltern", () => this._openKidSettings(p));
+      if (k === "reward") return this._parent("Belohnung festlegen", () => this._openReward(p));
+      if (k === "redeem") return this._redeem(p);
+      if (k === "confirm") return this._parent("Erledigte Aufgaben bestätigen", () => this._confirmKid(p));
+      const d = this._kid(p);
+      if (k === "task") {
+        const id = el.dataset.id;
+        const cur = d.heute.done[id];
+        if (cur === "ok" || cur === "wait") return;
+        d.heute.done[id] = st.bestaetigen ? "wait" : "ok";
+        this._celebrate(el, st.bestaetigen ? 0 : 1);
+        el.classList.add(st.bestaetigen ? "wait" : "ok");
+        await this._saveKid(p, d);
+        if (!st.bestaetigen) { await this._addStars(p, 1); await this._checkStreak(p); this._checkGoalReached(p); }
+        return;
+      }
+      if (k === "goal") {
+        const z = d.ziele.find((x) => x.id === el.dataset.id);
+        if (!z || z.last === today || z.wait === today || z.fertig) return;
+        if (st.bestaetigen) z.wait = today;
+        else this._goalStep(z, today);
+        await this._saveKid(p, d);
+        if (!st.bestaetigen) { await this._addStars(p, 1); this._celebrate(el, 3); if (z.fertig) this._goalDone(p, z); else this._checkGoalReached(p); }
+      }
+    }
+    _goalStep(z, today) { z.n = Math.min(z.ziel, (z.n || 0) + 1); z.last = today; delete z.wait; if (z.n >= z.ziel) z.fertig = true; }
+    async _goalDone(p, z) {
+      const d = this._kid(p);
+      d.sticker.push({ bild: z.bild, text: z.text, datum: ymd(new Date()) });
+      await this._saveKid(p, d);
+      this._party(p, z.bild, `${z.text}: geschafft!`);
+    }
+    async _confirmKid(p) {
+      const d = this._kid(p), today = ymd(new Date());
+      let add = 0;
+      Object.keys(d.heute.done).forEach((id) => { if (d.heute.done[id] === "wait") { d.heute.done[id] = "ok"; add++; } });
+      const finished = [];
+      d.ziele.forEach((z) => { if (z.wait === today) { this._goalStep(z, today); add++; if (z.fertig) finished.push(z); } });
+      await this._saveKid(p, d);
+      if (add) await this._addStars(p, add);
+      await this._checkStreak(p);
+      for (const z of finished) await this._goalDone(p, z);
+      if (!finished.length) this._checkGoalReached(p);
+    }
+    // Bonus: alle Tagesaufgaben an 5 Tagen hintereinander erledigt
+    async _checkStreak(p) {
+      const d = this._kid(p), today = ymd(new Date()), yest = ymd(addDays(new Date(), -1));
+      if (!d.aufgaben.length || d.streak.last === today) return;
+      if (!d.aufgaben.every((a) => d.heute.done[a.id] === "ok")) return;
+      d.streak = { n: d.streak.last === yest ? d.streak.n + 1 : 1, last: today };
+      const bonus = d.streak.n % 5 === 0;
+      await this._saveKid(p, d);
+      if (bonus) { await this._addStars(p, 1); this._party(p, "🔥", `${d.streak.n} Tage am Stück! +1 ★`); }
+    }
+    _checkGoalReached(p) { setTimeout(() => this._checkGoalNow(p), 1500); }
+    _checkGoalNow(p) {
+      const r = this._reward(p);
+      if (this._stars(p) >= r.ziel && this._partyFor !== `${p.name}|${r.text}|${r.ziel}`) {
+        this._partyFor = `${p.name}|${r.text}|${r.ziel}`;
+        this._party(p, r.bild || "🎁", `Geschafft, ${p.name}!`, r.text ? `${r.ziel} Sterne für: ${r.text}` : "");
+      }
+    }
+    _redeem(p) {
+      const r = this._reward(p);
+      this._parent(`${p.name} hat ${r.ziel} Sterne gesammelt! Belohnung «${r.text || "Belohnung"}» einlösen? Danach beginnt das Sammeln wieder bei 0.`, async () => {
+        await this._hass.callService("counter", "reset", { entity_id: p.sterne });
+        const d = this._kid(p);
+        d.sticker.push({ bild: r.bild || "🎁", text: r.text || "Belohnung", datum: ymd(new Date()) });
+        await this._saveKid(p, d);
+        this._partyFor = null;
+        this._party(p, r.bild || "🎁", `Viel Spass, ${p.name}!`, r.text || "");
+      });
+    }
+    // Grosse Feier mit Konfetti und kurzem Ton
+    _party(p, bild, title, sub = "") {
+      const el = this.shadowRoot.querySelector("#party");
+      if (!el) return;
+      const colors = ["#f2b400", "#d6336c", "#2b8a3e", "#1971c2", "#7048e8", "#e8590c"];
+      el.className = "party on";
+      el.innerHTML = `<div class="confetti">${Array.from({ length: 70 }, (_, i) => `<i style="left:${Math.random() * 100}%;background:${colors[i % colors.length]};animation-delay:${(Math.random() * 1.2).toFixed(2)}s;animation-duration:${(2.2 + Math.random() * 1.8).toFixed(2)}s;transform:rotate(${Math.round(Math.random() * 360)}deg)"></i>`).join("")}</div>
+        <div class="pbox" style="--c:${p.farbe}">${this._bildHtml(bild, "ppic")}<h2>${esc(title)}</h2>${sub ? `<p>${esc(sub)}</p>` : ""}<small>Antippen zum Schliessen</small></div>`;
+      clearTimeout(this._partyT);
+      this._partyT = setTimeout(() => this._partyClose(), 9000);
+      if (this._kidSettings().ton) this._jingle();
+    }
+    _partyClose() { const el = this.shadowRoot.querySelector("#party"); if (el) { el.className = ""; el.innerHTML = ""; } clearTimeout(this._partyT); }
+    _jingle() {
+      try {
+        const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+        const ctx = this._actx || (this._actx = new A());
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + i * 0.13;
+          o.type = "triangle"; o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+          o.start(t); o.stop(t + 0.4);
+        });
+      } catch (e) { /* ohne Ton */ }
+    }
+
+    // ---------- Einstellungen für Eltern ----------
+    _openKidSettings(p) {
+      const d = this._kid(p), st = this._kidSettings();
+      let tab = this._kidSetTab || "tages", neuBild = "⭐", neuZeit = "morgen", neuZiel = 14;
+      const draw = () => {
+        this._kidSetTab = tab;
+        const body = tab === "tages" ? `
+          <div class="klist">${d.aufgaben.map((a, i) => `<div class="krow"><span class="kpic s">${esc(a.bild)}</span><span>${esc(a.text)}</span><small>${{ morgen: "☀️ Morgen", tag: "🕐 Tag", abend: "🌙 Abend" }[a.zeit] || ""}</small><button class="nope" data-m="deltask" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine Tagesaufgaben.</p>`}</div>
+          <div class="sect">Vorlagen (antippen zum Hinzufügen)</div>
+          <div class="sug">${TAGES_VORLAGEN.map(([t, b, z], i) => `<button data-m="addtv" data-i="${i}">${b} ${esc(t)} <small>${{ morgen: "☀️", tag: "🕐", abend: "🌙" }[z]}</small></button>`).join("")}</div>`
+          : tab === "ziele" ? `
+          <div class="klist">${d.ziele.map((z, i) => `<div class="krow"><span class="kpic s">${esc(z.bild)}</span><span>${esc(z.text)}</span><small>${z.fertig ? "🏆 geschafft" : `${z.n || 0} / ${z.ziel} Tage`}</small><button class="nope" data-m="delgoal" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine grossen Ziele.</p>`}</div>
+          <div class="sect">Vorlagen (antippen zum Hinzufügen)</div>
+          <div class="sug">${LANG_VORLAGEN.map(([t, b, z], i) => `<button data-m="addlv" data-i="${i}">${b} ${esc(t)} <small>${z} Tage</small></button>`).join("")}</div>`
+          : `
+          <label class="chk"><input id="fp-best" type="checkbox" ${st.bestaetigen ? "checked" : ""}><span>Sterne erst nach Bestätigung durch Eltern</span></label>
+          <label class="kw">Eltern-Code (4 Ziffern, leer = kein Code)<input id="fp-pinset" type="text" inputmode="numeric" maxlength="4" value="${esc(st.pin)}" placeholder="z. B. 2580"></label>
+          <label class="chk"><input id="fp-ton" type="checkbox" ${st.ton ? "checked" : ""}><span>Ton bei der Feier</span></label>
+          <p class="hint2">Gilt für alle Kinder. Der Code schützt Einstellungen, Bestätigen und Einlösen.</p>
+          <div class="flash"></div>`;
+        const own = tab === "tages" || tab === "ziele" ? `
+          <div class="sect">${tab === "tages" ? "Eigene Tagesaufgabe" : "Eigenes grosses Ziel"}</div>
+          <div class="kown"><span class="kpic s" id="fp-nb">${neuBild}</span><input id="fp-nt" type="text" maxlength="30" placeholder="${tab === "tages" ? "z. B. Velohelm aufhängen" : "z. B. Allein einschlafen"}">
+            ${tab === "tages" ? `<select id="fp-nz"><option value="morgen" ${neuZeit === "morgen" ? "selected" : ""}>☀️ Morgen</option><option value="tag" ${neuZeit === "tag" ? "selected" : ""}>🕐 Tag</option><option value="abend" ${neuZeit === "abend" ? "selected" : ""}>🌙 Abend</option></select>`
+              : `<select id="fp-ng">${[5, 7, 10, 14, 21, 30].map((x) => `<option value="${x}" ${x === neuZiel ? "selected" : ""}>${x} Tage</option>`).join("")}</select>`}
+            <button class="btn" data-m="addown">Hinzufügen</button></div>
+          <div class="emo small">${KIND_EMOJIS.map((e) => `<button data-m="nb" data-v="${e}" class="${e === neuBild ? "on" : ""}">${e}</button>`).join("")}</div>` : "";
+        this._modal(`
+          <div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>Aufgaben von ${esc(p.name)}</h2></div>
+          <div class="dlg-b">
+            <div class="seg ktabs">${[["tages", "Tagesaufgaben"], ["ziele", "Grosse Ziele"], ["opt", "Einstellungen"]].map(([v, t]) => `<button data-m="tab" data-v="${v}" class="${tab === v ? "on" : ""}">${t}</button>`).join("")}</div>
+            ${body}${own}
+          </div>
+          <div class="dlg-f"><span class="sp"></span>${tab === "opt" ? `<button class="btn" data-m="saveopt">Speichern</button>` : ""}<button class="btn ${tab === "opt" ? "ghost" : ""}" data-m="close">Fertig</button></div>`);
+        this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
+      };
+      const uid = () => Math.random().toString(36).slice(2, 8);
+      const save = async () => { await this._saveKid(p, d); draw(); };
+      this._mh = {
+        tab: (el) => { tab = el.dataset.v; draw(); },
+        nb: (el) => { neuBild = el.dataset.v; const b = this.shadowRoot.querySelector("#fp-nb"); if (b) b.textContent = neuBild; this.shadowRoot.querySelectorAll("#modal .emo button").forEach((x) => x.classList.toggle("on", x === el)); },
+        addtv: (el) => { const [t, b, z] = TAGES_VORLAGEN[+el.dataset.i]; d.aufgaben.push({ id: uid(), text: t, bild: b, zeit: z }); save(); },
+        addlv: (el) => { const [t, b, z] = LANG_VORLAGEN[+el.dataset.i]; d.ziele.push({ id: uid(), text: t, bild: b, ziel: z, n: 0 }); save(); },
+        deltask: (el) => { d.aufgaben.splice(+el.dataset.i, 1); save(); },
+        delgoal: (el) => { d.ziele.splice(+el.dataset.i, 1); save(); },
+        addown: () => {
+          const t = this.shadowRoot.querySelector("#fp-nt").value.trim();
+          if (!t) return;
+          if (tab === "tages") { neuZeit = this.shadowRoot.querySelector("#fp-nz").value; d.aufgaben.push({ id: uid(), text: t, bild: neuBild, zeit: neuZeit }); }
+          else { neuZiel = +this.shadowRoot.querySelector("#fp-ng").value; d.ziele.push({ id: uid(), text: t, bild: neuBild, ziel: neuZiel, n: 0 }); }
+          save();
+        },
+        saveopt: async () => {
+          const pin = this.shadowRoot.querySelector("#fp-pinset").value.trim();
+          if (pin && !/^\d{4}$/.test(pin)) { const f = this.shadowRoot.querySelector("#modal .flash"); if (f) f.textContent = "Der Code muss genau 4 Ziffern haben."; return; }
+          await this._saveKidSettings({ bestaetigen: this.shadowRoot.querySelector("#fp-best").checked, pin, ton: this.shadowRoot.querySelector("#fp-ton").checked });
+          this._modal("");
+        },
+      };
+      draw();
+    }
+
     _openReward(p) {
       const h = this._hass;
       if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
@@ -1245,6 +1584,7 @@
         case "setup": this._runSetup(); break;
         case "bilder": this._openBilderListe(); break;
         case "addperson": this._openPerson(null); break;
+        case "kidview": { const p = this._config.personen.find((x) => x.name === el.dataset.name); if (p) this._openKid(p); break; }
         case "stargive": case "reward": case "redeem": {
           const p = this._config.personen.find((x) => x.name === el.dataset.name);
           if (!p || !p.sterne) break;
@@ -1252,14 +1592,11 @@
             const before = Math.max(0, parseInt(h.states[p.sterne]?.state, 10) || 0);
             h.callService("counter", "increment", { entity_id: p.sterne });
             this._celebrate(el, before + 1 >= this._reward(p).ziel ? 9 : 1);
+            this._checkGoalReached(p);
           } else if (a === "reward") this._openReward(p);
           else {
             const r = this._reward(p);
-            this._openConfirm(`${p.name} hat ${r.ziel} Sterne gesammelt! Belohnung «${r.text || "Belohnung"}» einlösen? Danach beginnt das Sammeln wieder bei 0.`, "Einlösen", async () => {
-              await h.callService("counter", "reset", { entity_id: p.sterne });
-              const app = this.shadowRoot.querySelector("#app");
-              if (app) this._celebrate(app.querySelector(".starsp") || app, 14);
-            });
+            this._redeem(p);
           }
           break;
         }
@@ -1275,8 +1612,10 @@
 
     _celebrate(el, count = 1) {
       const r = el.getBoundingClientRect();
-      const app = this.shadowRoot.querySelector("#app");
+      const kid = el.closest && el.closest("#kid");
+      const app = kid || this.shadowRoot.querySelector("#app");
       const host = app.getBoundingClientRect();
+      if (kid) { host.y -= kid.scrollTop; }
       for (let k = 0; k < count; k++) {
         const s = document.createElement("div");
         s.className = "burst";
@@ -2176,6 +2515,100 @@
   /* Dialog */
   .fp-modal:empty { display:none; }
   .fp-modal { position:fixed; inset:0; z-index:20; display:grid; place-items:center; }
+  /* Kinder-Ansicht */
+  #kid:empty, #party:empty { display:none; }
+  .kidview { position:fixed; inset:0; z-index:15; background:var(--bg); color:var(--ink); font-family:var(--f-ui); overflow:auto; animation:pop .18s ease-out;
+    --f-ui:'Figtree', system-ui, -apple-system, sans-serif; --f-disp:'Bricolage Grotesque', 'Figtree', system-ui, sans-serif; --accent:#1d2430;
+    --bg:#fff9ec; --paper:#ffffff; --ink:#1d2430; --ink2:#5b6676; --ink3:#a0a8b4; --soft:#f4ecd9; --line:#eadfc6; --jarbg:#fff4cf; --jarline:#c9b37a; --jarlid:#b08d4a; }
+  .kidview.dark { --bg:#141a22; --paper:#1d2530; --ink:#eef2f6; --ink2:#a9b3c0; --ink3:#6e7887; --soft:#26303d; --line:#2f3a48; --jarbg:#2a2f36; --jarline:#8d7d55; --jarlid:#7a6334; }
+  .kwrap { min-height:100%; display:flex; flex-direction:column; padding:20px 24px 28px; gap:18px; }
+  .khead { display:flex; align-items:center; gap:16px; }
+  .kname { font-family:var(--f-disp); font-size:40px; font-weight:800; flex:1; display:flex; align-items:center; gap:14px; }
+  .kav { display:inline-grid; place-items:center; border-radius:50%; overflow:hidden; background:var(--c); color:#fff; font-family:var(--f-disp); font-weight:800; flex:none; box-shadow:0 0 0 4px var(--paper), 0 0 0 7px var(--c); }
+  .kav img { width:100%; height:100%; object-fit:cover; }
+  .khead .kav { font-size:40px; }
+  .kbtn { width:64px; height:64px; border-radius:20px; background:var(--paper); font-size:30px; display:grid; place-items:center; box-shadow:0 2px 6px rgba(0,0,0,.08); text-align:center; }
+  .kbtn.close { background:var(--ink); color:var(--bg); font-size:28px; font-weight:800; }
+  .fire { font-size:14px; font-weight:800; color:#e8590c; margin-left:4px; }
+  .fire.big { font-size:26px; background:#fff0e0; padding:4px 12px; border-radius:16px; }
+  .dark .fire.big { background:#3a2614; }
+  .kmain { display:grid; grid-template-columns:minmax(220px, 300px) 1fr; gap:24px; align-items:start; }
+  .kleft { display:flex; flex-direction:column; align-items:center; gap:12px; position:sticky; top:0; }
+  .jar { width:100%; max-width:220px; height:auto; }
+  .kcount { font-family:var(--f-disp); font-size:44px; font-weight:800; color:#e0a200; line-height:1; }
+  .kreward { display:flex; align-items:center; gap:12px; width:100%; padding:12px; border-radius:20px; background:var(--paper); font-size:18px; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+  .kreward span:last-child { display:flex; flex-direction:column; line-height:1.2; }
+  .kreward small { color:var(--ink2); font-weight:600; font-size:15px; }
+  .kreward.ready { background:#fff1bf; box-shadow:0 0 0 4px #f2b400; animation:wiggle 1.2s ease-in-out infinite; }
+  .dark .kreward.ready { background:#3d3311; }
+  @keyframes wiggle { 0%,100% { transform:rotate(0); } 25% { transform:rotate(-2deg); } 75% { transform:rotate(2deg); } }
+  .krpic { width:72px; height:56px; border-radius:14px; overflow:hidden; flex:none; display:grid; place-items:center; font-size:42px; background:var(--soft); }
+  .krpic img, .kstpic img, .ppic img { width:100%; height:100%; object-fit:cover; display:block; }
+  .kconfirm { width:100%; padding:14px; border-radius:16px; background:var(--ink); color:var(--bg); font-weight:700; font-size:16px; text-align:center; }
+  .ksect { font-family:var(--f-disp); font-size:24px; margin:4px 0 10px; }
+  .kright { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .kcards { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px; margin-bottom:12px; }
+  .kcard { position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; padding:18px 10px 14px; border-radius:24px; background:var(--paper); box-shadow:0 3px 8px rgba(0,0,0,.07); text-align:center; transition:transform .12s; }
+  .kcard:active { transform:scale(.95); }
+  .kpic { font-size:64px; line-height:1; }
+  .kpic.s { font-size:28px; }
+  .ktxt { font-size:18px; font-weight:700; }
+  .kstate { position:absolute; top:10px; right:12px; font-size:22px; }
+  .kcard.ok { background:#d8f5df; box-shadow:0 0 0 4px #2f9e44; }
+  .kcard.ok .kstate { color:#2f9e44; font-weight:900; font-size:30px; }
+  .kcard.wait { background:#fff3cd; box-shadow:0 0 0 4px #f2b400; }
+  .dark .kcard.ok { background:#16351f; } .dark .kcard.wait { background:#3d3311; }
+  .kgoals { display:flex; flex-direction:column; gap:12px; }
+  .kgoal { display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:22px; background:var(--paper); box-shadow:0 3px 8px rgba(0,0,0,.07); }
+  .kgoal .kpic { font-size:52px; }
+  .kgoal.fertig { background:#fff1bf; } .dark .kgoal.fertig { background:#3d3311; }
+  .kgbody { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .kgbody b { font-size:19px; }
+  .kgbody small { color:var(--ink2); font-size:14px; font-weight:600; }
+  .kdots { display:flex; flex-wrap:wrap; gap:5px; }
+  .kdots span { width:18px; height:18px; border-radius:50%; background:var(--soft); box-shadow:inset 0 0 0 2px var(--line); }
+  .kdots span.on { background:#f2b400; box-shadow:none; }
+  .kgbtn { padding:14px 16px; border-radius:18px; background:var(--c); color:#fff; font-weight:800; font-size:17px; white-space:nowrap; }
+  .kgbtn.done { background:var(--soft); color:var(--ink2); }
+  .kalbum { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px; }
+  .kst { display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px; border-radius:20px; background:var(--paper); transform:rotate(-2deg); box-shadow:0 3px 8px rgba(0,0,0,.08); text-align:center; font-weight:700; }
+  .kst:nth-child(2n) { transform:rotate(2deg); }
+  .kst small { color:var(--ink3); }
+  .kstpic { width:84px; height:64px; border-radius:14px; overflow:hidden; display:grid; place-items:center; font-size:52px; }
+  .khint { color:var(--ink2); font-size:17px; }
+  .kback { align-self:flex-start; padding:12px 16px; border-radius:14px; background:var(--paper); font-weight:700; margin-top:8px; }
+  .kidopen { display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-right:auto; padding:2px 6px 2px 2px; border-radius:20px; }
+  .kidopen ha-icon { --mdc-icon-size:18px; color:var(--ink3); }
+  .kidopen .kav { box-shadow:0 0 0 2px var(--paper), 0 0 0 4px var(--c); font-size:14px; }
+  /* Feier */
+  .party { position:fixed; inset:0; z-index:30; display:grid; place-items:center; background:rgba(12,18,26,.55); overflow:hidden; }
+  .confetti { position:absolute; inset:0; pointer-events:none; }
+  .confetti i { position:absolute; top:-20px; width:12px; height:18px; border-radius:3px; animation-name:fall; animation-timing-function:linear; animation-iteration-count:1; animation-fill-mode:both; }
+  @keyframes fall { to { top:105%; transform:translateX(40px) rotate(720deg); } }
+  .pbox { position:relative; background:#fff; color:#1d2430; border-radius:32px; padding:32px 40px 22px; text-align:center; box-shadow:0 0 0 8px var(--c), 0 30px 80px rgba(0,0,0,.35); animation:boom .5s cubic-bezier(.2,1.6,.4,1); max-width:min(560px, 90vw); }
+  @keyframes boom { from { transform:scale(.3); opacity:0; } }
+  .ppic { width:220px; height:160px; margin:0 auto 10px; border-radius:24px; overflow:hidden; display:grid; place-items:center; font-size:130px; line-height:1; }
+  .pbox h2 { margin:6px 0 4px; font-family:'Bricolage Grotesque', sans-serif; font-size:40px; }
+  .pbox p { margin:0 0 8px; font-size:20px; color:#5b6676; }
+  .pbox small { color:#97a1ae; }
+  /* Eltern-Code */
+  .pindots { display:flex; gap:14px; justify-content:center; margin:6px 0; }
+  .pindots span { width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 2px var(--ink3); }
+  .pindots span.on { background:var(--ink); box-shadow:none; }
+  .pinpad { display:grid; grid-template-columns:repeat(3, 72px); gap:10px; justify-content:center; }
+  .pinpad button { height:60px; border-radius:16px; background:var(--soft); font-size:24px; font-weight:700; text-align:center; }
+  /* Eltern-Einstellungen */
+  .ktabs { align-self:flex-start; }
+  .klist { display:flex; flex-direction:column; gap:6px; }
+  .krow { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:12px; background:var(--soft); font-size:15px; font-weight:600; }
+  .krow small { margin-left:auto; color:var(--ink2); font-weight:500; }
+  .krow .nope { color:var(--ink3); padding:4px 8px; font-size:16px; }
+  .kown { display:flex; gap:8px; align-items:center; }
+  .kown input { flex:1; }
+  .kown select { font:inherit; font-size:15px; padding:11px 8px; border-radius:12px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); }
+  .emo.small { grid-template-columns:repeat(10, 1fr); }
+  .emo.small button { font-size:20px; border-radius:10px; }
+  @media (max-width: 700px) { .kmain { grid-template-columns:1fr; } .kleft { position:static; } .kname { font-size:28px; } .kpic { font-size:48px; } }
   .scrim { position:absolute; inset:0; background:rgba(12,18,26,.45); }
   .dlg { position:relative; background:var(--paper); color:var(--ink); width:min(520px, calc(100vw - 32px)); max-height:calc(100vh - 64px); overflow:auto; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.25); animation:pop .16s ease-out; }
   @keyframes pop { from { transform:scale(.97); opacity:0; } }
