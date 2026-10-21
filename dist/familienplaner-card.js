@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.3.0";
+  const VERSION = "1.3.1";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -569,8 +569,8 @@
       const avg = used / rows.length;
       const days = this._weekDays || 7;
       let nd = days;
-      if (free > avg * 0.9) nd = Math.min(21, days + Math.max(1, Math.floor(free / avg)));
-      else if (-free > avg && days > 7) nd = Math.max(7, days - Math.floor(-free / avg));
+      if (free > avg * 1.15) nd = Math.min(21, days + Math.max(1, Math.floor(free / (avg * 1.15))));
+      else if (free < -2 && days > 7) nd = Math.max(7, days - Math.max(1, Math.floor(-free / avg)));
       if (nd === days) return;
       this._fitN = (this._fitN || 0) + 1;
       this._weekDays = nd;
