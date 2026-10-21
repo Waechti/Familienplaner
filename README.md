@@ -33,7 +33,7 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 - **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
 - **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung mit Bild und Ziel; kleine Belohnungen (Lolli, Spielzeugauto, Heftli …) lassen sich mit einem Tipp wählen; Sterne gibt es per Tipp oder über die Ämtli
 - **Sterne & Belohnungen** (Kachel «Sterne» antippen, dann Kind wählen): grosses Sternenglas, Tagesaufgaben als Bildkarten (Morgen/Tag/Abend, täglich neu), grosse Ziele wie «4× Töpfchen → Monstertruck» oder «7 Nächte im eigenen Bett» mit eigenen Sternen und eigener Belohnung (jedes Mal oder einmal pro Tag), Sticker-Album, Bonus-Stern nach 5 Tagen am Stück 🔥, Feier mit Konfetti und Ton. Optional zählen Sterne erst nach Eltern-Bestätigung (mit 4-stelligem Code)
-- **Mond-Countdown** für Kinder: «noch 3× schlafen» bis zum Geburtstag oder zu den Ferien (bis 5 Tage)
+- **«Bald» für Kinder**: Bild, Name und grosse Zahl der Tage; antippen zeigt alle kommenden Ereignisse gross (schliesst nach 30 Sekunden)
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
 - Nachtdienste über Mitternacht erscheinen nur einmal («18:00–06:00»)
@@ -111,7 +111,8 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | Essen eintragen | beim Tag auf «Essen planen» tippen |
 | Pinnwand schreiben | Post-it antippen |
 | Countdown hinzufügen | «+» bei «Bald» |
-| Eintrag bei «Bald» ausblenden | Eintrag antippen |
+| Alle kommenden Ereignisse gross anzeigen | Kachel «Bald» antippen |
+| Eintrag bei «Bald» ausblenden | in der grossen Ansicht den Eintrag antippen |
 | Hoch- oder Querformat fest einstellen | Knopf oben rechts (Auto / Hoch / Quer) |
 | Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
 | Stern geben | Stern-Knopf beim Kind |

@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.10.0";
+  const VERSION = "1.10.1";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -1126,6 +1126,7 @@
     }
     _renderKid() {
       const k = this.shadowRoot.querySelector("#kid");
+      if (k && this._kidOpen === "__bald__") return this._renderSoonBig(k);
       if (k && this._kidOpen === "__menu__") {
         const app0 = this.shadowRoot.querySelector("#app");
         k.className = `kidview ${app0?.classList.contains("dark") ? "dark" : ""}`;
@@ -1210,6 +1211,19 @@
       if (el.dataset.k === "close") return this._closeKid();
       if (el.dataset.k === "pick") { this._kidOpen = el.dataset.name; this._kidTab = "heute"; return this._renderKid(); }
       if (el.dataset.k === "menu") { this._kidOpen = "__menu__"; return this._renderKid(); }
+      if (el.dataset.k === "soonadd") return this._openCountdown();
+      if (el.dataset.k === "soonitem") {
+        const h = this._hass;
+        if (el.dataset.uid) {
+          const cd = this._findByName("todo", this._config.countdowns);
+          const it = (this._todos[cd] || []).find((i) => i.uid === el.dataset.uid);
+          if (it) this._openConfirm(`«${it.summary}» aus den Countdowns entfernen?`, "Entfernen", () => h.callService("todo", "remove_item", { item: it.uid }, { entity_id: cd }).then(() => this._loadTodo(cd)));
+        } else if (el.dataset.key && this._bildListe()) {
+          const liste = this._bildListe(), key = el.dataset.key;
+          this._openConfirm(`«${el.dataset.title}» bei «Bald» ausblenden?`, "Ausblenden", () => h.callService("todo", "add_item", { item: `Ausgeblendet: ${key}`, description: "bald" }, { entity_id: liste }).then(() => this._loadTodo(liste)));
+        }
+        return;
+      }
       const p = this._config.personen.find((x) => x.name === this._kidOpen);
       if (!p) return;
       const k = el.dataset.k, st = this._kidSettings(), today = ymd(new Date());
@@ -1522,36 +1536,59 @@
       </div></div>`;
     }
 
-    _soonPanel() {
+    // «Bald»: Geburtstage, Countdowns, Schulferien (ausgeblendete Einträge weggelassen)
+    _soonItems(ferienAnzahl = 1) {
       const items = [];
       const t = sod(new Date());
-      (this._bdays || []).forEach((e) => { const n = daysUntil(e.start); if (n >= 0) items.push({ n, icon: "mdi:cake-variant-outline", title: e.title, key: `${e.title}|${ymd(e.start)}` }); });
+      (this._bdays || []).forEach((e) => { const n = daysUntil(e.start); if (n >= 0) items.push({ n, d: sod(e.start), icon: "mdi:cake-variant-outline", title: e.title, key: `${e.title}|${ymd(e.start)}` }); });
       const cd = this._findByName("todo", this._config.countdowns);
       (this._todos[cd] || []).filter((i) => i.status !== "completed" && i.due).forEach((i) => {
-        const n = daysUntil(parseYmd(i.due)); if (n >= 0) items.push({ n, icon: "mdi:party-popper", title: i.summary, uid: i.uid });
+        const d = parseYmd(i.due); const n = daysUntil(d); if (n >= 0) items.push({ n, d, icon: "mdi:party-popper", title: i.summary, uid: i.uid });
       });
-      const nf = alleFerien().find(([a, b]) => ymd(t) <= b);
-      if (nf) { const a = parseYmd(nf[0]); const n = daysUntil(a); const key = `${nf[2]}|${nf[0]}`; items.push(n <= 0 ? { n: 0, icon: "mdi:beach", title: `${nf[2]} bis ${parseYmd(nf[1]).getDate()}. ${MOS[parseYmd(nf[1]).getMonth()]}`, live: true, key } : { n, icon: "mdi:beach", title: nf[2], key }); }
+      alleFerien().filter(([a, b]) => ymd(t) <= b).slice(0, ferienAnzahl).forEach((f) => {
+        const a = parseYmd(f[0]), e = parseYmd(f[1]); const n = daysUntil(a); const key = `${f[2]}|${f[0]}`;
+        items.push(n <= 0 ? { n: 0, d: a, icon: "mdi:beach", title: `${f[2]} bis ${e.getDate()}. ${MOS[e.getMonth()]}`, live: true, key } : { n, d: a, icon: "mdi:beach", title: f[2], key });
+      });
       const hidden = this._ausgeblendet();
-      for (let i = items.length - 1; i >= 0; i--) if (items[i].key && hidden.includes(items[i].key)) items.splice(i, 1);
-      const ab = this._hass.states[this._config.abfall]?.attributes?.termine || [];
-      const nextAb = ab.filter((x) => x.d >= ymd(t) && x.d <= ymd(addDays(t, 5)));
-      items.sort((a, b) => a.n - b.n);
-      return `<div class="panel soon">
+      return items.filter((x) => !(x.key && hidden.includes(x.key))).sort((a, b) => a.n - b.n);
+    }
+    _soonBild(i) {
+      const emo = { "mdi:cake-variant-outline": "🎂", "mdi:party-popper": "🎉", "mdi:beach": "🏖️" }[i.icon] || "⭐";
+      const custom = this._customBilder().find((m) => i.title.toLowerCase().includes(m.key.toLowerCase()));
+      return custom ? custom.val : emo;
+    }
+    _soonWhen(i) {
+      if (i.live) return `<span class="bheute">Jetzt! 🎉</span>`;
+      if (i.n === 0) return `<span class="bheute">Heute! 🎉</span>`;
+      if (i.n === 1) return `<span class="bheute">Morgen</span>`;
+      return `<span class="bnum">${i.n}</span><span class="bsmall">Tage</span>`;
+    }
+    _soonPanel() {
+      const items = this._soonItems(1);
+      const cd = this._findByName("todo", this._config.countdowns);
+      return `<div class="panel soon" data-act="soonbig" role="button" aria-label="Bald gross anzeigen">
         <div class="ph"><ha-icon icon="mdi:timer-sand"></ha-icon><h3>Bald</h3>${cd ? `<button class="add" data-act="addcd" aria-label="Countdown hinzufügen"><ha-icon icon="mdi:plus"></ha-icon></button>` : ""}</div>
-        <ul class="cd kidsoon">${items.slice(0, this._isQuer() ? 6 : 4).map((i) => {
-          const emo = { "mdi:cake-variant-outline": "🎂", "mdi:party-popper": "🎉", "mdi:beach": "🏖️" }[i.icon] || "⭐";
-          const custom = this._customBilder().find((m) => i.title.toLowerCase().includes(m.key.toLowerCase()));
-          const bild = custom ? custom.val : emo;
-          const heute = i.live || i.n === 0;
-          const when = heute ? `<span class="bheute">${i.live ? "Jetzt! 🎉" : "Heute! 🎉"}</span>`
-            : i.n <= 5 ? `<span class="bmoons" title="noch ${i.n}× schlafen">${Array.from({ length: i.n }, () => "🌙").join("")}</span><span class="bsmall">noch ${i.n}× schlafen</span>`
-            : `<span class="bnum">${i.n}</span><span class="bsmall">Tage</span>`;
-          return `<li class="${heute ? "heute" : ""}" ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}>
-            ${this._bildHtml(bild, "bpic")}
-            <span class="btxt"><b>${esc(i.title)}</b><span class="bwhen">${when}</span></span></li>`;
-        }).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
-        ${nextAb.length ? `<div class="abf">${nextAb.map((x) => { const d = parseYmd(x.d); const st = ABFALL[x.t] || {}; return `<span class="abx" style="--c:${st.color}"><ha-icon icon="${st.icon}"></ha-icon><b>${esc(x.t)}</b> ${daysUntil(d) <= 1 ? inTage(daysUntil(d)) : `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`}</span>`; }).join("")}</div>` : ""}
+        <ul class="cd kidsoon">${items.slice(0, this._isQuer() ? 6 : 4).map((i) => `<li class="${i.live || i.n === 0 ? "heute" : ""}">
+            ${this._bildHtml(this._soonBild(i), "bpic")}
+            <span class="btxt"><b>${esc(i.title)}</b><span class="bwhen">${this._soonWhen(i)}</span></span></li>`).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
+      </div>`;
+    }
+    _openSoon() { this._kidOpen = "__bald__"; this._renderKid(); this._kidTouch(); }
+    _renderSoonBig(k) {
+      const app0 = this.shadowRoot.querySelector("#app");
+      k.className = `kidview ${app0?.classList.contains("dark") ? "dark" : ""}`;
+      const items = this._soonItems(3);
+      const cd = this._findByName("todo", this._config.countdowns);
+      k.innerHTML = `<div class="kwrap">
+        <header class="khead"><div class="kname">⏳ Bald</div>
+          ${cd ? `<button class="kbtn" data-k="soonadd" aria-label="Countdown hinzufügen">＋</button>` : ""}
+          <button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
+        <div class="sbig">${items.slice(0, 24).map((i) => `<button class="sbcard ${i.live || i.n === 0 ? "heute" : ""}" data-k="soonitem" data-uid="${esc(i.uid || "")}" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}">
+            ${this._bildHtml(this._soonBild(i), "sbpic")}
+            <b>${esc(i.title)}</b>
+            <span class="bwhen">${this._soonWhen(i)}</span>
+            <small>${WDL[i.d.getDay()]}, ${i.d.getDate()}. ${MO[i.d.getMonth()]}</small>
+          </button>`).join("") || `<p class="khint">Noch nichts geplant.</p>`}</div>
       </div>`;
     }
 
@@ -1714,6 +1751,7 @@
         case "addperson": this._openPerson(null); break;
         case "kidview": { const p = this._config.personen.find((x) => x.name === el.dataset.name); if (p) this._openKid(p); break; }
         case "rewards": this._openRewards(); break;
+        case "soonbig": this._openSoon(); break;
         case "stargive": case "reward": case "redeem": {
           const p = this._config.personen.find((x) => x.name === el.dataset.name);
           if (!p || !p.sterne) break;
@@ -2592,6 +2630,20 @@
   .bsmall { font-size:12px; font-weight:600; color:var(--ink2); }
   .bheute { font-family:var(--f-disp); font-size:19px; font-weight:800; color:#c48a00; }
   .dark .bheute { color:#ffd866; }
+  .soon[data-act] { cursor:pointer; }
+  .soon[data-act]:active { transform:scale(.99); }
+  .sbig { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:18px; align-content:start; }
+  .sbcard { display:flex; flex-direction:column; align-items:center; gap:8px; padding:22px 14px 18px; border-radius:26px; background:var(--paper); box-shadow:0 4px 12px rgba(0,0,0,.08); text-align:center; }
+  .sbcard.heute { background:#fff1bf; box-shadow:0 0 0 4px #f2b400; }
+  .dark .sbcard.heute { background:#3d3311; }
+  .sbcard b { font-size:20px; font-weight:800; line-height:1.2; }
+  .sbcard .bwhen { justify-content:center; }
+  .sbcard .bnum { font-size:44px; }
+  .sbcard .bheute { font-size:28px; }
+  .sbcard .bsmall { font-size:16px; }
+  .sbcard small { color:var(--ink2); font-size:14px; font-weight:600; }
+  .sbpic { width:120px; height:100px; border-radius:22px; overflow:hidden; display:grid; place-items:center; font-size:76px; line-height:1; background:var(--soft); }
+  .sbpic img { width:100%; height:100%; object-fit:cover; display:block; }
   .hoch .kidsoon { gap:6px; }
   .hoch .kidsoon li { padding:4px 6px 4px 4px; gap:8px; }
   .hoch .bpic { width:40px; height:40px; font-size:28px; border-radius:10px; }
