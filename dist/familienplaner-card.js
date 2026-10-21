@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.4.0";
+  const VERSION = "1.4.1";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -157,7 +157,15 @@
     ["Familie", "familie|family", "1679274742187-1aa949703203"],
     ["Putzen", "putzen|reinigung|putzfrau|fensterputz", "1563453392212-326f5e854473"],
   ].map(([name, keys, id]) => ({ name, keys, re: new RegExp(keys, "i"), url: `https://images.unsplash.com/photo-${id}?w=640&h=320&fit=crop&q=70` }));
-  const EMOJI_WAHL = ["🧸", "🏫", "🧩", "🌲", "🤸", "🏊", "⚽", "🩰", "🐴", "🎵", "🎨", "🦷", "🩺", "✂️", "🎂", "🎉", "👵", "👴", "🦁", "🎬", "📚", "🚲", "⛷️", "🏖️", "🚗", "🚆", "🛝", "🌙", "🍎", "🛒", "🐶", "⭐"];
+  // Belohnungen zum schnellen Wählen: [Text, Emoji, Sterne]
+  const BELOHNUNGEN = [
+    ["Lolli", "🍭", 3], ["Gummibärli", "🐻", 3], ["Sticker", "⭐", 3], ["Seifenblasen", "🫧", 4], ["Ballon", "🎈", 4],
+    ["Schoggi", "🍫", 4], ["Glace", "🍦", 5], ["Pommes", "🍟", 5], ["Heftli", "📖", 6], ["Malbuch", "🖍️", 6],
+    ["Spielzeugauto", "🚗", 8], ["Spielfigur", "🦖", 8], ["Hörspiel", "🎧", 8], ["Puzzle", "🧩", 8], ["Buch", "📚", 10],
+    ["Länger aufbleiben", "🌙", 6], ["Kuchen backen", "🧁", 8], ["Pizza essen", "🍕", 10], ["Freund einladen", "👫", 10],
+    ["Spielplatz", "🛝", 6], ["Badi", "🏊", 10], ["Velotour", "🚲", 10], ["Kino", "🎬", 15], ["Zoo", "🦁", 20], ["Ausflug", "🚂", 20],
+  ];
+  const EMOJI_WAHL = ["🧸", "🏫", "🧩", "🌲", "🤸", "🏊", "⚽", "🩰", "🐴", "🎵", "🎨", "🦷", "🩺", "✂️", "🎂", "🎉", "👵", "👴", "🦁", "🎬", "📚", "🚲", "⛷️", "🏖️", "🚗", "🚆", "🛝", "🌙", "🍎", "🛒", "🐶", "⭐", "🍭", "🍫", "🍦", "🍟", "🍕", "🧁", "🎈", "🫧", "📖", "🖍️", "🧩", "🦖", "🎧", "👫", "🏊", "🎁"];
 
   const WXDE = {
     "clear-night": "Klar", cloudy: "Bewölkt", exceptional: "Unwetter", fog: "Nebel", hail: "Hagel", lightning: "Gewitter",
@@ -923,6 +931,12 @@
         zp: () => setZ(ziel + 1), zm: () => setZ(ziel - 1),
         pick: (el) => { wahl = el.dataset.v; prev(); mark(el); },
         thema: (el) => { wahl = themen[+el.dataset.i].val; prev(); mark(el); },
+        quick: (el) => {
+          const [t, e, z] = BELOHNUNGEN[+el.dataset.i];
+          this.shadowRoot.querySelector("#fp-in").value = t; wahl = e; setZ(z); prev();
+          this.shadowRoot.querySelectorAll(".rwquick button").forEach((b) => b.classList.toggle("on", b === el));
+          mark(null);
+        },
         minus: async () => { await h.callService("counter", "decrement", { entity_id: p.sterne }); this._modal(""); },
         reset: () => this._openConfirm(`Sterne von ${p.name} auf 0 setzen?`, "Auf 0 setzen", () => h.callService("counter", "reset", { entity_id: p.sterne })),
         save: async () => { await this._setReward(p, { ziel, text: this.shadowRoot.querySelector("#fp-in").value.trim(), bild: wahl }); this._modal(""); },
@@ -936,7 +950,9 @@
             <button class="add" data-m="zm" aria-label="Weniger"><ha-icon icon="mdi:minus"></ha-icon></button><b id="fp-ziel">${ziel}</b>
             <button class="add" data-m="zp" aria-label="Mehr"><ha-icon icon="mdi:plus"></ha-icon></button>
             <span class="have">aktuell ${n} ${n === 1 ? "Stern" : "Sterne"}</span></div>
-          <div class="sect">Bild wählen</div>
+          <div class="sect">Schnell wählen</div>
+          <div class="rwquick">${BELOHNUNGEN.map(([t, e, z], i) => `<button data-m="quick" data-i="${i}" class="${t === r.text ? "on" : ""}"><span class="qe">${e}</span><span>${esc(t)}</span><small>${z} ★</small></button>`).join("")}</div>
+          <div class="sect">Oder eigenes Bild wählen</div>
           <div class="thm">${themen.map((t, i) => `<button data-m="thema" data-i="${i}" class="${t.val === wahl ? "on" : ""}">${this._bildHtml(t.val, "thpic")}<span>${esc(t.name)}</span></button>`).join("")}</div>
           <div class="sect">Oder ein Emoji</div>
           <div class="emo">${EMOJI_WAHL.map((e) => `<button data-m="pick" data-v="${e}" class="${e === wahl ? "on" : ""}">${e}</button>`).join("")}</div>
@@ -972,7 +988,7 @@
       items.sort((a, b) => a.n - b.n);
       return `<div class="panel soon">
         <div class="ph"><ha-icon icon="mdi:timer-sand"></ha-icon><h3>Bald</h3>${cd ? `<button class="add" data-act="addcd" aria-label="Countdown hinzufügen"><ha-icon icon="mdi:plus"></ha-icon></button>` : ""}</div>
-        <ul class="cd">${items.slice(0, 6).map((i) => `<li ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}><ha-icon icon="${i.icon}"></ha-icon><span class="tt">${esc(i.title)}</span>${!i.live && i.n >= 1 && i.n <= 7 ? `<span class="moons" title="noch ${i.n}× schlafen">${Array.from({ length: i.n }, () => `<ha-icon icon="mdi:moon-waning-crescent"></ha-icon>`).join("")}</span>` : `<span class="n">${i.live ? "jetzt" : inTage(i.n)}</span>`}</li>`).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
+        <ul class="cd">${items.slice(0, 6).map((i) => `<li ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}><ha-icon icon="${i.icon}"></ha-icon><span class="tt">${esc(i.title)}</span>${!i.live && i.n >= 1 && i.n <= 5 ? `<span class="moons" title="noch ${i.n}× schlafen">${Array.from({ length: i.n }, () => `<ha-icon icon="mdi:moon-waning-crescent"></ha-icon>`).join("")}</span>` : `<span class="n">${i.live ? "jetzt" : inTage(i.n)}</span>`}</li>`).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
         ${nextAb.length ? `<div class="abf">${nextAb.map((x) => { const d = parseYmd(x.d); const st = ABFALL[x.t] || {}; return `<span class="abx" style="--c:${st.color}"><ha-icon icon="${st.icon}"></ha-icon><b>${esc(x.t)}</b> ${daysUntil(d) <= 1 ? inTage(daysUntil(d)) : `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`}</span>`; }).join("")}</div>` : ""}
       </div>`;
     }
@@ -1758,6 +1774,11 @@
   .rwtxt { display:flex; flex-direction:column; min-width:0; line-height:1.2; }
   .rwtxt small { color:var(--ink2); font-weight:500; }
   .zielrow { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--ink2); flex-wrap:wrap; }
+  .rwquick { display:grid; grid-template-columns:repeat(auto-fill, minmax(136px, 1fr)); gap:6px; }
+  .rwquick button { display:flex; align-items:center; gap:6px; padding:7px 9px; border-radius:12px; background:var(--soft); font-size:13.5px; font-weight:600; }
+  .rwquick button.on { box-shadow:inset 0 0 0 3px var(--accent); background:var(--paper); }
+  .rwquick .qe { font-size:22px; line-height:1; }
+  .rwquick small { margin-left:auto; color:var(--ink3); font-weight:600; font-size:11.5px; white-space:nowrap; }
   .zielrow b { font-size:22px; color:var(--ink); min-width:28px; text-align:center; }
   .zielrow .have { margin-left:auto; }
   .bigpic ha-icon { --mdc-icon-size:40px; }

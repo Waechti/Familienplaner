@@ -30,8 +30,8 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 - **Essensplan**: pro Tag ein Gericht. Vorschläge lernen eure Gewohnheiten (z. B. Pizza am Freitag), berücksichtigen Lieblingsessen (Herz) und Abwechslung; «Woche füllen» plant die leeren Tage mit einem Tipp
 - **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
 - **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
-- **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung (z. B. Zoo-Besuch) mit Bild und Ziel; Sterne gibt es per Tipp oder über die Ämtli
-- **Mond-Countdown** für Kinder: «noch 3× schlafen» bis zum Geburtstag oder zu den Ferien
+- **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung mit Bild und Ziel; kleine Belohnungen (Lolli, Spielzeugauto, Heftli …) lassen sich mit einem Tipp wählen; Sterne gibt es per Tipp oder über die Ämtli
+- **Mond-Countdown** für Kinder: «noch 3× schlafen» bis zum Geburtstag oder zu den Ferien (bis 5 Tage)
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
 - Nachtdienste über Mitternacht erscheinen nur einmal («18:00–06:00»)
