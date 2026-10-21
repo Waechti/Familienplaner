@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.9.0";
+  const VERSION = "1.10.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -1539,7 +1539,18 @@
       items.sort((a, b) => a.n - b.n);
       return `<div class="panel soon">
         <div class="ph"><ha-icon icon="mdi:timer-sand"></ha-icon><h3>Bald</h3>${cd ? `<button class="add" data-act="addcd" aria-label="Countdown hinzufügen"><ha-icon icon="mdi:plus"></ha-icon></button>` : ""}</div>
-        <ul class="cd">${items.slice(0, 6).map((i) => `<li ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}><ha-icon icon="${i.icon}"></ha-icon><span class="tt">${esc(i.title)}</span>${!i.live && i.n >= 1 && i.n <= 5 ? `<span class="moons" title="noch ${i.n}× schlafen">${Array.from({ length: i.n }, () => `<ha-icon icon="mdi:moon-waning-crescent"></ha-icon>`).join("")}</span>` : `<span class="n">${i.live ? "jetzt" : inTage(i.n)}</span>`}</li>`).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
+        <ul class="cd kidsoon">${items.slice(0, this._isQuer() ? 6 : 4).map((i) => {
+          const emo = { "mdi:cake-variant-outline": "🎂", "mdi:party-popper": "🎉", "mdi:beach": "🏖️" }[i.icon] || "⭐";
+          const custom = this._customBilder().find((m) => i.title.toLowerCase().includes(m.key.toLowerCase()));
+          const bild = custom ? custom.val : emo;
+          const heute = i.live || i.n === 0;
+          const when = heute ? `<span class="bheute">${i.live ? "Jetzt! 🎉" : "Heute! 🎉"}</span>`
+            : i.n <= 5 ? `<span class="bmoons" title="noch ${i.n}× schlafen">${Array.from({ length: i.n }, () => "🌙").join("")}</span><span class="bsmall">noch ${i.n}× schlafen</span>`
+            : `<span class="bnum">${i.n}</span><span class="bsmall">Tage</span>`;
+          return `<li class="${heute ? "heute" : ""}" ${i.uid ? `data-act="cdinfo" data-uid="${esc(i.uid)}"` : `data-act="baldweg" data-key="${esc(i.key || "")}" data-title="${esc(i.title)}"`}>
+            ${this._bildHtml(bild, "bpic")}
+            <span class="btxt"><b>${esc(i.title)}</b><span class="bwhen">${when}</span></span></li>`;
+        }).join("") || `<li class="ph-empty">Noch nichts geplant.</li>`}</ul>
         ${nextAb.length ? `<div class="abf">${nextAb.map((x) => { const d = parseYmd(x.d); const st = ABFALL[x.t] || {}; return `<span class="abx" style="--c:${st.color}"><ha-icon icon="${st.icon}"></ha-icon><b>${esc(x.t)}</b> ${daysUntil(d) <= 1 ? inTage(daysUntil(d)) : `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.`}</span>`; }).join("")}</div>` : ""}
       </div>`;
     }
@@ -2567,6 +2578,27 @@
   .cd li ha-icon { color:var(--ink2); }
   .cd .tt { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cd .n { color:var(--ink2); font-size:13px; white-space:nowrap; }
+  /* «Bald» für Kinder: Bild, Name, Monde oder grosse Zahl */
+  .kidsoon { gap:8px; }
+  .kidsoon li { gap:10px; padding:6px 8px 6px 6px; border-radius:14px; background:var(--soft); align-items:center; }
+  .kidsoon li.heute { background:color-mix(in srgb, #f2b400 25%, var(--paper)); box-shadow:inset 0 0 0 2px #f2b400; }
+  .bpic { width:46px; height:46px; border-radius:12px; overflow:hidden; flex:none; display:grid; place-items:center; font-size:32px; line-height:1; background:var(--paper); }
+  .bpic img { width:100%; height:100%; object-fit:cover; display:block; }
+  .btxt { display:flex; flex-direction:column; min-width:0; flex:1; gap:2px; }
+  .btxt b { font-size:15px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bwhen { display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
+  .bmoons { font-size:19px; line-height:1; letter-spacing:1px; }
+  .bnum { font-family:var(--f-disp); font-size:24px; font-weight:800; line-height:1; color:var(--ink); }
+  .bsmall { font-size:12px; font-weight:600; color:var(--ink2); }
+  .bheute { font-family:var(--f-disp); font-size:19px; font-weight:800; color:#c48a00; }
+  .dark .bheute { color:#ffd866; }
+  .hoch .kidsoon { gap:6px; }
+  .hoch .kidsoon li { padding:4px 6px 4px 4px; gap:8px; }
+  .hoch .bpic { width:40px; height:40px; font-size:28px; border-radius:10px; }
+  .hoch .btxt b { font-size:14px; }
+  .hoch .bmoons, .hoch .bheute { font-size:17px; }
+  .hoch .bnum { font-size:20px; }
+  .hoch .soon .abf { margin-top:6px; padding-top:6px; }
   .abf { flex:none; display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
   .abx { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; padding:4px 8px; border-radius:8px; background:color-mix(in srgb, var(--c) 12%, var(--paper)); }
   .abx ha-icon { color:var(--c); --mdc-icon-size:15px; }
