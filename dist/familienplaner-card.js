@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.8.0";
+  const VERSION = "1.9.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -1110,15 +1110,15 @@
       this._renderKid(); this._kidTouch();
     }
     _closeKid() { this._kidOpen = null; clearTimeout(this._kidT); const k = this.shadowRoot.querySelector("#kid"); if (k) { k.className = ""; k.innerHTML = ""; } }
-    _kidTouch() { clearTimeout(this._kidT); this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, 60000); }
-    _jar(n, ziel) {
+    _kidTouch() { clearTimeout(this._kidT); this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, 30000); }
+    _jar(n, ziel, uid = "main") {
       const r = Math.max(0, Math.min(1, n / Math.max(1, ziel)));
       const top = 40, bottom = 196, hgt = (bottom - top) * r;
       return `<svg class="jar" viewBox="0 0 160 210" aria-label="${n} von ${ziel} Sternen">
-        <defs><clipPath id="jarclip"><path d="M40 30 h80 v14 c22 10 30 28 30 50 v86 c0 14 -10 24 -24 24 h-92 c-14 0 -24 -10 -24 -24 v-86 c0 -22 8 -40 30 -50 z"/></clipPath>
-          <linearGradient id="jarfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84d"/><stop offset="1" stop-color="#f2a900"/></linearGradient></defs>
-        <g clip-path="url(#jarclip)"><rect x="0" y="0" width="160" height="210" fill="var(--jarbg)"/>
-          <rect x="0" y="${bottom - hgt + 8}" width="160" height="${hgt + 10}" fill="url(#jarfill)"/>
+        <defs><clipPath id="jarclip-${uid}"><path d="M40 30 h80 v14 c22 10 30 28 30 50 v86 c0 14 -10 24 -24 24 h-92 c-14 0 -24 -10 -24 -24 v-86 c0 -22 8 -40 30 -50 z"/></clipPath>
+          <linearGradient id="jarfill-${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd84d"/><stop offset="1" stop-color="#f2a900"/></linearGradient></defs>
+        <g clip-path="url(#jarclip-${uid})"><rect x="0" y="0" width="160" height="210" fill="var(--jarbg)"/>
+          <rect x="0" y="${bottom - hgt + 8}" width="160" height="${hgt + 10}" fill="url(#jarfill-${uid})"/>
           ${Array.from({ length: Math.min(n, 30) }, (_, k) => { const x = 22 + ((k * 37) % 116), y = bottom - 10 - ((k * 23) % Math.max(12, hgt - 14)); return y > bottom - hgt + 10 ? `<text x="${x}" y="${y}" font-size="16" fill="#fff8d6">★</text>` : ""; }).join("")}</g>
         <path d="M40 30 h80 v14 c22 10 30 28 30 50 v86 c0 14 -10 24 -24 24 h-92 c-14 0 -24 -10 -24 -24 v-86 c0 -22 8 -40 30 -50 z" fill="none" stroke="var(--jarline)" stroke-width="5"/>
         <rect x="34" y="16" width="92" height="18" rx="6" fill="var(--jarlid)"/>
@@ -1167,11 +1167,10 @@
       if (hour >= 16) groups.sort((a, b) => (b[0] === "abend") - (a[0] === "abend"));
       const zielCard = (z) => {
         const lock = this._goalLocked(z, today);
-        const stars = Array.from({ length: z.ziel }, (_, i) => `<span class="${i < z.n ? "on" : i < z.n + z.wait ? "wait" : ""}">★</span>`).join("");
         const bel = z.belohnung || {};
         return `<div class="kgoal ${z.fertig ? "fertig" : ""}">
-          <span class="kpic">${esc(z.bild)}</span>
-          <div class="kgbody"><b>${esc(z.text)}</b><div class="kgstars">${stars}</div>
+          <span class="kgjar">${this._jar(Math.min(z.n, z.ziel), z.ziel, "z" + String(z.id).replace(/[^a-z0-9]/gi, ""))}<span class="kgjn">${z.n}/${z.ziel}</span></span>
+          <div class="kgbody"><b><span class="kgic">${esc(z.bild)}</span> ${esc(z.text)}</b>
             <small>${z.fertig ? "Geschafft! 🏆" : `noch ${Math.max(0, z.ziel - z.n - z.wait)} ★${z.oft === "tag" ? " · einmal pro Tag" : ""}`}</small></div>
           ${bel.text || bel.bild ? `<div class="kgrew">${bel.bild ? this._bildHtml(bel.bild, "kgrpic") : ""}<span>${esc(bel.text || "")}</span></div>` : ""}
           ${z.fertig ? `<button class="kgbtn again" data-k="goalagain" data-id="${esc(z.id)}">Nochmals</button>`
@@ -1333,12 +1332,13 @@
       const draw = () => {
         this._kidSetTab = tab;
         const body = tab === "tages" ? `
-          <div class="klist">${d.aufgaben.map((a, i) => `<div class="krow"><span class="kpic s">${esc(a.bild)}</span><span>${esc(a.text)}</span><small>${{ morgen: "☀️ Morgen", tag: "🕐 Tag", abend: "🌙 Abend" }[a.zeit] || ""}</small><button class="nope" data-m="deltask" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine Tagesaufgaben.</p>`}</div>
+          <div class="klist">${d.aufgaben.map((a, i) => `<div class="krow"><span class="kpic s">${esc(a.bild)}</span><span>${esc(a.text)}</span><small>${{ morgen: "☀️ Morgen", tag: "🕐 Tag", abend: "🌙 Abend" }[a.zeit] || ""}</small>${d.heute.done[a.id] ? `<button class="kreset" data-m="resettask" data-i="${i}" title="Heute wieder offen">↺ ${d.heute.done[a.id] === "ok" ? "✓" : "⏳"}</button>` : ""}<button class="nope" data-m="deltask" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine Tagesaufgaben.</p>`}</div>
+          ${Object.keys(d.heute.done).length ? `<button class="btn ghost" data-m="resetall">↺ Alle Aufgaben von heute zurücksetzen</button>` : ""}
           <div class="sect">Vorlagen (antippen zum Hinzufügen)</div>
           <div class="sug">${TAGES_VORLAGEN.map(([t, b, z], i) => `<button data-m="addtv" data-i="${i}">${b} ${esc(t)} <small>${{ morgen: "☀️", tag: "🕐", abend: "🌙" }[z]}</small></button>`).join("")}</div>`
           : tab === "ziele" ? `
           <p class="hint2">Jedes grosse Ziel sammelt eigene Sterne für eine eigene Belohnung. Die Tagesaufgaben füllen nebenbei das Sternenglas.</p>
-          <div class="klist">${d.ziele.map((z, i) => `<div class="krow"><button class="krowmain" data-m="editgoal" data-i="${i}"><span class="kpic s">${esc(z.bild)}</span><span>${esc(z.text)}</span><small>${z.fertig ? "🏆 geschafft" : `${z.n || 0} / ${z.ziel} ★`} → ${esc((z.belohnung && (z.belohnung.bild || "")) || "")} ${esc((z.belohnung && z.belohnung.text) || "–")}</small></button><button class="nope" data-m="delgoal" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine grossen Ziele.</p>`}</div>
+          <div class="klist">${d.ziele.map((z, i) => `<div class="krow"><button class="krowmain" data-m="editgoal" data-i="${i}"><span class="kpic s">${esc(z.bild)}</span><span>${esc(z.text)}</span><small>${z.fertig ? "🏆 geschafft" : `${z.n || 0} / ${z.ziel} ★`} → ${esc((z.belohnung && (z.belohnung.bild || "")) || "")} ${esc((z.belohnung && z.belohnung.text) || "–")}</small></button>${z.n || z.wait || z.fertig ? `<button class="kreset" data-m="resetgoal" data-i="${i}" title="Fortschritt auf 0">↺ 0</button>` : ""}<button class="nope" data-m="delgoal" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine grossen Ziele.</p>`}</div>
           <div class="sect">Vorlagen (antippen, dann anpassen)</div>
           <div class="sug">${LANG_VORLAGEN.map(([t, b, z, o, bt, bb], i) => `<button data-m="addlv" data-i="${i}">${b} ${esc(t)} <small>${z}× → ${bb} ${esc(bt)}</small></button>`).join("")}</div>
           <button class="btn ghost" data-m="newgoal">+ Eigenes Ziel</button>`
@@ -1374,6 +1374,26 @@
         newgoal: () => this._openGoalEditor(p, null, { text: "", bild: "⭐", ziel: 5, oft: "frei", belohnung: {} }),
         editgoal: (el) => this._openGoalEditor(p, +el.dataset.i, null),
         deltask: (el) => { d.aufgaben.splice(+el.dataset.i, 1); save(); },
+        // Zurücksetzen: Aufgabe wieder offen, ein bereits gezählter Stern wird abgezogen
+        resettask: async (el) => {
+          const a = d.aufgaben[+el.dataset.i]; if (!a) return;
+          const was = d.heute.done[a.id]; delete d.heute.done[a.id];
+          await this._saveKid(p, d);
+          if (was === "ok" && this._stars(p) > 0) await this._hass.callService("counter", "decrement", { entity_id: p.sterne });
+          draw();
+        },
+        resetall: async () => {
+          const ok = Object.values(d.heute.done).filter((v) => v === "ok").length;
+          d.heute.done = {};
+          await this._saveKid(p, d);
+          for (let k = 0; k < Math.min(ok, this._stars(p)); k++) await this._hass.callService("counter", "decrement", { entity_id: p.sterne });
+          draw();
+        },
+        resetgoal: async (el) => {
+          const z = d.ziele[+el.dataset.i]; if (!z) return;
+          z.n = 0; z.wait = 0; z.last = ""; z.fertig = false; delete z.waitDay;
+          await save();
+        },
         delgoal: (el) => { d.ziele.splice(+el.dataset.i, 1); save(); },
         addown: () => {
           const t = this.shadowRoot.querySelector("#fp-nt").value.trim();
@@ -2663,6 +2683,12 @@
   .kgbody { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
   .kgbody b { font-size:19px; }
   .kgbody small { color:var(--ink2); font-size:14px; font-weight:600; }
+  .kgjar { position:relative; width:78px; flex:none; display:flex; flex-direction:column; align-items:center; }
+  .kgjar .jar { width:78px; }
+  .kgjn { font-family:var(--f-disp); font-weight:800; font-size:16px; color:#c48a00; margin-top:-2px; }
+  .kgic { font-size:24px; vertical-align:-3px; }
+  .kgoal.fertig .kgjar .jar { filter:drop-shadow(0 0 8px #f2b400); }
+  .kreset { padding:4px 9px; border-radius:9px; background:var(--paper); font-size:13px; font-weight:700; color:var(--ink2); white-space:nowrap; }
   .kgstars { display:flex; flex-wrap:wrap; gap:2px; font-size:26px; line-height:1; color:var(--line); }
   .kgstars span.on { color:#f2b400; }
   .kgstars span.wait { color:#f2b400; opacity:.4; }
