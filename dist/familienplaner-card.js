@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.6.0";
+  const VERSION = "1.7.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -173,8 +173,11 @@
     ["Pyjama anziehen", "🌙", "abend"], ["Buch anschauen", "📚", "abend"], ["Baden / Duschen", "🛁", "abend"],
   ];
   const LANG_VORLAGEN = [
-    ["Töpfchentraining", "🚽", 14], ["Schläft im eigenen Bett", "🛏️", 14], ["Trocken in der Nacht", "🌙", 14], ["Ohne Nuggi", "🍼", 14],
-    ["Selber anziehen", "👕", 10], ["Allein Zähne putzen", "🪥", 14], ["Schuhe selber binden", "👟", 10], ["Velo ohne Stützräder", "🚲", 10], ["Schwimmen üben", "🏊", 10],
+    ["Töpfchen", "🚽", 4, "frei", "Monstertruck", "🛻"], ["Schläft im eigenen Bett", "🛏️", 7, "tag", "Kuscheltier", "🧸"],
+    ["Trocken in der Nacht", "🌙", 7, "tag", "Glace", "🍦"], ["Ohne Nuggi", "🍼", 7, "tag", "Spielfigur", "🦖"],
+    ["Selber anziehen", "👕", 5, "frei", "Sticker", "⭐"], ["Allein Zähne putzen", "🪥", 10, "frei", "Heftli", "📖"],
+    ["Schuhe selber binden", "👟", 5, "frei", "Ballon", "🎈"], ["Velo ohne Stützräder", "🚲", 5, "tag", "Glace", "🍦"],
+    ["Schwimmen üben", "🏊", 5, "tag", "Pommes", "🍟"],
   ];
   const KIND_EMOJIS = ["🪥", "👕", "🛏️", "🥣", "🍎", "👟", "🧼", "🐰", "🪴", "🍽️", "🧸", "🌙", "📚", "🛁", "🚽", "🍼", "🚲", "🏊", "🎒", "🧹", "🧺", "🗑️", "🎹", "⚽", "🖍️", "🙏", "😴", "🥦", "💧", "⭐"];
   const EMOJI_WAHL = ["🧸", "🏫", "🧩", "🌲", "🤸", "🏊", "⚽", "🩰", "🐴", "🎵", "🎨", "🦷", "🩺", "✂️", "🎂", "🎉", "👵", "👴", "🦁", "🎬", "📚", "🚲", "⛷️", "🏖️", "🚗", "🚆", "🛝", "🌙", "🍎", "🛒", "🐶", "⭐", "🍭", "🍫", "🍦", "🍟", "🍕", "🧁", "🎈", "🫧", "📖", "🖍️", "🧩", "🦖", "🎧", "👫", "🏊", "🎁"];
@@ -1017,6 +1020,7 @@
             <div class="sthead"><button class="kidopen" data-act="kidview" data-name="${esc(p.name)}" aria-label="Kinder-Ansicht ${esc(p.name)}">${this._kidAvatar(p, 30)}<span>${esc(p.name)}</span>${this._kid(p).streak.n >= 2 ? `<span class="fire">🔥${this._kid(p).streak.n}</span>` : ""}<ha-icon icon="mdi:chevron-right"></ha-icon></button>
               <button class="stgive" data-act="stargive" data-name="${esc(p.name)}" aria-label="Stern für ${esc(p.name)}"><ha-icon icon="mdi:star-plus"></ha-icon></button></div>
             <button class="sttrack" data-act="reward" data-name="${esc(p.name)}">${track}</button>
+            ${(() => { const zs = this._kid(p).ziele.filter((z) => !z.fertig).slice(0, 3); return zs.length ? `<button class="stgoals" data-act="kidview" data-name="${esc(p.name)}">${zs.map((z) => `<span>${esc(z.bild)} ${z.n}/${z.ziel} → ${esc(z.belohnung?.bild || "🎁")}</span>`).join("")}</button>` : ""; })()}
             <button class="streward" data-act="${done ? "redeem" : "reward"}" data-name="${esc(p.name)}">
               ${r.bild ? this._bildHtml(r.bild, "rwpic") : `<span class="rwpic empty"><ha-icon icon="mdi:gift-outline"></ha-icon></span>`}
               <span class="rwtxt">${done ? `<b>Geschafft!</b> ${esc(r.text || "Belohnung")} einlösen` : r.text ? `${esc(r.text)}<small>noch ${r.ziel - n} ${r.ziel - n === 1 ? "Stern" : "Sterne"}</small>` : "Belohnung festlegen"}</span>
@@ -1054,6 +1058,12 @@
       if (!Array.isArray(d.sticker)) d.sticker = [];
       if (!d.streak) d.streak = { n: 0, last: "" };
       if (!d.heute || d.heute.datum !== today) d.heute = { datum: today, done: {} };
+      d.ziele.forEach((z) => {
+        if (typeof z.wait === "string") { z.waitDay = z.wait; z.wait = z.wait === today ? 1 : 0; }
+        z.wait = +z.wait || 0; z.n = +z.n || 0; z.ziel = Math.max(1, +z.ziel || 1);
+        if (!z.oft) z.oft = "tag";
+        if (!z.belohnung) z.belohnung = {};
+      });
       // Flamme erlischt, wenn gestern nicht alles erledigt war
       const yest = ymd(addDays(new Date(), -1));
       if (d.streak.last && d.streak.last !== today && d.streak.last !== yest) d.streak = { n: 0, last: "" };
@@ -1132,7 +1142,7 @@
       const today = ymd(new Date());
       const hour = new Date().getHours();
       const zeitIcon = { morgen: "☀️", abend: "🌙", tag: "🕐" };
-      const waiting = Object.values(d.heute.done).filter((v) => v === "wait").length + d.ziele.filter((z) => z.wait === today).length;
+      const waiting = Object.values(d.heute.done).filter((v) => v === "wait").length + d.ziele.reduce((a, z) => a + (z.wait || 0), 0);
       const card = (a) => {
         const state = d.heute.done[a.id];
         return `<button class="kcard ${state === "ok" ? "ok" : state === "wait" ? "wait" : ""}" data-k="task" data-id="${esc(a.id)}">
@@ -1143,12 +1153,16 @@
       // aktuelle Tageszeit zuerst
       if (hour >= 16) groups.sort((a, b) => (b[0] === "abend") - (a[0] === "abend"));
       const zielCard = (z) => {
-        const doneToday = z.last === today || z.wait === today;
-        const dots = Array.from({ length: z.ziel }, (_, i) => `<span class="${i < z.n ? "on" : ""}"></span>`).join("");
+        const lock = this._goalLocked(z, today);
+        const stars = Array.from({ length: z.ziel }, (_, i) => `<span class="${i < z.n ? "on" : i < z.n + z.wait ? "wait" : ""}">★</span>`).join("");
+        const bel = z.belohnung || {};
         return `<div class="kgoal ${z.fertig ? "fertig" : ""}">
           <span class="kpic">${esc(z.bild)}</span>
-          <div class="kgbody"><b>${esc(z.text)}</b><div class="kdots">${dots}</div><small>${z.fertig ? "Geschafft! 🏆" : `${z.n} von ${z.ziel}`}</small></div>
-          ${z.fertig ? "" : `<button class="kgbtn ${doneToday ? "done" : ""}" data-k="goal" data-id="${esc(z.id)}" ${doneToday ? "disabled" : ""}>${z.wait === today ? "⏳" : doneToday ? "✓ Heute" : "Heute geschafft"}</button>`}
+          <div class="kgbody"><b>${esc(z.text)}</b><div class="kgstars">${stars}</div>
+            <small>${z.fertig ? "Geschafft! 🏆" : `noch ${Math.max(0, z.ziel - z.n - z.wait)} ★${z.oft === "tag" ? " · einmal pro Tag" : ""}`}</small></div>
+          ${bel.text || bel.bild ? `<div class="kgrew">${bel.bild ? this._bildHtml(bel.bild, "kgrpic") : ""}<span>${esc(bel.text || "")}</span></div>` : ""}
+          ${z.fertig ? `<button class="kgbtn again" data-k="goalagain" data-id="${esc(z.id)}">Nochmals</button>`
+            : `<button class="kgbtn ${lock ? "done" : ""}" data-k="goal" data-id="${esc(z.id)}" ${lock ? "disabled" : ""}>${lock ? (z.wait ? "⏳" : "✓ Heute") : "+1 ★"}</button>`}
         </div>`;
       };
       const done = n >= r.ziel;
@@ -1205,26 +1219,37 @@
       }
       if (k === "goal") {
         const z = d.ziele.find((x) => x.id === el.dataset.id);
-        if (!z || z.last === today || z.wait === today || z.fertig) return;
-        if (st.bestaetigen) z.wait = today;
-        else this._goalStep(z, today);
+        if (!z || z.fertig || this._goalLocked(z, today)) return;
+        if (st.bestaetigen) { z.wait = (z.wait || 0) + 1; z.waitDay = today; }
+        else this._goalStep(z, today, 1);
+        this._celebrate(el, st.bestaetigen ? 0 : 3);
         await this._saveKid(p, d);
-        if (!st.bestaetigen) { await this._addStars(p, 1); this._celebrate(el, 3); if (z.fertig) this._goalDone(p, z); else this._checkGoalReached(p); }
+        if (!st.bestaetigen && z.fertig) this._goalDone(p, z);
+        return;
+      }
+      if (k === "goalagain") {
+        const id = el.dataset.id;
+        return this._parent("Dieses Ziel nochmals von vorne beginnen?", async () => {
+          const d2 = this._kid(p), z = d2.ziele.find((x) => x.id === id);
+          if (z) { z.n = 0; z.wait = 0; z.last = ""; z.fertig = false; }
+          await this._saveKid(p, d2);
+        });
       }
     }
-    _goalStep(z, today) { z.n = Math.min(z.ziel, (z.n || 0) + 1); z.last = today; delete z.wait; if (z.n >= z.ziel) z.fertig = true; }
+    _goalLocked(z, today) { return z.oft === "tag" && (z.last === today || (z.wait > 0 && z.waitDay === today)); }
+    _goalStep(z, today, cnt = 1) { z.n = Math.min(z.ziel, (z.n || 0) + cnt); z.last = today; z.wait = 0; delete z.waitDay; if (z.n >= z.ziel) z.fertig = true; }
     async _goalDone(p, z) {
-      const d = this._kid(p);
-      d.sticker.push({ bild: z.bild, text: z.text, datum: ymd(new Date()) });
+      const d = this._kid(p), bel = z.belohnung || {};
+      d.sticker.push({ bild: bel.bild || z.bild, text: bel.text || z.text, datum: ymd(new Date()) });
       await this._saveKid(p, d);
-      this._party(p, z.bild, `${z.text}: geschafft!`);
+      this._party(p, bel.bild || z.bild, `Geschafft, ${p.name}!`, bel.text ? `${z.text} ${z.ziel}× – ${bel.text}` : `${z.text} ${z.ziel}×`);
     }
     async _confirmKid(p) {
       const d = this._kid(p), today = ymd(new Date());
       let add = 0;
       Object.keys(d.heute.done).forEach((id) => { if (d.heute.done[id] === "wait") { d.heute.done[id] = "ok"; add++; } });
       const finished = [];
-      d.ziele.forEach((z) => { if (z.wait === today) { this._goalStep(z, today); add++; if (z.fertig) finished.push(z); } });
+      d.ziele.forEach((z) => { if (z.wait > 0 && !z.fertig) { this._goalStep(z, today, z.wait); if (z.fertig) finished.push(z); } });
       await this._saveKid(p, d);
       if (add) await this._addStars(p, add);
       await this._checkStreak(p);
@@ -1297,16 +1322,18 @@
           <div class="sect">Vorlagen (antippen zum Hinzufügen)</div>
           <div class="sug">${TAGES_VORLAGEN.map(([t, b, z], i) => `<button data-m="addtv" data-i="${i}">${b} ${esc(t)} <small>${{ morgen: "☀️", tag: "🕐", abend: "🌙" }[z]}</small></button>`).join("")}</div>`
           : tab === "ziele" ? `
-          <div class="klist">${d.ziele.map((z, i) => `<div class="krow"><span class="kpic s">${esc(z.bild)}</span><span>${esc(z.text)}</span><small>${z.fertig ? "🏆 geschafft" : `${z.n || 0} / ${z.ziel} Tage`}</small><button class="nope" data-m="delgoal" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine grossen Ziele.</p>`}</div>
-          <div class="sect">Vorlagen (antippen zum Hinzufügen)</div>
-          <div class="sug">${LANG_VORLAGEN.map(([t, b, z], i) => `<button data-m="addlv" data-i="${i}">${b} ${esc(t)} <small>${z} Tage</small></button>`).join("")}</div>`
+          <p class="hint2">Jedes grosse Ziel sammelt eigene Sterne für eine eigene Belohnung. Die Tagesaufgaben füllen nebenbei das Sternenglas.</p>
+          <div class="klist">${d.ziele.map((z, i) => `<div class="krow"><button class="krowmain" data-m="editgoal" data-i="${i}"><span class="kpic s">${esc(z.bild)}</span><span>${esc(z.text)}</span><small>${z.fertig ? "🏆 geschafft" : `${z.n || 0} / ${z.ziel} ★`} → ${esc((z.belohnung && (z.belohnung.bild || "")) || "")} ${esc((z.belohnung && z.belohnung.text) || "–")}</small></button><button class="nope" data-m="delgoal" data-i="${i}" aria-label="Entfernen">✕</button></div>`).join("") || `<p class="hint2">Noch keine grossen Ziele.</p>`}</div>
+          <div class="sect">Vorlagen (antippen, dann anpassen)</div>
+          <div class="sug">${LANG_VORLAGEN.map(([t, b, z, o, bt, bb], i) => `<button data-m="addlv" data-i="${i}">${b} ${esc(t)} <small>${z}× → ${bb} ${esc(bt)}</small></button>`).join("")}</div>
+          <button class="btn ghost" data-m="newgoal">+ Eigenes Ziel</button>`
           : `
           <label class="chk"><input id="fp-best" type="checkbox" ${st.bestaetigen ? "checked" : ""}><span>Sterne erst nach Bestätigung durch Eltern</span></label>
           <label class="kw">Eltern-Code (4 Ziffern, leer = kein Code)<input id="fp-pinset" type="text" inputmode="numeric" maxlength="4" value="${esc(st.pin)}" placeholder="z. B. 2580"></label>
           <label class="chk"><input id="fp-ton" type="checkbox" ${st.ton ? "checked" : ""}><span>Ton bei der Feier</span></label>
           <p class="hint2">Gilt für alle Kinder. Der Code schützt Einstellungen, Bestätigen und Einlösen.</p>
           <div class="flash"></div>`;
-        const own = tab === "tages" || tab === "ziele" ? `
+        const own = tab === "tages" ? `
           <div class="sect">${tab === "tages" ? "Eigene Tagesaufgabe" : "Eigenes grosses Ziel"}</div>
           <div class="kown"><span class="kpic s" id="fp-nb">${neuBild}</span><input id="fp-nt" type="text" maxlength="30" placeholder="${tab === "tages" ? "z. B. Velohelm aufhängen" : "z. B. Allein einschlafen"}">
             ${tab === "tages" ? `<select id="fp-nz"><option value="morgen" ${neuZeit === "morgen" ? "selected" : ""}>☀️ Morgen</option><option value="tag" ${neuZeit === "tag" ? "selected" : ""}>🕐 Tag</option><option value="abend" ${neuZeit === "abend" ? "selected" : ""}>🌙 Abend</option></select>`
@@ -1328,14 +1355,16 @@
         tab: (el) => { tab = el.dataset.v; draw(); },
         nb: (el) => { neuBild = el.dataset.v; const b = this.shadowRoot.querySelector("#fp-nb"); if (b) b.textContent = neuBild; this.shadowRoot.querySelectorAll("#modal .emo button").forEach((x) => x.classList.toggle("on", x === el)); },
         addtv: (el) => { const [t, b, z] = TAGES_VORLAGEN[+el.dataset.i]; d.aufgaben.push({ id: uid(), text: t, bild: b, zeit: z }); save(); },
-        addlv: (el) => { const [t, b, z] = LANG_VORLAGEN[+el.dataset.i]; d.ziele.push({ id: uid(), text: t, bild: b, ziel: z, n: 0 }); save(); },
+        addlv: (el) => { const [t, b, z, o, bt, bb] = LANG_VORLAGEN[+el.dataset.i]; this._openGoalEditor(p, null, { text: t, bild: b, ziel: z, oft: o, belohnung: { text: bt, bild: bb } }); },
+        newgoal: () => this._openGoalEditor(p, null, { text: "", bild: "⭐", ziel: 5, oft: "frei", belohnung: {} }),
+        editgoal: (el) => this._openGoalEditor(p, +el.dataset.i, null),
         deltask: (el) => { d.aufgaben.splice(+el.dataset.i, 1); save(); },
         delgoal: (el) => { d.ziele.splice(+el.dataset.i, 1); save(); },
         addown: () => {
           const t = this.shadowRoot.querySelector("#fp-nt").value.trim();
           if (!t) return;
           if (tab === "tages") { neuZeit = this.shadowRoot.querySelector("#fp-nz").value; d.aufgaben.push({ id: uid(), text: t, bild: neuBild, zeit: neuZeit }); }
-          else { neuZiel = +this.shadowRoot.querySelector("#fp-ng").value; d.ziele.push({ id: uid(), text: t, bild: neuBild, ziel: neuZiel, n: 0 }); }
+          else return;
           save();
         },
         saveopt: async () => {
@@ -1343,6 +1372,59 @@
           if (pin && !/^\d{4}$/.test(pin)) { const f = this.shadowRoot.querySelector("#modal .flash"); if (f) f.textContent = "Der Code muss genau 4 Ziffern haben."; return; }
           await this._saveKidSettings({ bestaetigen: this.shadowRoot.querySelector("#fp-best").checked, pin, ton: this.shadowRoot.querySelector("#fp-ton").checked });
           this._modal("");
+        },
+      };
+      draw();
+    }
+
+    _openGoalEditor(p, idx, preset) {
+      const d = this._kid(p);
+      const src = idx != null ? d.ziele[idx] : preset;
+      if (!src) return;
+      const g = { text: src.text || "", bild: src.bild || "⭐", ziel: src.ziel || 5, oft: src.oft || "frei", belohnung: { text: src.belohnung?.text || "", bild: src.belohnung?.bild || "" } };
+      const BEL_EMOJIS = ["🛻", "🚗", "🚒", "🚂", "🦖", "🧸", "🍭", "🍫", "🍦", "🍟", "🍕", "🧁", "🎈", "🫧", "📖", "🖍️", "🧩", "🎧", "⚽", "🏊", "🎬", "🦁", "🛝", "🎁", "⭐", "👑"];
+      const draw = () => {
+        this._modal(`
+          <div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>${idx != null ? "Ziel bearbeiten" : "Neues grosses Ziel"}</h2></div>
+          <div class="dlg-b">
+            <div class="kown"><span class="kpic s">${esc(g.bild)}</span><input id="fp-gt" type="text" maxlength="30" placeholder="z. B. Töpfchen" value="${esc(g.text)}"></div>
+            <div class="emo small">${KIND_EMOJIS.map((e) => `<button data-m="gb" data-v="${e}" class="${e === g.bild ? "on" : ""}">${e}</button>`).join("")}</div>
+            <div class="sect">Wie oft zählt es?</div>
+            <div class="seg">${[["frei", "Jedes Mal"], ["tag", "Einmal pro Tag"]].map(([v, t]) => `<button data-m="go" data-v="${v}" class="${g.oft === v ? "on" : ""}">${t}</button>`).join("")}</div>
+            <div class="zielrow"><span>Sterne bis zur Belohnung</span>
+              <button class="add" data-m="gzm" aria-label="Weniger"><ha-icon icon="mdi:minus"></ha-icon></button><b>${g.ziel}</b>
+              <button class="add" data-m="gzp" aria-label="Mehr"><ha-icon icon="mdi:plus"></ha-icon></button></div>
+            <div class="sect">Belohnung</div>
+            <div class="kown"><span class="kpic s">${esc(g.belohnung.bild || "🎁")}</span><input id="fp-gbt" type="text" maxlength="30" placeholder="z. B. Monstertruck" value="${esc(g.belohnung.text)}"></div>
+            <div class="emo small">${BEL_EMOJIS.map((e) => `<button data-m="gbb" data-v="${e}" class="${e === g.belohnung.bild ? "on" : ""}">${e}</button>`).join("")}</div>
+            <div class="rwquick">${BELOHNUNGEN.map(([t, e], i) => `<button data-m="gq" data-i="${i}" class="${t === g.belohnung.text ? "on" : ""}"><span class="qe">${e}</span><span>${esc(t)}</span></button>`).join("")}</div>
+            <div class="flash"></div>
+          </div>
+          <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="back">Abbrechen</button><button class="btn" data-m="gsave">Speichern</button></div>`);
+        this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
+      };
+      const keep = () => { const t = this.shadowRoot.querySelector("#fp-gt"); if (t) g.text = t.value; const b = this.shadowRoot.querySelector("#fp-gbt"); if (b) g.belohnung.text = b.value; };
+      this._mh = {
+        gb: (el) => { keep(); g.bild = el.dataset.v; draw(); },
+        go: (el) => { keep(); g.oft = el.dataset.v; draw(); },
+        gzm: () => { keep(); g.ziel = Math.max(1, g.ziel - 1); draw(); },
+        gzp: () => { keep(); g.ziel = Math.min(30, g.ziel + 1); draw(); },
+        gbb: (el) => { keep(); g.belohnung.bild = el.dataset.v; draw(); },
+        gq: (el) => { keep(); const [t, e] = BELOHNUNGEN[+el.dataset.i]; g.belohnung = { text: t, bild: e }; draw(); },
+        back: () => this._openKidSettings(p),
+        gsave: async () => {
+          keep();
+          g.text = g.text.trim(); g.belohnung.text = g.belohnung.text.trim();
+          if (!g.text) { const f = this.shadowRoot.querySelector("#modal .flash"); if (f) f.textContent = "Bitte einen Namen für das Ziel eingeben."; return; }
+          const d2 = this._kid(p);
+          if (idx != null && d2.ziele[idx]) {
+            const z = d2.ziele[idx];
+            Object.assign(z, { text: g.text, bild: g.bild, ziel: g.ziel, oft: g.oft, belohnung: g.belohnung });
+            z.fertig = z.n >= z.ziel;
+          } else d2.ziele.push({ id: Math.random().toString(36).slice(2, 8), ...g, n: 0, wait: 0, last: "" });
+          await this._saveKid(p, d2);
+          this._kidSetTab = "ziele";
+          this._openKidSettings(p);
         },
       };
       draw();
@@ -2565,10 +2647,20 @@
   .kgbody { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
   .kgbody b { font-size:19px; }
   .kgbody small { color:var(--ink2); font-size:14px; font-weight:600; }
+  .kgstars { display:flex; flex-wrap:wrap; gap:2px; font-size:26px; line-height:1; color:var(--line); }
+  .kgstars span.on { color:#f2b400; }
+  .kgstars span.wait { color:#f2b400; opacity:.4; }
+  .kgrew { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:13px; font-weight:700; color:var(--ink2); max-width:96px; text-align:center; }
+  .kgrpic { width:64px; height:52px; border-radius:14px; overflow:hidden; display:grid; place-items:center; font-size:44px; background:var(--soft); }
+  .kgrpic img { width:100%; height:100%; object-fit:cover; }
+  .kgbtn.again { background:var(--soft); color:var(--ink); }
+  .krowmain { display:flex; align-items:center; gap:10px; flex:1; min-width:0; text-align:left; }
+  .stgoals { display:flex; flex-wrap:wrap; gap:6px; }
+  .stgoals span { font-size:12.5px; font-weight:700; padding:3px 8px; border-radius:10px; background:var(--paper); }
   .kdots { display:flex; flex-wrap:wrap; gap:5px; }
   .kdots span { width:18px; height:18px; border-radius:50%; background:var(--soft); box-shadow:inset 0 0 0 2px var(--line); }
   .kdots span.on { background:#f2b400; box-shadow:none; }
-  .kgbtn { padding:14px 16px; border-radius:18px; background:var(--c); color:#fff; font-weight:800; font-size:17px; white-space:nowrap; }
+  .kgbtn { padding:16px 20px; border-radius:18px; background:var(--c); color:#fff; font-weight:800; font-size:20px; white-space:nowrap; min-width:92px; text-align:center; }
   .kgbtn.done { background:var(--soft); color:var(--ink2); }
   .kalbum { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px; }
   .kst { display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px; border-radius:20px; background:var(--paper); transform:rotate(-2deg); box-shadow:0 3px 8px rgba(0,0,0,.08); text-align:center; font-weight:700; }
