@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.2.0";
+  const VERSION = "1.3.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -229,6 +229,8 @@
       this._poll = setInterval(() => { this._refreshCalendars(true); this._pollN = (this._pollN || 0) + 1; if (this._pollN % 6 === 0) this._loadExtras(); }, 5 * 60000);
       this._mq = window.matchMedia("(orientation: landscape)");
       this._mqH = () => this._render();
+      this._rsH = () => this._render();
+      window.addEventListener("resize", this._rsH);
       this._mq.addEventListener?.("change", this._mqH);
       if (this._hass) this._subscribeWeather();
     }
@@ -236,6 +238,7 @@
     disconnectedCallback() {
       clearInterval(this._tick); clearInterval(this._poll);
       this._mq?.removeEventListener?.("change", this._mqH);
+      window.removeEventListener("resize", this._rsH);
       if (this._unsubWx) { this._unsubWx.then((u) => u && u()).catch(() => {}); this._unsubWx = null; }
     }
 
@@ -310,7 +313,7 @@
       const a = this._anchor;
       if (this._view === "tag") return [a, addDays(a, 1)];
       if (this._view === "monat") { const f = sow(new Date(a.getFullYear(), a.getMonth(), 1)); return [f, addDays(f, 42)]; }
-      const s = sow(a); return [s, addDays(s, 7)];
+      const s = sow(a); return [s, addDays(s, this._weekDays || 7)];
     }
 
     async _refreshAll() {
@@ -547,7 +550,32 @@
           <aside class="side ${this._hasChores() ? "" : "nochores"}" data-scroll="side">${this._sidePanels()}</aside>
         </div>`;
       app.querySelectorAll("[data-scroll]").forEach((el) => { if (scrolls[el.dataset.scroll] != null) el.scrollTop = scrolls[el.dataset.scroll]; });
+      if (this._view === "woche") requestAnimationFrame(() => this._fitWeek());
       if (this._needScrollNow) { this._needScrollNow = false; const nl = app.querySelector(".nowline"); if (nl) nl.closest("[data-scroll]").scrollTop = Math.max(0, nl.offsetTop - 120); }
+    }
+
+    // Woche: so viele Tage zeigen, wie auf den Bildschirm passen (mindestens 7, höchstens 21)
+    _fitWeek() {
+      const wb = this.shadowRoot.querySelector(".wbody");
+      if (!wb || this._view !== "woche") return;
+      const rows = wb.querySelectorAll(".wrow");
+      if (!rows.length) return;
+      const key = `${ymd(this._anchor)}|${window.innerWidth}x${window.innerHeight}|${this._orient}|${[...this._hidden].join(",")}`;
+      if (key !== this._fitKey) { this._fitKey = key; this._fitN = 0; }
+      if ((this._fitN || 0) >= 6) return;
+      const top = wb.getBoundingClientRect().top - wb.scrollTop;
+      const used = rows[rows.length - 1].getBoundingClientRect().bottom - top + 8;
+      const free = wb.clientHeight - used;
+      const avg = used / rows.length;
+      const days = this._weekDays || 7;
+      let nd = days;
+      if (free > avg * 0.9) nd = Math.min(21, days + Math.max(1, Math.floor(free / avg)));
+      else if (-free > avg && days > 7) nd = Math.max(7, days - Math.floor(-free / avg));
+      if (nd === days) return;
+      this._fitN = (this._fitN || 0) + 1;
+      this._weekDays = nd;
+      this._refreshCalendars();
+      this._render();
     }
 
     _clock() {
@@ -568,7 +596,7 @@
       let label;
       if (this._view === "tag") label = `${WDL[s.getDay()]}, ${s.getDate()}. ${MO[s.getMonth()]}`;
       else if (this._view === "monat") label = `${MO[this._anchor.getMonth()]} ${this._anchor.getFullYear()}`;
-      else { const l = addDays(e, -1); label = `${s.getDate()}.${s.getMonth() !== l.getMonth() ? " " + MOS[s.getMonth()] : ""} – ${l.getDate()}. ${MOS[l.getMonth()]} <span class="kw">KW ${kw(s)}</span>`; }
+      else { const l = addDays(e, -1); label = `${s.getDate()}.${s.getMonth() !== l.getMonth() ? " " + MOS[s.getMonth()] : ""} – ${l.getDate()}. ${MOS[l.getMonth()]} <span class="kw">KW ${kw(s)}${kw(l) !== kw(s) ? "–" + kw(l) : ""}</span>`; }
       const orientIcon = { auto: "mdi:phone-rotate-portrait", hoch: "mdi:tablet", quer: "mdi:tablet" }[this._orient];
       const orientLabel = { auto: "Auto", hoch: "Hoch", quer: "Quer" }[this._orient];
       return `
@@ -682,8 +710,10 @@
       const cols = `var(--daycol) ${all.map((p) => (this._hidden.has(p.name) ? "var(--hidcol)" : "minmax(0,1fr)")).join(" ")}`;
       const today = sod(new Date());
       let rows = "";
-      for (let k = 0; k < 7; k++) {
+      const nDays = this._weekDays || 7;
+      for (let k = 0; k < nDays; k++) {
         const d = addDays(s, k);
+        if (k > 0 && d.getDay() === 1) rows += `<div class="kwsep"><span>KW ${kw(d)}</span></div>`;
         const famEv = this._onChips(this._events.familie, d);
         const hol = holidayOn(d);
         const band = famEv.length || hol;
@@ -1443,7 +1473,7 @@
   .quer .side { width:340px; flex:none; grid-auto-rows:max-content; }
   .quer .side .items { max-height:300px; }
   .quer .side .cd { max-height:220px; }
-  .hoch .side { flex:none; height:36%; min-height:280px; grid-template-columns:1fr 1fr 1.25fr; grid-template-rows:auto 1fr; overflow:hidden; }
+  .hoch .side { flex:none; height:clamp(280px, 36%, 440px); min-height:280px; grid-template-columns:1fr 1fr 1.25fr; grid-template-rows:auto 1fr; overflow:hidden; }
   .hoch .side .notewrap { grid-column:1; grid-row:1; }
   .hoch .side .note { min-height:0; padding:18px 16px 14px; }
   .hoch .side .note p { -webkit-line-clamp:3; font-size:22px; }
@@ -1487,7 +1517,8 @@
   .wrow.now { background:var(--today); box-shadow:0 0 0 2px var(--todayline); }
   .wrow.now .dcell { background:color-mix(in srgb, var(--todayline) 18%, transparent); }
   .dcell { padding:10px 8px 10px 12px; display:flex; flex-direction:column; gap:4px; border-right:1px solid var(--line); background:color-mix(in srgb, var(--soft) 60%, transparent); }
-  .wrow.mo-start { margin-top:4px; }
+  .kwsep { display:flex; align-items:center; gap:10px; flex:none; padding:4px 6px 0; color:var(--ink3); font-size:12px; font-weight:700; letter-spacing:.04em; }
+  .kwsep::after { content:""; flex:1; height:1px; background:color-mix(in srgb, var(--ink) 18%, transparent); }
   .dnum { display:flex; align-items:baseline; gap:6px; flex-wrap:wrap; }
   .dnum .wd { font-weight:700; color:var(--ink2); font-size:14px; }
   .dnum .n { font-family:var(--f-disp); font-weight:700; font-size:28px; line-height:1; letter-spacing:-0.02em; }

@@ -24,7 +24,7 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 
 ## Was er kann
 
-- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto
+- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto. Auf grossen Displays zeigt die Woche automatisch mehr Tage.
 - **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen.
 - **Essensplan**: pro Tag ein Gericht, mit Vorschlägen aus den letzten Wochen
 - **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
