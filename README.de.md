@@ -41,6 +41,7 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
 - Nachtdienste über Mitternacht erscheinen nur einmal («18:00–06:00»)
+- **Einstellungen** (Knopf ⚙️ oben): Familienmitglieder mit Foto, Farbe und Kalendern (hinzufügen, ausblenden, löschen), Kinder & Sterne, Bilder zu Terminen, Lieblingsessen, ausgeblendete Einträge, Ausrichtung und dunkles Design an einem Ort. Mit Eltern-Code geschützt, falls einer gesetzt ist.
 - Hoch- und Querformat, helles und dunkles Design (wahlweise automatisch nach Sonnenuntergang)
 - Deutsch und Englisch (richtet sich nach der Sprache von Home Assistant)
 
@@ -107,18 +108,20 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 
 | Was | Wie |
 |---|---|
-| Familienmitglied hinzufügen | Knopf «+ Person» oben links in der Wochenansicht |
-| Hinzugefügte Person ändern oder entfernen | lange auf ihr Foto drücken → «Name & Kalender» |
+| Einstellungen öffnen | Knopf ⚙️ «Einstellungen» oben rechts |
+| Familienmitglied hinzufügen, ändern, ausblenden oder löschen | Einstellungen → Familie (oder «+ Person» oben links in der Wochenansicht) |
+| Kalender einer Person ändern | Einstellungen → Familie → «Kalender» |
 | Person aus- oder einblenden | Foto antippen |
 | Foto, Ausschnitt und Farbe ändern | lange auf das Foto drücken (Foto verschieben und vergrössern) |
 | Termin ansehen, Bild zuweisen | Termin antippen → «Bild zuweisen» (oder lange drücken) |
-| Alle Bild-Themen ansehen und ändern | Knopf mit dem Bildsymbol oben rechts |
+| Alle Bild-Themen ansehen und ändern | Einstellungen → Bilder |
 | Essen eintragen | beim Tag auf «Essen planen» tippen |
 | Pinnwand schreiben | Post-it antippen |
 | Countdown hinzufügen | «+» bei «Bald» |
 | Alle kommenden Ereignisse gross anzeigen | Kachel «Bald» antippen |
 | Eintrag bei «Bald» ausblenden | in der grossen Ansicht den Eintrag antippen |
-| Hoch- oder Querformat fest einstellen | Knopf oben rechts (Auto / Hoch / Quer) |
+| Hoch- oder Querformat, dunkles Design | Einstellungen → Anzeige (gilt für dieses Gerät) |
+| Lieblingsessen verwalten, ausgeblendete Einträge zurückholen | Einstellungen → Essen / Bald |
 | Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
 | Stern geben | Stern-Knopf beim Kind |
 | Sterne & Belohnungen öffnen | Kachel «Sterne» antippen, dann das Kind wählen |
@@ -141,7 +144,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | `feiertage` | Auswahl der Feiertage (siehe Beispiel-Dashboard); `[]` blendet alle aus |
 | `eigene_feiertage` | zusätzliche Tage `{datum, name}` |
 | `personen_hinzufuegen` | `false` blendet den Knopf «+ Person» aus (Standard: sichtbar). Am Tablet hinzugefügte Personen werden in der Liste «Planer Bilder» gespeichert |
-| `dunkel` | `auto` (wie Home Assistant, Standard), `sonne` (dunkel zwischen Sonnenuntergang und -aufgang), `hell` oder `dunkel` |
+| `dunkel` | `auto` (wie Home Assistant, Standard), `sonne` (dunkel zwischen Sonnenuntergang und -aufgang), `hell` oder `dunkel`. Pro Gerät änderbar unter Einstellungen → Anzeige |
 | `sprache` | `auto` (wie Home Assistant, Standard), `de` oder `en` |
 | `zuhause_link`, `zuhause_name` | Knopf oben, der zu einem anderen Dashboard wechselt, z. B. `zuhause_link: /dashboard-zuhause` (Pfad aus der Adresszeile). Ohne `zuhause_link` kein Knopf |
 

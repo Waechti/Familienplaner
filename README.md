@@ -34,6 +34,7 @@ The design follows the light or dark theme of Home Assistant. The interface is a
 - **Coming up**: birthdays, your own countdowns and the next school holidays, shown big with pictures for kids.
 - **Message board** as a sticky note, **weather** for today and tomorrow, **public holidays**, **waste collection** reminders.
 - Night shifts across midnight show up only once ("18:00–06:00").
+- **Settings** (⚙️ button at the top): family members with photo, colour and calendars (add, hide, delete), kids & stars, event pictures, favourite meals, hidden entries, orientation and dark design, all in one place. Protected by the parent code if one is set.
 - Portrait and landscape, light and dark design (optionally dark after sunset).
 
 Events are only displayed; you edit them as usual in your calendar (e.g. Google Calendar).
@@ -120,12 +121,13 @@ The automation in the package fetches new events every 15 minutes. The secret ad
 
 | What | How |
 |---|---|
-| Add a family member | "+ Person" button at the top left of the week view |
-| Edit or remove an added person | long press their photo → "Name & calendar" |
+| Open settings | ⚙️ "Settings" button at the top right |
+| Add, edit, hide or delete a family member | Settings → Family (or "+ Person" at the top left of the week view) |
+| Change a person's calendars | Settings → Family → "Calendars" |
 | Show or hide a person | tap their photo |
 | Change photo, crop and colour | long press the photo |
 | View an event, assign a picture | tap the event → "Assign picture" (or long press) |
-| See and change all picture topics | picture button at the top right |
+| See and change all picture topics | Settings → Pictures |
 | Plan a meal | tap "Plan a meal" on a day |
 | Write on the message board | tap the sticky note |
 | Add a countdown | "+" at "Coming up" |
@@ -135,7 +137,8 @@ The automation in the package fetches new events every 15 minutes. The secret ad
 | Set tasks, goals, parent code | ⚙️ in the kids view |
 | Set or redeem a reward | tap the stars or the reward |
 | Mark a favourite meal | tap the heart in the meal window; ✕ on a suggestion = don't suggest again |
-| Fix portrait or landscape | button at the top right (Auto / Portrait / Landscape) |
+| Fix portrait or landscape, dark design | Settings → Display (applies to this device) |
+| Manage favourite meals, bring back hidden entries | Settings → Meals / Coming up |
 
 ## Card options
 
@@ -154,7 +157,7 @@ The option names are German. Here is what they mean:
 | `feiertage` | which public holidays to show (see example dashboard); `[]` hides all |
 | `eigene_feiertage` | extra days `{datum, name}` (date, name) |
 | `personen_hinzufuegen` | `false` hides the "+ Person" button |
-| `dunkel` | dark mode: `auto` (like Home Assistant, default), `sonne` (dark between sunset and sunrise), `hell` (light) or `dunkel` (dark) |
+| `dunkel` | dark mode: `auto` (like Home Assistant, default), `sonne` (dark between sunset and sunrise), `hell` (light) or `dunkel` (dark). Can be overridden per device in Settings → Display |
 | `sprache` | language: `auto` (like Home Assistant, default), `en` or `de` |
 | `zuhause_link`, `zuhause_name` | button at the top that opens another dashboard, e.g. `zuhause_link: /dashboard-home` |
 

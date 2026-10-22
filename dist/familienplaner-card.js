@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.12.0";
+  const VERSION = "1.13.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -305,6 +305,19 @@
     "Allein Zähne putzen": "Brush teeth alone", "Schuhe selber binden": "Tie own shoes", "Velo ohne Stützräder": "Bike without stabilisers", "Schwimmen üben": "Swimming practice",
     // Wochentage, Monate (lange Formen für Überschriften)
     "Heute Abfuhr:": "Collection today:", "Morgen rausstellen:": "Put out tonight:", "🏆 geschafft": "🏆 done", "Hochladen": "Upload",
+    // Einstellungen
+    "Einstellungen": "Settings", "⚙️ Einstellungen": "⚙️ Settings", "Einstellungen öffnen": "Open settings", "Kinder & Sterne": "Kids & stars", "Anzeige": "Display",
+    "Foto & Farbe": "Photo & colour", "Kalender": "Calendars", "Ausblenden": "Hide", "Einblenden": "Show", "Kein Kalender": "No calendar", "＋ Familienmitglied hinzufügen": "＋ Add family member",
+    "Ausblenden gilt nur für dieses Gerät. Fest eingerichtete Personen (aus der Konfiguration) lassen sich nicht löschen, ihre Kalender aber hier ändern.": "Hiding only applies to this device. People set up in the configuration can't be deleted here, but you can change their calendars.",
+    "Aufgaben & Ziele": "Tasks & goals", "Sterne auf 0": "Stars to 0", "Für alle Kinder": "For all children", "Ändern": "Change", "Zurücksetzen": "Reset",
+    "✓ Sterne erst nach Bestätigung durch Eltern": "✓ Stars only after a parent confirms", "Sterne zählen sofort": "Stars count right away", "🔒 Eltern-Code aktiv": "🔒 Parent code on", "kein Eltern-Code": "no parent code",
+    "🔔 Ton an": "🔔 Sound on", "🔕 Ton aus": "🔕 Sound off", "＋ Neues Thema": "＋ New topic", "♥ Lieblingsessen": "♥ Favourite meals", "Lieblingsessen": "Favourite",
+    "Noch keine. Im Essen-Fenster auf das Herz tippen.": "None yet. Tap the heart in the meal window.", "Keine. ✕ antippen holt ein Essen zurück in die Vorschläge.": "None. Tapping ✕ brings a meal back into the suggestions.",
+    "🎉 Countdowns": "🎉 Countdowns", "Keine eigenen Countdowns.": "No countdowns of your own.", "＋ Countdown": "＋ Countdown", "Bei «Bald» ausgeblendet": "Hidden from coming up",
+    "Nichts ausgeblendet. In der grossen «Bald»-Ansicht einen Eintrag antippen, um ihn auszublenden.": "Nothing hidden. Tap an entry in the big coming-up view to hide it.",
+    "Ausrichtung": "Orientation", "Automatisch": "Automatic", "Dunkles Design": "Dark design", "Wie Home Assistant": "Like Home Assistant", "Nach Sonnenuntergang": "After sunset", "Immer hell": "Always light", "Immer dunkel": "Always dark",
+    "Wieder zeigen": "Show again",
+    "Für diese Einstellungen braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.": "These settings need the list “Planer Bilder”. Tap “Create now” at the top.",
     "Montag": "Monday", "Dienstag": "Tuesday", "Mittwoch": "Wednesday", "Donnerstag": "Thursday", "Freitag": "Friday", "Samstag": "Saturday", "Sonntag": "Sunday",
   };
   // Texte mit Zahlen oder Namen
@@ -326,6 +339,10 @@
     [/^aktuell (\d+) Sterne?$/, "currently $1 stars"], [/^(\w{2,3}) (\d+)\.(\d+)\.$/, (m, w, d, mo) => `${w} ${+d} ${EN_ARRAYS.MOS[mo - 1]}`],
     [/^Noch eine Liste anlegen:$/, "Create one more list:"], [/^Noch (\d+) Listen anlegen:$/, "Create $1 more lists:"], [/^✓ Eltern bestätigen \((\d+)\)$/, "✓ Parent check ($1)"],
     [/^Ausschnitt für (.+)$/, "Crop for $1"], [/^(\d+) \/ (\d+) ★ → (.*)$/, "$1 / $2 ★ → $3"],
+        [/^Kalender von (.+)$/, "Calendars of $1"], [/^Kalender von (.+) wieder wie in der Konfiguration\?$/, "Reset $1's calendars to the configuration?"],
+    [/^Wie Karte \((.+)\)$/, "Like the card ($1)"], [/^Diese Einstellungen gelten nur für dieses Gerät\. Familienplaner (.+)\.$/, "These settings only apply to this device. Family planner $1."],
+    [/^(\d+) ★ · (\d+) Tagesaufgaben · (\d+) grosse Ziele$/, "$1 ★ · $2 daily tasks · $3 big goals"], [/^📅 (.+)$/, "📅 $1"], [/^(.+) entfernen$/, "Remove $1"],
+    [/^(.+) · ohne Bilder$/, (m, a) => `${trEN(a)} · without pictures`], [/^(.+) · ausgeblendet$/, (m, a) => `${trEN(a)} · hidden`],
         [/^Person (\d)$/, "Person $1"], [/^Ämtli (.+)$/, "Chores $1"], [/^Foto (.+)$/, "Photo $1"],
   ];
   // Datumsformen nach dem Umstellen der Monatsnamen: «3. Nov» -> «Nov 3»
@@ -338,6 +355,8 @@
     if (out === undefined) {
       for (const [re, rep] of EN_RX) { if (re.test(t)) { out = t.replace(re, rep); break; } }
     }
+    // Mehrteilige Zeilen: «Sterne zählen sofort · kein Eltern-Code»
+    if (out === undefined && t.includes(" · ")) { const parts = t.split(" · ").map((x) => trEN(x)); if (parts.join(" · ") !== t) out = parts.join(" · "); }
     if (out === undefined) {
       // Emoji vor dem Text: «🪥 Zähne putzen»
       const m = t.match(/^([^\p{L}\d]+?)\s+(.+)$/u);
@@ -745,12 +764,31 @@
       const base = new Set((this._basePersonen || []).map((p) => p.name.toLowerCase()));
       return out.filter((p) => !base.has(p.name.toLowerCase()));
     }
+    // Änderungen an den fest eingerichteten Personen (Kalender, Bilder)
+    _baseOverrides() {
+      const base = new Map((this._basePersonen || []).map((p) => [p.name.toLowerCase(), p]));
+      const out = {};
+      (this._todos[this._bildListe()] || []).forEach((i) => {
+        const m = /^Person (.+)$/.exec(i.summary || "");
+        if (!m || !base.has(m[1].trim().toLowerCase())) return;
+        let d = {};
+        try { d = JSON.parse(i.description || "{}") || {}; } catch (e) { d = {}; }
+        out[base.get(m[1].trim().toLowerCase()).name] = { kalender: Array.isArray(d.kalender) ? d.kalender : null, bilder: d.bilder, uid: i.uid };
+      });
+      return out;
+    }
     _syncPersons() {
       const ex = this._extraPersons();
-      const sig = JSON.stringify(ex.map((p) => [p.name, p.farbe, p.kalender, p.bilder]));
+      const ov = this._baseOverrides();
+      const sig = JSON.stringify([ex.map((p) => [p.name, p.farbe, p.kalender, p.bilder]), ov]);
       if (sig === this._extraSig) return;
       this._extraSig = sig;
-      this._config.personen = [...(this._basePersonen || []), ...ex];
+      const base = (this._basePersonen || []).map((p) => {
+        const o = ov[p.name];
+        if (!o) return p;
+        return { ...p, kalender: o.kalender || p.kalender, bilder: o.bilder === undefined ? p.bilder : o.bilder !== false, override: o.uid };
+      });
+      this._config.personen = [...base, ...ex];
       this._refreshCalendars(true);
       this._loadExtras();
     }
@@ -781,6 +819,16 @@
       this._mh = {
         farbe: (el) => { farbe = el.dataset.v; this.shadowRoot.querySelectorAll("#modal .sw").forEach((b) => b.classList.toggle("on", b === el)); this.shadowRoot.querySelector("#modal .dlg-h").style.setProperty("--c", farbe); },
         save: async () => {
+          if (p && !p.extra) {
+            const kal0 = [...this.shadowRoot.querySelectorAll("#modal .calpick input:checked")].map((i) => i.value);
+            const bilder0 = this.shadowRoot.querySelector("#fp-bilder").checked;
+            const d0 = JSON.stringify({ basis: true, kalender: kal0, bilder: bilder0 });
+            if (p.override) await h.callService("todo", "update_item", { item: p.override, description: d0 }, { entity_id: liste });
+            else await h.callService("todo", "add_item", { item: `Person ${p.name}`, description: d0 }, { entity_id: liste });
+            await this._loadTodo(liste);
+            this._modal("");
+            return;
+          }
           const name = this.shadowRoot.querySelector("#fp-in").value.trim();
           const fl = this.shadowRoot.querySelector("#modal .flash");
           if (!name) { fl.textContent = "Bitte einen Namen eingeben."; return; }
@@ -800,6 +848,10 @@
           await this._loadTodo(liste);
           this._modal("");
         },
+        reset: () => this._openConfirm(`Kalender von ${p.name} wieder wie in der Konfiguration?`, "Zurücksetzen", async () => {
+          await h.callService("todo", "remove_item", { item: p.override }, { entity_id: liste });
+          await this._loadTodo(liste);
+        }),
         del: () => this._openConfirm(`${p.name} aus dem Planer entfernen? Die Kalender selbst bleiben unverändert.`, "Entfernen", async () => {
           await h.callService("todo", "remove_item", { item: p.uid }, { entity_id: liste });
           const foto = (this._todos[liste] || []).find((i) => i.summary === `Foto ${p.name}`);
@@ -808,18 +860,18 @@
         }),
       };
       this._modal(`
-        <div class="dlg-h" style="--c:${farbe}"><span class="bar"></span><h2>${p ? `${esc(p.name)} bearbeiten` : "Familienmitglied hinzufügen"}</h2></div>
+        <div class="dlg-h" style="--c:${farbe}"><span class="bar"></span><h2>${p ? (p.extra ? `${esc(p.name)} bearbeiten` : `Kalender von ${esc(p.name)}`) : "Familienmitglied hinzufügen"}</h2></div>
         <div class="dlg-b">
-          <label class="kw">Name<input id="fp-in" type="text" maxlength="30" autofocus placeholder="z. B. Grosi, Leo" value="${esc(p?.name || "")}"></label>
+          ${p && !p.extra ? "" : `<label class="kw">Name<input id="fp-in" type="text" maxlength="30" autofocus placeholder="z. B. Grosi, Leo" value="${esc(p?.name || "")}"></label>
           <div class="farben left"><span class="lbl">Farbe</span>
-            ${FARBEN.map((c) => `<button class="sw ${c === farbe ? "on" : ""}" data-m="farbe" data-v="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join("")}</div>
+            ${FARBEN.map((c) => `<button class="sw ${c === farbe ? "on" : ""}" data-m="farbe" data-v="${c}" style="background:${c}" aria-label="Farbe ${c}"></button>`).join("")}</div>`}
           <div class="sect">Kalender dieser Person</div>
           <div class="calpick">${cals.length ? cals.map((c) => `<label><input type="checkbox" value="${esc(c.id)}" ${sel.has(c.id) ? "checked" : ""}><span>${esc(c.name)}</span></label>`).join("") : `<p class="hint2">Noch keine Kalender in Home Assistant. Zuerst einen Kalender einbinden (z. B. «Remote Calendar»).</p>`}</div>
           <label class="chk"><input id="fp-bilder" type="checkbox" ${p?.bilder === false ? "" : "checked"}><span>Bilder auf den Terminen zeigen</span></label>
           <p class="hint2">Foto und Farbe lassen sich danach wie gewohnt ändern: lange auf das Foto drücken.</p>
           <div class="flash"></div>
         </div>
-        <div class="dlg-f">${p?.uid ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">${p ? "Speichern" : "Hinzufügen"}</button></div>`);
+        <div class="dlg-f">${p?.uid ? `<button class="btn ghost" data-m="del">Entfernen</button>` : p?.override ? `<button class="btn ghost" data-m="reset">Zurücksetzen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">${p ? "Speichern" : "Hinzufügen"}</button></div>`);
     }
 
     _photo(p) {
@@ -837,7 +889,7 @@
     _visiblePersons() { return this._config.personen.map((p, i) => ({ ...p, i })).filter((p) => !this._hidden.has(p.name)); }
     // Design: "sonne" = dunkel zwischen Sonnenuntergang und -aufgang, "auto" = wie Home Assistant, "hell", "dunkel"
     _isDark() {
-      const m = String(this._config.dunkel || "auto").toLowerCase();
+      const m = String(lsGet("fp-dunkel", "") || this._config.dunkel || "auto").toLowerCase();
       if (m === "dunkel") return true;
       if (m === "hell") return false;
       if (m === "sonne") { const sun = this._hass?.states["sun.sun"]; if (sun) return sun.state === "below_horizon"; }
@@ -978,8 +1030,7 @@
                 </div></div>`;
             })() : ""}
             ${this._config.zuhause_link ? `<button class="homebtn" data-act="zuhause" title="Zum Dashboard «${esc(this._config.zuhause_name || "Zuhause")}»" aria-label="${esc(this._config.zuhause_name || "Zuhause")}"><ha-icon icon="mdi:home"></ha-icon><span>${esc(this._config.zuhause_name || "Zuhause")}</span></button>` : ""}
-            <button class="homebtn" data-act="bilder" title="Bilder zu Terminen"><ha-icon icon="mdi:image-multiple"></ha-icon><span>Bilder</span></button>
-            <button class="homebtn orient" data-act="orient" title="Format: ${orientLabel}"><ha-icon icon="${orientIcon}" class="${this._orient === "quer" ? "rot" : ""}"></ha-icon><span>${orientLabel}</span></button>
+            <button class="homebtn wide" data-act="einstellungen" title="Einstellungen"><ha-icon icon="mdi:cog"></ha-icon><span>Einstellungen</span></button>
           </div>
         </header>
         ${this._alertBar()}`;
@@ -1314,6 +1365,122 @@
       draw();
     }
 
+    // ================= Einstellungen =================
+    _openSettings() {
+      const open = () => { this._kidOpen = "__settings__"; this._setTab = this._setTab || "familie"; this._renderKid(); this._kidTouch(); };
+      if (this._kidSettings().pin) this._parent("Einstellungen öffnen", open); else open();
+    }
+    _calNames(p) {
+      return this._cals(p.kalender).map((id) => this._hass.states[id]?.attributes?.friendly_name || id).join(", ");
+    }
+    _renderSettings(k) {
+      const app0 = this.shadowRoot.querySelector("#app");
+      const prevBody = k.querySelector(".setbody");
+      const scroll = prevBody ? prevBody.scrollTop : 0;
+      k.className = `kidview setview ${app0?.classList.contains("dark") ? "dark" : ""}`;
+      const tab = this._setTab;
+      const tabs = [["familie", "👨‍👩‍👧", "Familie"], ["kinder", "⭐", "Kinder & Sterne"], ["bilder", "🖼️", "Bilder"], ["essen", "🍝", "Essen"], ["bald", "⏳", "Bald"], ["anzeige", "🎨", "Anzeige"]]
+        .filter(([t]) => t !== "kinder" || this._kids().length);
+      const liste = this._bildListe();
+      const items = this._todos[liste] || [];
+      const noList = !liste ? `<p class="sethint">Für diese Einstellungen braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.</p>` : "";
+      let body = "";
+      if (tab === "familie") {
+        body = `<div class="setlist">${this._config.personen.map((p) => {
+          const hid = this._hidden.has(p.name);
+          const cal = this._calNames(p);
+          return `<div class="setrow ${hid ? "off" : ""}">
+            ${this._kidAvatar(p, 56)}
+            <div class="settxt"><b>${esc(p.name)}</b><span>${cal ? `📅 ${esc(cal)}` : "Kein Kalender"}${p.bilder === false ? " · ohne Bilder" : ""}${hid ? " · ausgeblendet" : ""}</span></div>
+            <button class="btn ghost" data-k="s-photo" data-name="${esc(p.name)}">Foto &amp; Farbe</button>
+            <button class="btn ghost" data-k="s-person" data-name="${esc(p.name)}">${p.extra ? "Name &amp; Kalender" : "Kalender"}</button>
+            <button class="btn ghost" data-k="s-hide" data-name="${esc(p.name)}">${hid ? "Einblenden" : "Ausblenden"}</button>
+            ${p.extra ? `<button class="setdel" data-k="s-del" data-name="${esc(p.name)}" aria-label="${esc(p.name)} entfernen">🗑</button>` : `<span class="setdel ph"></span>`}
+          </div>`;
+        }).join("")}</div>
+        ${this._config.personen_hinzufuegen === false ? "" : `<button class="btn setadd" data-k="s-add">＋ Familienmitglied hinzufügen</button>`}
+        <p class="sethint">Ausblenden gilt nur für dieses Gerät. Fest eingerichtete Personen (aus der Konfiguration) lassen sich nicht löschen, ihre Kalender aber hier ändern.</p>`;
+      } else if (tab === "kinder") {
+        const st = this._kidSettings();
+        body = `<div class="setlist">${this._kids().map((p) => {
+          const d = this._kid(p);
+          return `<div class="setrow">${this._kidAvatar(p, 56)}
+            <div class="settxt"><b>${esc(p.name)}</b><span>${this._stars(p)} ★ · ${d.aufgaben.length} Tagesaufgaben · ${d.ziele.length} grosse Ziele</span></div>
+            <button class="btn ghost" data-k="s-kid" data-name="${esc(p.name)}">Aufgaben &amp; Ziele</button>
+            <button class="btn ghost" data-k="s-reward" data-name="${esc(p.name)}">Belohnung</button>
+            <button class="btn ghost" data-k="s-stars0" data-name="${esc(p.name)}">Sterne auf 0</button>
+          </div>`;
+        }).join("")}</div>
+        <div class="setcard"><b>Für alle Kinder</b>
+          <span>${st.bestaetigen ? "✓ Sterne erst nach Bestätigung durch Eltern" : "Sterne zählen sofort"} · ${st.pin ? "🔒 Eltern-Code aktiv" : "kein Eltern-Code"} · ${st.ton ? "🔔 Ton an" : "🔕 Ton aus"}</span>
+          <button class="btn ghost" data-k="s-kidopt">Ändern</button></div>`;
+      } else if (tab === "bilder") {
+        const it = this._bilderItems();
+        body = `<p class="sethint">Ein Termin bekommt das Bild des ersten Themas, dessen Stichwort im Titel vorkommt. Antippen, um ein Bild zu ändern.</p>
+          <div class="blist">${it.map((x, i) => `<button class="bitem" data-k="s-bild" data-i="${i}">${this._bildHtml(x.val, "bthumb")}<span class="bt"><b>${esc(x.name)}</b><span>${esc(x.keys)}</span></span>${x.changed ? `<span class="bchg">geändert</span>` : ""}</button>`).join("")}</div>
+          <button class="btn setadd" data-k="s-bildneu">＋ Neues Thema</button>`;
+      } else if (tab === "essen") {
+        const fav = items.filter((i) => /^Essen ♥ /.test(i.summary || "")).sort((a, b) => a.summary.localeCompare(b.summary));
+        const no = items.filter((i) => /^Essen ✗ /.test(i.summary || "")).sort((a, b) => a.summary.localeCompare(b.summary));
+        const chip = (i, k2) => `<span class="setchip">${esc(i.summary.slice(8))}<button data-k="${k2}" data-uid="${esc(i.uid)}" aria-label="Entfernen">✕</button></span>`;
+        body = `${noList}<div class="setcard col"><b>♥ Lieblingsessen</b><div class="setchips">${fav.map((i) => chip(i, "s-rm")).join("") || `<span class="sethint">Noch keine. Im Essen-Fenster auf das Herz tippen.</span>`}</div></div>
+          <div class="setcard col"><b>Nicht mehr vorschlagen</b><div class="setchips">${no.map((i) => chip(i, "s-rm")).join("") || `<span class="sethint">Keine. ✕ antippen holt ein Essen zurück in die Vorschläge.</span>`}</div></div>`;
+      } else if (tab === "bald") {
+        const hid = items.filter((i) => /^Ausgeblendet: /.test(i.summary || ""));
+        const cd = this._findByName("todo", this._config.countdowns);
+        const cds = (this._todos[cd] || []).filter((i) => i.status !== "completed");
+        body = `<div class="setcard col"><b>🎉 Countdowns</b><div class="setchips">${cds.map((i) => `<span class="setchip">${esc(i.summary)}${i.due ? ` <small>${esc(i.due.slice(8, 10) + "." + i.due.slice(5, 7) + ".")}</small>` : ""}<button data-k="s-cdrm" data-uid="${esc(i.uid)}" aria-label="Entfernen">✕</button></span>`).join("") || `<span class="sethint">Keine eigenen Countdowns.</span>`}</div>
+            ${cd ? `<button class="btn ghost" data-k="s-cdadd">＋ Countdown</button>` : ""}</div>
+          <div class="setcard col"><b>Bei «Bald» ausgeblendet</b><div class="setchips">${hid.map((i) => `<span class="setchip">${esc(i.summary.slice(14).split("|")[0])} <small>${esc((i.summary.split("|")[1] || "").slice(0, 10))}</small><button data-k="s-rm" data-uid="${esc(i.uid)}" aria-label="Wieder zeigen">↺</button></span>`).join("") || `<span class="sethint">Nichts ausgeblendet. In der grossen «Bald»-Ansicht einen Eintrag antippen, um ihn auszublenden.</span>`}</div></div>`;
+      } else {
+        const dk = lsGet("fp-dunkel", "");
+        const seg = (k2, cur, opts) => `<div class="seg big">${opts.map(([v, t]) => `<button class="${cur === v ? "on" : ""}" data-k="${k2}" data-v="${v}">${t}</button>`).join("")}</div>`;
+        body = `<div class="setcard col"><b>Ausrichtung</b>${seg("s-orient", this._orient, [["auto", "Automatisch"], ["hoch", "Hochformat"], ["quer", "Querformat"]])}</div>
+          <div class="setcard col"><b>Dunkles Design</b>${seg("s-dark", dk, [["", `Wie Karte (${esc(String(this._config.dunkel || "auto"))})`], ["auto", "Wie Home Assistant"], ["sonne", "Nach Sonnenuntergang"], ["hell", "Immer hell"], ["dunkel", "Immer dunkel"]])}</div>
+          <p class="sethint">Diese Einstellungen gelten nur für dieses Gerät. Familienplaner ${VERSION}.</p>`;
+      }
+      k.innerHTML = `<div class="kwrap setwrap">
+        <header class="khead"><div class="kname">⚙️ Einstellungen</div><button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
+        <div class="setmain">
+          <nav class="setnav">${tabs.map(([t, ic, name]) => `<button class="${t === tab ? "on" : ""}" data-k="s-tab" data-v="${t}"><span>${ic}</span>${name}</button>`).join("")}</nav>
+          <div class="setbody">${body}</div>
+        </div></div>`;
+      const nb = k.querySelector(".setbody");
+      if (nb && scroll) nb.scrollTop = scroll;
+    }
+    async _settingsClick(el) {
+      const k = el.dataset.k, h = this._hass, liste = this._bildListe();
+      const person = () => this._config.personen.find((x) => x.name === el.dataset.name);
+      const need = () => { if (!liste) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return false; } return true; };
+      switch (k) {
+        case "s-tab": this._setTab = el.dataset.v; return this._renderKid();
+        case "s-photo": { const p = person(); if (p) this._openPhoto(p); return; }
+        case "s-person": { const p = person(); if (p && need()) this._openPerson(p); return; }
+        case "s-add": if (need()) this._openPerson(null); return;
+        case "s-hide": { const n = el.dataset.name; this._hidden.has(n) ? this._hidden.delete(n) : this._hidden.add(n); lsSet("fp-hidden", JSON.stringify([...this._hidden])); this._render(); return; }
+        case "s-del": {
+          const p = person(); if (!p || !p.uid) return;
+          return this._openConfirm(`${p.name} aus dem Planer entfernen? Die Kalender selbst bleiben unverändert.`, "Entfernen", async () => {
+            await h.callService("todo", "remove_item", { item: p.uid }, { entity_id: liste });
+            const foto = (this._todos[liste] || []).find((i) => i.summary === `Foto ${p.name}`);
+            if (foto) await h.callService("todo", "remove_item", { item: foto.uid }, { entity_id: liste });
+            await this._loadTodo(liste);
+          });
+        }
+        case "s-kid": { const p = person(); if (p && need()) { this._kidSetTab = "tages"; this._openKidSettings(p); } return; }
+        case "s-kidopt": { const p = this._kids()[0]; if (p && need()) { this._kidSetTab = "opt"; this._openKidSettings(p); } return; }
+        case "s-reward": { const p = person(); if (p && need()) this._openReward(p); return; }
+        case "s-stars0": { const p = person(); if (p) this._openConfirm(`Sterne von ${p.name} auf 0 setzen?`, "Auf 0 setzen", () => h.callService("counter", "reset", { entity_id: p.sterne })); return; }
+        case "s-bild": { const it = this._bilderItems()[+el.dataset.i]; if (it) this._openBildKey(it.name, it.key); return; }
+        case "s-bildneu": this._openBildKey("Neues Thema", ""); return;
+        case "s-rm": if (liste && el.dataset.uid) { await h.callService("todo", "remove_item", { item: el.dataset.uid }, { entity_id: liste }); await this._loadTodo(liste); } return;
+        case "s-cdrm": { const cd = this._findByName("todo", this._config.countdowns); if (cd) { await h.callService("todo", "remove_item", { item: el.dataset.uid }, { entity_id: cd }); await this._loadTodo(cd); } return; }
+        case "s-cdadd": this._openCountdown(); return;
+        case "s-orient": this._orient = el.dataset.v; lsSet("fp-orient", this._orient); this._render(); return;
+        case "s-dark": lsSet("fp-dunkel", el.dataset.v); this._render(); return;
+      }
+    }
+
     _openRewards() {
       const ks = this._kids();
       if (ks.length === 1) return this._openKid(ks[0]);
@@ -1326,7 +1493,7 @@
       this._renderKid(); this._kidTouch();
     }
     _closeKid() { this._kidOpen = null; clearTimeout(this._kidT); const k = this.shadowRoot.querySelector("#kid"); if (k) { k.className = ""; k.innerHTML = ""; } }
-    _kidTouch() { clearTimeout(this._kidT); this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, 30000); }
+    _kidTouch() { clearTimeout(this._kidT); this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, this._kidOpen === "__settings__" ? 120000 : 30000); }
     _jar(n, ziel, uid = "main") {
       const r = Math.max(0, Math.min(1, n / Math.max(1, ziel)));
       const top = 40, bottom = 196, hgt = (bottom - top) * r;
@@ -1343,6 +1510,7 @@
     _renderKid() {
       const k = this.shadowRoot.querySelector("#kid");
       if (k && this._kidOpen === "__bald__") return this._renderSoonBig(k);
+      if (k && this._kidOpen === "__settings__") return this._renderSettings(k);
       if (k && this._kidOpen === "__menu__") {
         const app0 = this.shadowRoot.querySelector("#app");
         k.className = `kidview ${app0?.classList.contains("dark") ? "dark" : ""}`;
@@ -1425,6 +1593,7 @@
       const el = e.target.closest("[data-k]");
       if (!el) return;
       if (el.dataset.k === "close") return this._closeKid();
+      if (this._kidOpen === "__settings__") return this._settingsClick(el);
       if (el.dataset.k === "pick") { this._kidOpen = el.dataset.name; this._kidTab = "heute"; return this._renderKid(); }
       if (el.dataset.k === "menu") { this._kidOpen = "__menu__"; return this._renderKid(); }
       if (el.dataset.k === "soonadd") return this._openCountdown();
@@ -1964,6 +2133,7 @@
         }
         case "setup": this._runSetup(); break;
         case "bilder": this._openBilderListe(); break;
+        case "einstellungen": this._openSettings(); break;
         case "addperson": this._openPerson(null); break;
         case "kidview": { const p = this._config.personen.find((x) => x.name === el.dataset.name); if (p) this._openKid(p); break; }
         case "rewards": this._openRewards(); break;
@@ -2258,7 +2428,7 @@
     }
 
     _openBild(ev) { this._openBildKey(ev.title, null); }
-    _openBilderListe() {
+    _bilderItems() {
       const custom = this._customBilder();
       const items = THEMEN.map((t) => {
         const first = t.keys.split("|")[0];
@@ -2267,6 +2437,10 @@
         return { name: t.name, keys: t.keys.replace(/\\[bs]|\\\.|\?/g, "").split("|").slice(0, 4).join(", "), val: c ? c.val : "url:" + t.url, key, changed: !!c };
       });
       custom.filter((m) => !THEMEN.some((t) => t.re.test(m.key))).forEach((m) => items.push({ name: m.key, keys: m.key, val: m.val, key: m.key, changed: true }));
+      return items;
+    }
+    _openBilderListe() {
+      const items = this._bilderItems();
       this._mh = { open: (el) => { const it = items[+el.dataset.i]; this._openBildKey(it.name, it.key); }, neu: () => this._openBildKey("Neues Thema", "") };
       this._modal(`
         <div class="dlg-h"><ha-icon icon="mdi:image-multiple-outline"></ha-icon><h2>Bilder zu Terminen</h2></div>
@@ -2950,6 +3124,41 @@
   .fire { font-size:14px; font-weight:800; color:#e8590c; margin-left:4px; }
   .fire.big { font-size:26px; background:#fff0e0; padding:4px 12px; border-radius:16px; }
   .dark .fire.big { background:#3a2614; }
+  /* Einstellungen */
+  .homebtn.wide { width:100px; }
+  .kidview.setview { --bg:#f3f5f8; --soft:#e9edf2; --line:#dde2e8; }
+  .kidview.setview.dark { --bg:#11161d; --soft:#232c37; --line:#2f3a48; }
+  .setwrap { height:100%; min-height:0; }
+  .setmain { flex:1; min-height:0; display:grid; grid-template-columns:230px 1fr; gap:22px; }
+  .setnav { display:flex; flex-direction:column; gap:6px; }
+  .setnav button { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px; font-size:17px; font-weight:700; color:var(--ink2); text-align:left; }
+  .setnav button span { font-size:24px; width:30px; text-align:center; }
+  .setnav button.on { background:var(--paper); color:var(--ink); box-shadow:0 2px 6px rgba(0,0,0,.06); }
+  .setbody { overflow:auto; display:flex; flex-direction:column; gap:14px; padding:2px 2px 20px; }
+  .setlist { display:flex; flex-direction:column; gap:10px; }
+  .setrow { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:18px; background:var(--paper); box-shadow:0 1px 3px rgba(0,0,0,.05); flex-wrap:wrap; }
+  .setrow.off { opacity:.6; }
+  .setrow .kav { font-size:24px; box-shadow:0 0 0 3px var(--paper), 0 0 0 5px var(--c); margin:0 6px 0 4px; }
+  .settxt { flex:1; min-width:150px; display:flex; flex-direction:column; gap:3px; }
+  .settxt b { font-size:18px; }
+  .settxt span { font-size:13px; color:var(--ink2); }
+  .setrow .btn { padding:12px 16px; font-size:15px; }
+  .setdel { width:44px; height:44px; border-radius:12px; font-size:20px; display:grid; place-items:center; background:color-mix(in srgb, #c92a2a 12%, var(--paper)); }
+  .setdel.ph { background:none; }
+  .setadd { align-self:flex-start; padding:12px 18px; font-size:15px; }
+  .sethint { margin:0; color:var(--ink2); font-size:14px; }
+  .setcard { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:16px; border-radius:18px; background:var(--paper); box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .setcard.col { flex-direction:column; align-items:flex-start; }
+  .setcard > b { font-size:17px; }
+  .setcard > span { flex:1; color:var(--ink2); font-size:14px; }
+  .setchips { display:flex; flex-wrap:wrap; gap:8px; }
+  .setchip { display:inline-flex; align-items:center; gap:6px; padding:6px 6px 6px 12px; border-radius:12px; background:var(--soft); font-size:14px; font-weight:600; }
+  .setchip small { color:var(--ink2); font-weight:500; }
+  .setchip button { width:28px; height:28px; border-radius:8px; background:var(--paper); font-size:13px; font-weight:700; color:var(--ink2); }
+  .seg.big { flex-wrap:wrap; }
+  .seg.big button { padding:10px 16px; font-size:15px; }
+  .setview .blist { max-height:none; }
+  @media (max-width: 760px) { .homebtn.wide { width:76px; } .homebtn.wide span { font-size:9px; } .setmain { grid-template-columns:1fr; } .setnav { flex-direction:row; overflow-x:auto; } .setnav button { padding:10px 12px; font-size:14px; white-space:nowrap; } }
   .kmain { display:grid; grid-template-columns:minmax(220px, 300px) 1fr; gap:24px; align-items:start; }
   .kleft { display:flex; flex-direction:column; align-items:center; gap:12px; position:sticky; top:0; }
   .jar { width:100%; max-width:220px; height:auto; }
