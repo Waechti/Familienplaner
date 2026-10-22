@@ -17,3 +17,5 @@ jobs:
       - uses: hacs/action@main
         with:
           category: plugin
+          # PolyForm Noncommercial ist bewusst gewählt (kein Verkauf), daher keine offizielle HACS-Liste
+          ignore: license

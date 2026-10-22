@@ -56,8 +56,8 @@ Termine werden nur angezeigt; bearbeitet werden sie wie gewohnt im Kalender (z. 
 
 ### Variante A: über HACS
 
-1. In HACS nach **Familienplaner** suchen und herunterladen.
-2. Wird er nicht gefunden: oben rechts ⋮ → **Benutzerdefinierte Repositories** → `https://github.com/Waechti/familienplaner` eintragen, Typ **Dashboard**, dann suchen und herunterladen.
+1. HACS → oben rechts ⋮ → **Benutzerdefinierte Repositories** → `https://github.com/Waechti/Familienplaner` eintragen, Typ **Dashboard**.
+2. «Familienplaner» suchen und herunterladen.
 3. Weiter mit Schritt 3 unten.
 
 ### Variante B: von Hand (ZIP)

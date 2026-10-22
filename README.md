@@ -48,8 +48,8 @@ Events are only displayed; you edit them as usual in your calendar (e.g. Google 
 
 ### Option A: HACS
 
-1. Search for **Familienplaner** in HACS and download it.
-2. Not found? Top right ⋮ → **Custom repositories** → add `https://github.com/Waechti/familienplaner`, type **Dashboard**, then search and download.
+1. HACS → top right ⋮ → **Custom repositories** → add `https://github.com/Waechti/Familienplaner`, type **Dashboard**.
+2. Search for **Familienplaner** and download it.
 3. Continue with step 3 below.
 
 ### Option B: manually
