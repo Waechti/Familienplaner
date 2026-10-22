@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.10.1";
+  const VERSION = "1.12.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -102,60 +102,60 @@
 
   // Foto-Themen (Unsplash, frei verwendbar). Reihenfolge = Vorrang: das erste passende Thema gewinnt.
   const THEMEN = [
-    ["Nachtschicht", "nachtdienst|nachtschicht|\\bnacht\\b", "1506606401543-2e73709cebb4"],
+    ["Nachtschicht", "nachtdienst|nachtschicht|\\bnacht\\b|night shift|nightshift", "1506606401543-2e73709cebb4"],
     ["Laternenumzug", "laterne|räbeliechtli|räbe", "1628024564458-b3dfcceb3f34"],
-    ["Weihnachten", "weihnacht|christkind|samichlaus", "1514377006585-6e7975371bd6"],
+    ["Weihnachten", "weihnacht|christkind|samichlaus|christmas|xmas", "1514377006585-6e7975371bd6"],
     ["1. August", "1\\.\\s?august|bundesfeier", "1549194400-06e6874c2fd1"],
-    ["Ferien", "ferien|urlaub|hotel", "1531129630896-1744cab0cafd"],
-    ["Elternabend / Schule", "eltern|besuchstag|schule|schulreise", "1580582932707-520aed937b7b"],
+    ["Ferien", "ferien|urlaub|hotel|vacation|holiday", "1531129630896-1744cab0cafd"],
+    ["Elternabend / Schule", "eltern|besuchstag|schule|schulreise|parents|\\bschool", "1580582932707-520aed937b7b"],
     ["Kindergarten Wald", "wald", "1647627611823-d08fa901678e"],
-    ["Turnen", "turnen|kinderturnen|muki|vaki", "1655842556539-db2d2099ded1"],
+    ["Turnen", "turnen|kinderturnen|muki|vaki|gymnastics", "1655842556539-db2d2099ded1"],
     ["Ballett / Tanz", "ballett|dance|tanz", "1555656220-46e30749d330"],
-    ["Kindergarten", "kindergarten|kiga|chindsgi", "1588075592446-265fd1e6e76f"],
-    ["Spielgruppe", "spielgruppe", "1484820540004-14229fe36ca4"],
-    ["Hüten / Grosseltern", "hüete|hueten|hüten|grosi|grossmami|grosspapi|\\boma\\b|\\bopa\\b|nonna", "1593100126453-19b562a800c1"],
-    ["Haustiere füttern", "hase|kaninchen|katze|meerschwein|füttern", "1729172311760-f50e9ec48b35"],
+    ["Kindergarten", "kindergarten|kiga|chindsgi|preschool|nursery", "1588075592446-265fd1e6e76f"],
+    ["Spielgruppe", "spielgruppe|playgroup|daycare", "1484820540004-14229fe36ca4"],
+    ["Hüten / Grosseltern", "hüete|hueten|hüten|grosi|grossmami|grosspapi|\\boma\\b|\\bopa\\b|nonna|babysit|grandma|grandpa|granny", "1593100126453-19b562a800c1"],
+    ["Haustiere füttern", "hase|kaninchen|katze|meerschwein|füttern|feed the|\\bpets?\\b", "1729172311760-f50e9ec48b35"],
     ["Physio / Therapie", "physio|osteo|therapie|massage", "1649751361457-01d3a696c7e6"],
-    ["Zahnarzt", "zahnarzt|dentalhygiene", "1598256989800-fe5f95da9787"],
-    ["Augen", "auge", "1576210117723-cd06449a467d"],
-    ["Arzt", "arzt|doktor|impf|spital|klinik", "1632053002928-1919605ee6f7"],
-    ["Coiffeur", "coiffeur|friseur|haare schneiden", "1704072650662-76df3af134a7"],
-    ["Geburtstag", "geburi|geburtstag|🎂|🎁", "1545696563-af8f6ec2295a"],
-    ["Kürbis", "kürbis", "1570586437263-ab629fccc818"],
+    ["Zahnarzt", "zahnarzt|dentalhygiene|dentist|orthodont", "1598256989800-fe5f95da9787"],
+    ["Augen", "auge|optician|\\beye", "1576210117723-cd06449a467d"],
+    ["Arzt", "arzt|doktor|impf|spital|klinik|doctor|vaccin|hospital|clinic", "1632053002928-1919605ee6f7"],
+    ["Coiffeur", "coiffeur|friseur|haare schneiden|hairdress|haircut|barber", "1704072650662-76df3af134a7"],
+    ["Geburtstag", "geburi|geburtstag|🎂|🎁|birthday|bday", "1545696563-af8f6ec2295a"],
+    ["Kürbis", "kürbis|pumpkin|halloween", "1570586437263-ab629fccc818"],
     ["Europa-Park", "europapark|europa-park|freizeitpark", "1628835788312-41d61f5ddce8"],
-    ["Reisen / Flug", "reise|flug|flughafen|airport|abreise", "1436491865332-7a61a109cc05"],
-    ["Zug / Bahn", "\\bzug\\b|zugfahrt|bahnhof|\\bsbb\\b|\\bbahn\\b", "1593186344142-ef775a6e596f"],
-    ["Umzug", "\\bumzug|zügeln|umziehen", "1714647211902-bb711d643a17"],
+    ["Reisen / Flug", "reise|flug|flughafen|airport|abreise|travel|flight", "1436491865332-7a61a109cc05"],
+    ["Zug / Bahn", "\\bzug\\b|zugfahrt|bahnhof|\\bsbb\\b|\\bbahn\\b|\\btrain\\b", "1593186344142-ef775a6e596f"],
+    ["Umzug", "\\bumzug|zügeln|umziehen|moving house|\\bmove\\b", "1714647211902-bb711d643a17"],
     ["Zoo / Tierpark", "zoo|tierpark|affen|wildpark", "1535489158666-8d856534a6ef"],
-    ["Kino", "kino|movie|film", "1578849278619-e73505e9610f"],
-    ["Jahrestag / Date", "jahrestag|\\bdate\\b|dinner|❤️|valentin", "1513279922550-250c2129b13a"],
-    ["Konzert / Theater", "konzert|concert|musical|theater|\\boper\\b", "1470229722913-7c0e2dbbafd3"],
+    ["Kino", "kino|movie|film|cinema", "1578849278619-e73505e9610f"],
+    ["Jahrestag / Date", "jahrestag|\\bdate\\b|dinner|❤️|valentin|anniversary", "1513279922550-250c2129b13a"],
+    ["Konzert / Theater", "konzert|concert|musical|theater|\\boper\\b|theatre", "1470229722913-7c0e2dbbafd3"],
     ["Fest / Party", "fest|party|feier|apéro|apero", "1504196606672-aef5c9cefc92"],
-    ["Essen", "zmittag|essen|brunch|restaurant|znacht|brötle|grill|picknick", "1600891964599-f61ba0e24092"],
-    ["Garage / Werkstatt", "garage|werkstatt|reifen|pneu|\\bmfk\\b|\\btüv\\b|auto\\s*service", "1727893119356-1702fe921cf9"],
-    ["Handwerker / Service", "boiler|handwerker|reparatur|installat|elektriker|zähler|monteur|sanitär|heizung|maler\\b|schreiner|service", "1426927308491-6380b6a9936f"],
-    ["Auto laden", "\\bladen\\b|ladestation|wallbox|batterie|e-auto", "1593941707874-ef25b8b4a92b"],
-    ["Auto", "\\bauto\\b|autowasch|waschanlage|tanken|vignette", "1683444126212-50c0aa2a421b"],
-    ["Einkauf", "einkauf|ikea|migros|coop|denner|\\blidl\\b|\\baldi\\b|shopping|\\bdm\\b|baumarkt|jumbo|hornbach", "1670684684445-a4504dca0bbc"],
+    ["Essen", "zmittag|essen|brunch|restaurant|znacht|brötle|grill|picknick|lunch|restaurant", "1600891964599-f61ba0e24092"],
+    ["Garage / Werkstatt", "garage|werkstatt|reifen|pneu|\\bmfk\\b|\\btüv\\b|auto\\s*service|mechanic|\\btyres?\\b|\\btires?\\b", "1727893119356-1702fe921cf9"],
+    ["Handwerker / Service", "boiler|handwerker|reparatur|installat|elektriker|zähler|monteur|sanitär|heizung|maler\\b|schreiner|service|plumber|electrician|repair", "1426927308491-6380b6a9936f"],
+    ["Auto laden", "\\bladen\\b|ladestation|wallbox|batterie|e-auto|charging|charge car", "1593941707874-ef25b8b4a92b"],
+    ["Auto", "\\bauto\\b|autowasch|waschanlage|tanken|vignette|\\bcar\\b|car wash", "1683444126212-50c0aa2a421b"],
+    ["Einkauf", "einkauf|ikea|migros|coop|denner|\\blidl\\b|\\baldi\\b|shopping|\\bdm\\b|baumarkt|jumbo|hornbach|grocer|supermarket", "1670684684445-a4504dca0bbc"],
     ["Meeting", "meeting|sitzung|besprechung|gespräch|\\bcall\\b|teams|zoom|termin mit", "1542744173-8e7e53415bb0"],
-    ["Notar / Vertrag", "notar|vertrag|unterschrift", "1450101499163-c8848c66ca85"],
+    ["Notar / Vertrag", "notar|vertrag|unterschrift|notary|contract", "1450101499163-c8848c66ca85"],
     ["Büro", "büro|buero|fokus|office", "1497215728101-856f4ea42174"],
-    ["Kurs / Weiterbildung", "weiterbildung|kurs|schulung|seminar|workshop|vortrag", "1524178232363-1fb2b075b655"],
-    ["Schwimmen", "schwimm|badi", "1592484806287-7bc9c8af5405"],
-    ["Fussball", "fussball|fußball|tschutten", "1622659097972-68f1d8c1829f"],
-    ["Reiten", "reiten|pony|pferd", "1718045330352-7b800f3bba80"],
-    ["Musik", "musik|klavier|gitarre|flöte|singen", "1577877777751-3f1ec20a0715"],
-    ["Malen / Basteln", "\\bmalen|basteln|zeichnen|werken", "1605627079912-97c3810a11a4"],
-    ["Spielplatz", "spielplatz", "1596997000103-e597b3ca50df"],
-    ["Velo", "velo|fahrrad", "1629056007607-f3e5de821891"],
-    ["Ski / Schnee", "\\bski|schlitteln|schnee", "1631779202803-7f1415c87a9d"],
-    ["Bibliothek", "bibliothek|ludothek|bücherei", "1767356326735-2da0a10cf1f0"],
-    ["Garten", "garten|rasen|dünger|hecke|mähen|pflanzen|gärtner", "1642541744624-7a2a89545a32"],
-    ["Hund", "hund|gassi|tierarzt|hundeschule", "1517849845537-4d257902454a"],
-    ["Wandern / Ausflug", "wander|ausflug|\\balp\\b|berg\\b|bergtour", "1527095655060-4026c4af2b25"],
-    ["Fitness / Sport", "fitness|\\bgym\\b|training|joggen|\\blauf|lauf\\b|crossfit|sport", "1534438327276-14e5300c3a48"],
+    ["Kurs / Weiterbildung", "weiterbildung|kurs|schulung|seminar|workshop|vortrag|class\\b|lesson|training", "1524178232363-1fb2b075b655"],
+    ["Schwimmen", "schwimm|badi|swim", "1592484806287-7bc9c8af5405"],
+    ["Fussball", "fussball|fußball|tschutten|soccer|football", "1622659097972-68f1d8c1829f"],
+    ["Reiten", "reiten|pony|pferd|riding|horse", "1718045330352-7b800f3bba80"],
+    ["Musik", "musik|klavier|gitarre|flöte|singen|music|piano|guitar|violin|choir", "1577877777751-3f1ec20a0715"],
+    ["Malen / Basteln", "\\bmalen|basteln|zeichnen|werken|painting|crafts|drawing", "1605627079912-97c3810a11a4"],
+    ["Spielplatz", "spielplatz|playground", "1596997000103-e597b3ca50df"],
+    ["Velo", "velo|fahrrad|\\bbike|cycling", "1629056007607-f3e5de821891"],
+    ["Ski / Schnee", "\\bski|schlitteln|schnee|snow|sledg", "1631779202803-7f1415c87a9d"],
+    ["Bibliothek", "bibliothek|ludothek|bücherei|library", "1767356326735-2da0a10cf1f0"],
+    ["Garten", "garten|rasen|dünger|hecke|mähen|pflanzen|gärtner|garden|lawn", "1642541744624-7a2a89545a32"],
+    ["Hund", "hund|gassi|tierarzt|hundeschule|\\bdog\\b|\\bvet\\b|puppy", "1517849845537-4d257902454a"],
+    ["Wandern / Ausflug", "wander|ausflug|\\balp\\b|berg\\b|bergtour|hike|hiking|\\btrip\\b|outing", "1527095655060-4026c4af2b25"],
+    ["Fitness / Sport", "fitness|\\bgym\\b|training|joggen|\\blauf|lauf\\b|crossfit|sport|workout|running|yoga", "1534438327276-14e5300c3a48"],
     ["Familie", "familie|family", "1679274742187-1aa949703203"],
-    ["Putzen", "putzen|reinigung|putzfrau|fensterputz", "1563453392212-326f5e854473"],
+    ["Putzen", "putzen|reinigung|putzfrau|fensterputz|cleaning|cleaner", "1563453392212-326f5e854473"],
   ].map(([name, keys, id]) => ({ name, keys, re: new RegExp(keys, "i"), url: `https://images.unsplash.com/photo-${id}?w=640&h=320&fit=crop&q=70` }));
   // Belohnungen zum schnellen Wählen: [Text, Emoji, Sterne]
   const BELOHNUNGEN = [
@@ -190,11 +190,213 @@
   const lsGet = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* egal */ } };
 
+  // ---------- Sprache ----------
+  // Die Karte ist auf Deutsch geschrieben. Für «sprache: en» übersetzt ein Beobachter die angezeigten Texte
+  // (Textknoten, aria-label, title, placeholder). Gespeicherte Daten bleiben unverändert.
+  const EN = {
+    // Allgemein
+    "Abbrechen": "Cancel", "Speichern": "Save", "Schliessen": "Close", "Entfernen": "Remove", "Löschen": "Delete", "Hinzufügen": "Add",
+    "Fertig": "Done", "Zurück": "Back", "← Zurück": "← Back", "Bestätigen": "Confirm", "Übernehmen": "Apply", "Mehr": "More", "Weniger": "Less",
+    "Nochmals": "Again", "Name": "Name", "Farbe": "Colour", "Eigene Farbe": "Custom colour", "Standard": "Default", "Person": "Person",
+    "Heute": "Today", "Morgen": "Tomorrow", "heute": "today", "morgen": "tomorrow", "ganztags": "all day", "Tage": "days", "Tag": "Day",
+    "Woche": "Week", "Monat": "Month", "Familie": "Family", "Bilder": "Pictures", "Bald": "Coming up", "⏳ Bald": "⏳ Coming up",
+    "Bald gross anzeigen": "Show coming up full screen", "Noch nichts geplant.": "Nothing planned yet.", "Die Liste ist leer.": "The list is empty.",
+    "Antippen zum Schliessen": "Tap to close", "Jetzt anlegen": "Create now", "Lege an …": "Creating …", "Speichere …": "Saving …", "Lade hoch …": "Uploading …",
+    "Vergrössern": "Zoom in", "Grösser": "Bigger", "Kleiner": "Smaller", "Ausschnitt": "Crop", "geändert": "changed", "Mär": "Mar", "März": "March",
+    "OK": "OK", "Ja": "Yes", "Nein": "No", "Einstellungen": "Settings", "Querformat": "Landscape", "Hochformat": "Portrait", "Hoch": "Portrait", "Quer": "Landscape", "Automatisch": "Automatic",
+    // Kopf und Ansichten
+    "Zuhause": "Home", "Eigene Bilder": "Pictures", "Ausrichtung": "Orientation", "Zum Dashboard «Zuhause»": "Go to the Home dashboard",
+    "Familienplaner: Kalender": "Family planner: calendar", "Familienplaner: Liste": "Family planner: list",
+    "Wochenplan der Familie mit Essen, Einkauf und Ämtli": "Family week planner with meals, shopping and chores",
+    "Vorherige": "Previous", "Nächste": "Next", "Vorherige Woche": "Previous week", "Nächste Woche": "Next week", "Zu heute": "Go to today",
+    "Antippen und eine Nachricht für alle hinterlassen …": "Tap to leave a message for everyone …", "Pinnwand bearbeiten": "Edit message board", "Pinnwand": "Message board",
+    "Antippen: ein/ausblenden · Lange drücken: Foto ändern": "Tap: show/hide · Long press: change photo",
+    "Termine werden in Google Kalender bearbeitet.": "Events are edited in Google Calendar.", "Termin": "Event", "Termine": "Events",
+    "Noch keine Kalender verbunden.": "No calendars connected yet.",
+    "Noch keine Kalender in Home Assistant. Zuerst einen Kalender einbinden (z. B. «Remote Calendar»).": "No calendars in Home Assistant yet. Add a calendar first (e.g. “Remote Calendar”).",
+    "Kalender in Home Assistant einbinden (z. B. «Remote Calendar») und unter «kalender» bei der Person eintragen.": "Add a calendar in Home Assistant (e.g. “Remote Calendar”) and list it under “kalender” for the person.",
+    // Wetter
+    "Klar": "Clear", "Bewölkt": "Cloudy", "Unwetter": "Severe weather", "Nebel": "Fog", "Hagel": "Hail", "Gewitter": "Thunderstorm",
+    "Gewitter mit Regen": "Thunderstorm with rain", "Teilweise bewölkt": "Partly cloudy", "Starkregen": "Heavy rain", "Regen": "Rain",
+    "Schnee": "Snow", "Schneeregen": "Sleet", "Sonnig": "Sunny", "Windig": "Windy", "Windig, bewölkt": "Windy, cloudy",
+    // Abfall
+    "Abfall": "Waste", "Kehricht": "Trash", "Grüngut": "Green waste", "Papier": "Paper", "Karton": "Cardboard", "Metall": "Metal", "Glas": "Glass",
+    "Bioabfall": "Organic waste", "Gelber Sack": "Recycling bag", "Restmüll": "Residual waste", "Altpapier": "Waste paper", "Sonderabfall": "Hazardous waste",
+    // Feiertage und Ferien
+    "Neujahr": "New Year's Day", "Berchtoldstag": "Berchtold's Day", "Heilige Drei Könige": "Epiphany", "Josefstag": "St Joseph's Day",
+    "Karfreitag": "Good Friday", "Ostermontag": "Easter Monday", "Tag der Arbeit": "Labour Day", "Auffahrt": "Ascension Day", "Pfingstmontag": "Whit Monday",
+    "Fronleichnam": "Corpus Christi", "Bundesfeier": "Swiss National Day", "Tag der Deutschen Einheit": "German Unity Day", "Nationalfeiertag": "National Day",
+    "Mariä Himmelfahrt": "Assumption Day", "Allerheiligen": "All Saints' Day", "Mariä Empfängnis": "Immaculate Conception", "Weihnachten": "Christmas",
+    "Stephanstag": "St Stephen's Day", "Feiertag": "Holiday", "Ferien": "Holidays", "Schulferien": "School holidays",
+    // Essen
+    "Essen": "Meals", "Essensplan": "Meal plan", "Essen planen": "Plan a meal", "Was gibt es?": "What's for dinner?", "Woche füllen": "Fill the week",
+    "Vorschlag für die Woche": "Suggestions for the week", "Schnell wählen": "Quick pick", "Als Lieblingsessen": "Mark as favourite", "Weitere Lieblingsessen": "More favourites",
+    "Nicht mehr vorschlagen": "Don't suggest again", "Schon gekocht": "Already cooked", "oft gekocht": "cooked often", "lange nicht mehr": "not in a while",
+    "Auf die Einkaufsliste": "Add to shopping list", "Die nächsten 7 Tage sind schon geplant.": "The next 7 days are already planned.",
+    "Bereits geplante Tage bleiben, wie sie sind. Einzelne Essen kannst du danach wie gewohnt ändern.": "Days already planned stay as they are. You can change single meals afterwards as usual.",
+    "Noch keine Vorschläge: Sobald ein paar Wochen geplant sind, lernt der Planer eure Gewohnheiten. Lieblingsessen mit dem Herz markieren.": "No suggestions yet: once a few weeks are planned, the planner learns your habits. Mark favourite meals with the heart.",
+    // Einkauf
+    "Einkauf": "Shopping", "Einkaufsliste": "Shopping list", "Artikel hinzufügen": "Add item", "Bring! ist nicht verbunden.": "Bring! is not connected.", "z. B. Milch": "e.g. milk",
+    // Ämtli
+    "Ämtli": "Chores", "Keine Ämtli": "No chores", "Neues Ämtli": "New chore", "Ämtli hinzufügen": "Add chore",
+    "Die Ämtli-Listen werden mit «Jetzt anlegen» erstellt.": "The chore lists are created with “Create now”.", "z. B. Tisch decken": "e.g. set the table",
+    "Stern abziehen": "Remove a star", "Auf 0": "Reset", "Auf 0 setzen": "Reset to 0",
+    // Countdowns
+    "Countdown hinzufügen": "Add countdown", "Neuer Countdown": "New countdown", "z. B. Ferien in Italien": "e.g. holiday in Italy", "Jetzt! 🎉": "Now! 🎉", "Heute! 🎉": "Today! 🎉",
+    // Personen und Fotos
+    "Familienmitglied hinzufügen": "Add family member", "Name & Kalender": "Name & calendar", "Kalender dieser Person": "This person's calendars",
+    "Bitte einen Namen eingeben.": "Please enter a name.", "Der Name darf höchstens 30 Zeichen haben.": "The name can have at most 30 characters.",
+    "Foto und Farbe lassen sich danach wie gewohnt ändern: lange auf das Foto drücken.": "Photo and colour can be changed later as usual: long press the photo.",
+    "Foto wählen": "Choose photo", "Foto entfernen": "Remove photo", "Eigenes Foto …": "Own photo …", "Foto bereit, jetzt speichern.": "Photo ready, now save.",
+    "Bild mit dem Finger verschieben, mit dem Regler oder zwei Fingern vergrössern.": "Move the picture with your finger, zoom with the slider or two fingers.",
+    "Bild konnte nicht geladen werden.": "Could not load the picture.", "Bild konnte nicht gelesen werden": "Could not read the picture", "Bild konnte nicht erstellt werden": "Could not create the picture",
+    "z. B. Grosi, Leo": "e.g. Grandma, Leo",
+    // Bilder zu Terminen
+    "Bilder zu Terminen": "Pictures for events", "Bild für Termine": "Picture for events", "Bilder auf den Terminen zeigen": "Show pictures on events",
+    "Bild zuweisen": "Assign picture", "Bild ändern": "Change picture", "Neues Thema": "New topic", "+ Neues Thema": "+ New topic", "Bestehendes Thema wählen": "Choose an existing topic",
+    "Gilt für alle Termine mit": "Applies to all events containing", "Oder eigenes Bild wählen": "Or choose your own picture", "Oder ein Emoji": "Or an emoji",
+    "Oder Bild-Adresse aus dem Internet einfügen": "Or paste a picture address from the internet", "Planer Bilder": "Planner pictures",
+    "Liste «Planer Bilder» fehlt": "List “Planer Bilder” is missing",
+    "Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.": "This needs the list “Planer Bilder”. Tap “Create now” at the top.",
+    "Zuerst oben «Jetzt anlegen» tippen (Liste «Planer Bilder»).": "First tap “Create now” at the top (list “Planer Bilder”).",
+    "Ein Termin bekommt das Bild des ersten Themas, dessen Stichwort im Titel vorkommt. Antippen, um ein Bild zu ändern.": "An event gets the picture of the first topic whose keyword appears in its title. Tap to change a picture.",
+    // Themen
+    "Nachtschicht": "Night shift", "Laternenumzug": "Lantern parade", "1. August": "1 August", "Elternabend / Schule": "Parents' evening / school",
+    "Kindergarten Wald": "Forest kindergarten", "Turnen": "Gymnastics", "Ballett / Tanz": "Ballet / dance", "Kindergarten": "Kindergarten", "Spielgruppe": "Playgroup",
+    "Hüten / Grosseltern": "Babysitting / grandparents", "Haustiere füttern": "Feed the pets", "Physio / Therapie": "Physio / therapy", "Zahnarzt": "Dentist",
+    "Augen": "Eyes", "Arzt": "Doctor", "Coiffeur": "Hairdresser", "Geburtstag": "Birthday", "Kürbis": "Pumpkin", "Reisen / Flug": "Travel / flight",
+    "Zug / Bahn": "Train", "Umzug": "Moving house", "Zoo / Tierpark": "Zoo", "Kino": "Cinema", "Jahrestag / Date": "Anniversary / date",
+    "Konzert / Theater": "Concert / theatre", "Fest / Party": "Party", "Garage / Werkstatt": "Garage", "Handwerker / Service": "Tradesman / service",
+    "Auto laden": "Charge the car", "Meeting": "Meeting", "Notar / Vertrag": "Notary / contract", "Büro": "Office",
+    "Kurs / Weiterbildung": "Course / training", "Schwimmen": "Swimming", "Fussball": "Football", "Reiten": "Horse riding", "Musik": "Music",
+    "Malen / Basteln": "Painting / crafts", "Spielplatz": "Playground", "Velo": "Bike", "Ski / Schnee": "Ski / snow", "Bibliothek": "Library", "Garten": "Garden",
+    "Hund": "Dog", "Wandern / Ausflug": "Hiking / trip", "Fitness / Sport": "Fitness / sport", "Putzen": "Cleaning",
+    // Sterne und Kinder
+    "Sterne": "Stars", "Sterne und Belohnungen öffnen": "Open stars and rewards", "Aufgaben & Belohnungen": "Tasks & rewards", "⭐ Sterne & Belohnungen": "⭐ Stars & rewards",
+    "Belohnung": "Reward", "Belohnung wählen": "Choose a reward", "Belohnung festlegen": "Set a reward", "Sterne bis zur Belohnung": "Stars until the reward",
+    "Geschafft!": "Done it!", "Geschafft! 🏆": "Done it! 🏆", "Alle Aufgaben erledigt ✓": "All tasks done ✓", "Heute wieder offen": "Open again today",
+    "Noch keine Aufgaben. Eltern: ⚙️ antippen.": "No tasks yet. Parents: tap ⚙️.", "Einstellungen für Eltern": "Parent settings",
+    "Eltern-Code": "Parent code", "Eltern-Code (4 Ziffern, leer = kein Code)": "Parent code (4 digits, empty = no code)", "Falscher Code": "Wrong code",
+    "Der Code muss genau 4 Ziffern haben.": "The code must have exactly 4 digits.", "z. B. 2580": "e.g. 2580",
+    "Gilt für alle Kinder. Der Code schützt Einstellungen, Bestätigen und Einlösen.": "Applies to all children. The code protects settings, confirming and redeeming.",
+    "Sterne erst nach Bestätigung durch Eltern": "Stars only after a parent confirms", "Ton bei der Feier": "Sound at the celebration",
+    "Erledigte Aufgaben bestätigen": "Confirm finished tasks", "Tagesaufgaben": "Daily tasks", "Grosse Ziele": "Big goals", "🏆 Grosse Ziele": "🏆 Big goals",
+    "Optionen": "Options", "Eigene Tagesaufgabe": "Own daily task", "Eigenes grosses Ziel": "Own big goal", "+ Eigenes Ziel": "+ Own goal",
+    "Neues grosses Ziel": "New big goal", "Ziel bearbeiten": "Edit goal", "Wie oft zählt es?": "How often does it count?", "Einmal pro Tag": "Once a day", "Jedes Mal": "Every time",
+    "Bitte einen Namen für das Ziel eingeben.": "Please enter a name for the goal.", "Dieses Ziel nochmals von vorne beginnen?": "Start this goal again from the beginning?",
+    "Noch keine Tagesaufgaben.": "No daily tasks yet.", "Noch keine grossen Ziele.": "No big goals yet.", "Fortschritt auf 0": "Reset progress",
+    "↺ Alle Aufgaben von heute zurücksetzen": "↺ Reset all of today's tasks",
+    "Jedes grosse Ziel sammelt eigene Sterne für eine eigene Belohnung. Die Tagesaufgaben füllen nebenbei das Sternenglas.": "Each big goal collects its own stars for its own reward. The daily tasks fill the star jar along the way.",
+    "Vorlagen (antippen zum Hinzufügen)": "Templates (tap to add)", "Vorlagen (antippen, dann anpassen)": "Templates (tap, then adjust)",
+    "Am Morgen": "In the morning", "Am Tag": "During the day", "Am Abend": "In the evening", "☀️ Morgen": "☀️ Morning", "🕐 Tag": "🕐 Day", "🌙 Abend": "🌙 Evening",
+    "Meine Sticker": "My stickers", "Sticker-Album": "Sticker album", "Noch keine Sticker. Für jede Belohnung und jedes grosse Ziel gibt es einen.": "No stickers yet. There is one for every reward and every big goal.",
+    "Zurück zur Übersicht": "Back to overview", "z. B. Allein einschlafen": "e.g. fall asleep alone", "z. B. Monstertruck": "e.g. monster truck",
+    "z. B. Töpfchen": "e.g. potty", "z. B. Velohelm aufhängen": "e.g. hang up the bike helmet", "z. B. Zoo-Besuch, Glace, Kino": "e.g. zoo visit, ice cream, cinema",
+    // Belohnungen
+    "Lolli": "Lollipop", "Gummibärli": "Gummy bears", "Sticker": "Sticker", "Seifenblasen": "Bubbles", "Ballon": "Balloon", "Schoggi": "Chocolate",
+    "Glace": "Ice cream", "Pommes": "Fries", "Heftli": "Magazine", "Malbuch": "Colouring book", "Spielzeugauto": "Toy car", "Spielfigur": "Toy figure",
+    "Hörspiel": "Audio story", "Puzzle": "Puzzle", "Buch": "Book", "Länger aufbleiben": "Stay up later", "Kuchen backen": "Bake a cake", "Pizza essen": "Pizza night",
+    "Freund einladen": "Invite a friend", "Badi": "Swimming pool", "Velotour": "Bike ride", "Zoo": "Zoo", "Ausflug": "Day trip", "Monstertruck": "Monster truck", "Kuscheltier": "Cuddly toy",
+    // Vorlagen Aufgaben und Ziele
+    "Zähne putzen": "Brush teeth", "Anziehen": "Get dressed", "Bett machen": "Make the bed", "Frühstück essen": "Eat breakfast", "Znüni einpacken": "Pack a snack",
+    "Schuhe anziehen": "Put on shoes", "Hände waschen": "Wash hands", "Pflanzen giessen": "Water the plants", "Tisch decken": "Set the table", "Aufräumen": "Tidy up",
+    "Pyjama anziehen": "Put on pyjamas", "Buch anschauen": "Look at a book", "Baden / Duschen": "Bath / shower", "Töpfchen": "Potty",
+    "Schläft im eigenen Bett": "Sleeps in own bed", "Trocken in der Nacht": "Dry at night", "Ohne Nuggi": "No dummy", "Selber anziehen": "Dress by myself",
+    "Allein Zähne putzen": "Brush teeth alone", "Schuhe selber binden": "Tie own shoes", "Velo ohne Stützräder": "Bike without stabilisers", "Schwimmen üben": "Swimming practice",
+    // Wochentage, Monate (lange Formen für Überschriften)
+    "Heute Abfuhr:": "Collection today:", "Morgen rausstellen:": "Put out tonight:", "🏆 geschafft": "🏆 done", "Hochladen": "Upload",
+    "Montag": "Monday", "Dienstag": "Tuesday", "Mittwoch": "Wednesday", "Donnerstag": "Thursday", "Freitag": "Friday", "Samstag": "Saturday", "Sonntag": "Sunday",
+  };
+  // Texte mit Zahlen oder Namen
+  const EN_RX = [
+    [/^in (\d+) Tagen$/, "in $1 days"], [/^(\d+) Tage$/, "$1 days"], [/^(\d+) Tagen$/, "$1 days"], [/^bis (\d\d:\d\d)$/, "until $1"], [/^ab (\d\d:\d\d)$/, "from $1"],
+    [/^KW (\d+)(–\d+)?$/, "Week $1$2"], [/^noch (\d+) ★$/, "$1 ★ to go"], [/^noch (\d+) ★ · einmal pro Tag$/, "$1 ★ to go · once a day"],
+    [/^noch (\d+) Aufgaben? heute$/, (m, n) => `${n} ${n === "1" ? "task" : "tasks"} left today`], [/^noch (\d+)× schlafen$/, "$1 more sleeps"],
+    [/^Geschafft, (.+)!$/, "You did it, $1!"], [/^Viel Spass, (.+)!$/, "Have fun, $1!"], [/^(\d+) Tage am Stück! \+1 ★$/, "$1 days in a row! +1 ★"],
+    [/^(\d+) Sterne für: (.+)$/, "$1 stars for: $2"], [/^(\d+) Sterne$/, "$1 stars"], [/^(\d+) Sterne gesammelt$/, "$1 stars collected"],
+    [/^(.+) hat (\d+) Sterne gesammelt! Belohnung «(.+)» einlösen\? Danach beginnt das Sammeln wieder bei 0\.$/, "$1 has collected $2 stars! Redeem the reward “$3”? Collecting then starts again at 0."],
+    [/^Sterne von (.+) auf 0 setzen\?$/, "Reset $1's stars to 0?"], [/^(.+) aus dem Planer entfernen\? Die Kalender selbst bleiben unverändert\.$/, "Remove $1 from the planner? The calendars themselves stay unchanged."],
+    [/^«(.+)» hinzugefügt$/, "“$1” added"], [/^«(.+)» aus den Countdowns entfernen\?$/, "Remove “$1” from the countdowns?"], [/^«(.+)» bei «Bald» ausblenden\?$/, "Hide “$1” from coming up?"],
+    [/^Hochladen fehlgeschlagen: (.*)$/, "Upload failed: $1"], [/^Speichern fehlgeschlagen: (.*)$/, "Saving failed: $1"],
+    [/^Format: (.+)$/, "Format: $1"], [/^Farbe (.+)$/, "Colour $1"], [/^Zum Dashboard «(.+)»$/, "Go to the “$1” dashboard"], [/^(.+) bis (\d+)\. (\w+)$/, "$1 until $3 $2"],
+    [/^(\d+)\. – (\d+)\. (\w+)$/, "$3 $1–$2"], [/^\+(\d+) weitere$/, "+$1 more"], [/^Essen am (.+)$/, "Meal on $1"], [/^Vorschläge für (.+)$/, "Suggestions for $1"],
+    [/^(.+) nicht mehr vorschlagen$/, "Don't suggest $1 again"], [/^(\d+) von (\d+) Sternen$/, "$1 of $2 stars"], [/^Aufgaben von (.+)$/, "$1's tasks"],
+    [/^(\d+)× → (\S+) (.+)$/, (m, n, e, x) => `${n}× → ${e} ${EN[x] || x}`],
+    [/^(.+) bearbeiten$/, "Edit $1"], [/^Belohnung für (.+)$/, "Reward for $1"], [/^Worauf sammelt (.+)\?$/, "What is $1 saving up for?"],
+    [/^aktuell (\d+) Sterne?$/, "currently $1 stars"], [/^(\w{2,3}) (\d+)\.(\d+)\.$/, (m, w, d, mo) => `${w} ${+d} ${EN_ARRAYS.MOS[mo - 1]}`],
+    [/^Noch eine Liste anlegen:$/, "Create one more list:"], [/^Noch (\d+) Listen anlegen:$/, "Create $1 more lists:"], [/^✓ Eltern bestätigen \((\d+)\)$/, "✓ Parent check ($1)"],
+    [/^Ausschnitt für (.+)$/, "Crop for $1"], [/^(\d+) \/ (\d+) ★ → (.*)$/, "$1 / $2 ★ → $3"],
+        [/^Person (\d)$/, "Person $1"], [/^Ämtli (.+)$/, "Chores $1"], [/^Foto (.+)$/, "Photo $1"],
+  ];
+  // Datumsformen nach dem Umstellen der Monatsnamen: «3. Nov» -> «Nov 3»
+  const EN_MON = "Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|January|February|March|April|June|July|August|September|October|November|December";
+  const EN_DATE = new RegExp(`(\\d{1,2})\\. (${EN_MON})\\b`, "g");
+  const trEN = (s) => {
+    const t = s.trim();
+    if (!t || !/[A-Za-zÄÖÜäöü]/.test(t)) return s;
+    let out = EN[t];
+    if (out === undefined) {
+      for (const [re, rep] of EN_RX) { if (re.test(t)) { out = t.replace(re, rep); break; } }
+    }
+    if (out === undefined) {
+      // Emoji vor dem Text: «🪥 Zähne putzen»
+      const m = t.match(/^([^\p{L}\d]+?)\s+(.+)$/u);
+      out = m && EN[m[2]] ? `${m[1]} ${EN[m[2]]}` : t;
+    }
+    out = out.replace(EN_DATE, "$2 $1").replace(/«/g, "“").replace(/»/g, "”");
+    if (out === t) return s;
+    return s.replace(t, out);
+  };
+  const EN_ARRAYS = {
+    WD: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    WDL: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    MO: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    MOS: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  };
+  const DE_ARRAYS = { WD: WD.slice(), WDL: WDL.slice(), MO: MO.slice(), MOS: MOS.slice() };
+  let LANG = "de";
+  // Vorlagen in der aktiven Sprache speichern
+  const L = (t) => (LANG === "en" ? EN[t] || t : t);
+  const setLang = (l) => {
+    if (l === LANG) return;
+    LANG = l;
+    const src = l === "en" ? EN_ARRAYS : DE_ARRAYS;
+    WD.splice(0, 7, ...src.WD); WDL.splice(0, 7, ...src.WDL); MO.splice(0, 12, ...src.MO); MOS.splice(0, 12, ...src.MOS);
+  };
+  const TR_ATTR = ["aria-label", "title", "placeholder"];
+  const translateTree = (root) => {
+    if (LANG !== "en" || !root) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+    let n = root.nodeType === 1 || root.nodeType === 11 ? w.nextNode() : root;
+    if (root.nodeType === 3) { const v = trEN(root.nodeValue); if (v !== root.nodeValue) root.nodeValue = v; return; }
+    if (root.nodeType === 1) translateEl(root);
+    while (n) {
+      if (n.nodeType === 3) {
+        const p = n.parentNode;
+        if (p && p.nodeName !== "STYLE" && p.nodeName !== "SCRIPT" && p.nodeName !== "TEXTAREA") { const v = trEN(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+      } else translateEl(n);
+      n = w.nextNode();
+    }
+  };
+  const translateEl = (el) => {
+    for (const a of TR_ATTR) { const v = el.getAttribute?.(a); if (v) { const t = trEN(v); if (t !== v) el.setAttribute(a, t); } }
+  };
+
   // ---------- Karte ----------
   class FamilienplanerCard extends HTMLElement {
     constructor() {
       super();
       this.attachShadow({ mode: "open" });
+      // Übersetzt neu gezeichnete Texte, wenn «sprache: en» aktiv ist
+      this._mo = new MutationObserver((ms) => {
+        if (LANG !== "en") return;
+        for (const m of ms) {
+          if (m.type === "childList") m.addedNodes.forEach((n) => translateTree(n));
+          else if (m.type === "characterData") translateTree(m.target);
+          else translateEl(m.target);
+        }
+      });
+      this._mo.observe(this.shadowRoot, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: TR_ATTR });
       this._view = lsGet("fp-view", "woche");
       this._orient = lsGet("fp-orient", "auto");
       this._anchor = sod(new Date());
@@ -226,7 +428,7 @@
         schulferien_kalender: [],
         feiertage: null,
         eigene_feiertage: [],
-        geburtstage: ["Geburtstag"],
+        geburtstage: ["Geburtstag", "Birthdays"],
         essensplan: "Essensplan",
         countdowns: "Countdowns",
         bilderliste: "Planer Bilder",
@@ -237,8 +439,10 @@
         zuhause_link: null,
         zuhause_name: "Zuhause",
         dunkel: "auto",
+        sprache: "auto",
       };
       this._config = { ...def, ...config };
+      this._applyLang();
       FERIEN = (this._config.schulferien || []).filter((f) => f && f.von && f.bis).map((f) => [String(f.von), String(f.bis), f.name || "Ferien"]);
       if (Array.isArray(this._config.feiertage)) FEIERTAGE = this._config.feiertage.map((k) => String(k).toLowerCase());
       EIGENE_FEIERTAGE = this._config.eigene_feiertage || [];
@@ -268,9 +472,21 @@
       if (this._unsubWx) { this._unsubWx.then((u) => u && u()).catch(() => {}); this._unsubWx = null; }
     }
 
+    // «auto»: Deutsch, wenn Home Assistant auf Deutsch läuft, sonst Englisch
+    _applyLang() {
+      const want = String(this._config?.sprache || "auto").toLowerCase();
+      const ha = (this._hass?.locale?.language || this._hass?.language || navigator.language || "de").toLowerCase();
+      const l = want === "de" || want === "en" ? want : ha.startsWith("de") ? "de" : "en";
+      const changed = l !== LANG;
+      setLang(l);
+      if (changed && this._config) holidayCache = {};
+      return changed;
+    }
+
     set hass(hass) {
       const first = !this._hass;
       this._hass = hass;
+      if (first && this._applyLang()) this._sig = "";
       if (first) { this._subscribeWeather(); this._refreshAll(); }
       // Nur neu zeichnen, wenn sich etwas Relevantes geändert hat
       const ids = this._watchIds();
@@ -409,7 +625,7 @@
         Promise.all(other.map((id) => this._fetchCal(id, t, addDays(t, 120)))),
       ]);
       const seen = new Set();
-      this._bdays = [...b1.flat(), ...b2.flat().filter((e) => /geburtstag|geburi|🎂|🎁/i.test(e.title))]
+      this._bdays = [...b1.flat(), ...b2.flat().filter((e) => /geburtstag|geburi|birthday|bday|🎂|🎁/i.test(e.title))]
         .filter((e) => { const k = e.title + ymd(e.start); if (seen.has(k)) return false; seen.add(k); return true; });
       const ess = this._cals([c.essensplan]);
       if (ess.length) {
@@ -1383,8 +1599,8 @@
       this._mh = {
         tab: (el) => { tab = el.dataset.v; draw(); },
         nb: (el) => { neuBild = el.dataset.v; const b = this.shadowRoot.querySelector("#fp-nb"); if (b) b.textContent = neuBild; this.shadowRoot.querySelectorAll("#modal .emo button").forEach((x) => x.classList.toggle("on", x === el)); },
-        addtv: (el) => { const [t, b, z] = TAGES_VORLAGEN[+el.dataset.i]; d.aufgaben.push({ id: uid(), text: t, bild: b, zeit: z }); save(); },
-        addlv: (el) => { const [t, b, z, o, bt, bb] = LANG_VORLAGEN[+el.dataset.i]; this._openGoalEditor(p, null, { text: t, bild: b, ziel: z, oft: o, belohnung: { text: bt, bild: bb } }); },
+        addtv: (el) => { const [t, b, z] = TAGES_VORLAGEN[+el.dataset.i]; d.aufgaben.push({ id: uid(), text: L(t), bild: b, zeit: z }); save(); },
+        addlv: (el) => { const [t, b, z, o, bt, bb] = LANG_VORLAGEN[+el.dataset.i]; this._openGoalEditor(p, null, { text: L(t), bild: b, ziel: z, oft: o, belohnung: { text: L(bt), bild: bb } }); },
         newgoal: () => this._openGoalEditor(p, null, { text: "", bild: "⭐", ziel: 5, oft: "frei", belohnung: {} }),
         editgoal: (el) => this._openGoalEditor(p, +el.dataset.i, null),
         deltask: (el) => { d.aufgaben.splice(+el.dataset.i, 1); save(); },
@@ -1446,7 +1662,7 @@
             <div class="sect">Belohnung</div>
             <div class="kown"><span class="kpic s">${esc(g.belohnung.bild || "🎁")}</span><input id="fp-gbt" type="text" maxlength="30" placeholder="z. B. Monstertruck" value="${esc(g.belohnung.text)}"></div>
             <div class="emo small">${BEL_EMOJIS.map((e) => `<button data-m="gbb" data-v="${e}" class="${e === g.belohnung.bild ? "on" : ""}">${e}</button>`).join("")}</div>
-            <div class="rwquick">${BELOHNUNGEN.map(([t, e], i) => `<button data-m="gq" data-i="${i}" class="${t === g.belohnung.text ? "on" : ""}"><span class="qe">${e}</span><span>${esc(t)}</span></button>`).join("")}</div>
+            <div class="rwquick">${BELOHNUNGEN.map(([t, e], i) => `<button data-m="gq" data-i="${i}" class="${L(t) === g.belohnung.text ? "on" : ""}"><span class="qe">${e}</span><span>${esc(t)}</span></button>`).join("")}</div>
             <div class="flash"></div>
           </div>
           <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="back">Abbrechen</button><button class="btn" data-m="gsave">Speichern</button></div>`);
@@ -1459,7 +1675,7 @@
         gzm: () => { keep(); g.ziel = Math.max(1, g.ziel - 1); draw(); },
         gzp: () => { keep(); g.ziel = Math.min(30, g.ziel + 1); draw(); },
         gbb: (el) => { keep(); g.belohnung.bild = el.dataset.v; draw(); },
-        gq: (el) => { keep(); const [t, e] = BELOHNUNGEN[+el.dataset.i]; g.belohnung = { text: t, bild: e }; draw(); },
+        gq: (el) => { keep(); const [t, e] = BELOHNUNGEN[+el.dataset.i]; g.belohnung = { text: L(t), bild: e }; draw(); },
         back: () => this._openKidSettings(p),
         gsave: async () => {
           keep();
@@ -1498,7 +1714,7 @@
         thema: (el) => { wahl = themen[+el.dataset.i].val; prev(); mark(el); },
         quick: (el) => {
           const [t, e, z] = BELOHNUNGEN[+el.dataset.i];
-          this.shadowRoot.querySelector("#fp-in").value = t; wahl = e; setZ(z); prev();
+          this.shadowRoot.querySelector("#fp-in").value = L(t); wahl = e; setZ(z); prev();
           this.shadowRoot.querySelectorAll(".rwquick button").forEach((b) => b.classList.toggle("on", b === el));
           mark(null);
         },
@@ -1516,7 +1732,7 @@
             <button class="add" data-m="zp" aria-label="Mehr"><ha-icon icon="mdi:plus"></ha-icon></button>
             <span class="have">aktuell ${n} ${n === 1 ? "Stern" : "Sterne"}</span></div>
           <div class="sect">Schnell wählen</div>
-          <div class="rwquick">${BELOHNUNGEN.map(([t, e, z], i) => `<button data-m="quick" data-i="${i}" class="${t === r.text ? "on" : ""}"><span class="qe">${e}</span><span>${esc(t)}</span><small>${z} ★</small></button>`).join("")}</div>
+          <div class="rwquick">${BELOHNUNGEN.map(([t, e, z], i) => `<button data-m="quick" data-i="${i}" class="${L(t) === r.text ? "on" : ""}"><span class="qe">${e}</span><span>${esc(t)}</span><small>${z} ★</small></button>`).join("")}</div>
           <div class="sect">Oder eigenes Bild wählen</div>
           <div class="thm">${themen.map((t, i) => `<button data-m="thema" data-i="${i}" class="${t.val === wahl ? "on" : ""}">${this._bildHtml(t.val, "thpic")}<span>${esc(t.name)}</span></button>`).join("")}</div>
           <div class="sect">Oder ein Emoji</div>
@@ -2886,6 +3102,6 @@
 
   customElements.define("familienplaner-card", FamilienplanerCard);
   window.customCards = window.customCards || [];
-  window.customCards.push({ type: "familienplaner-card", name: "Familienplaner", description: "Wochenplan der Familie mit Essen, Einkauf und Ämtli" });
+  window.customCards.push({ type: "familienplaner-card", name: "Familienplaner", description: "Wochenplan der Familie mit Essen, Einkauf und Ämtli / Family week planner with meals, shopping and chores" });
   console.info(`%c FAMILIENPLANER %c ${VERSION} `, "background:#18212d;color:#fff;border-radius:4px 0 0 4px;padding:2px 4px", "background:#f2c200;color:#18212d;border-radius:0 4px 4px 0;padding:2px 4px");
 })();

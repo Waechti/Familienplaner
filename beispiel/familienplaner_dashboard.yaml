@@ -77,6 +77,9 @@ views:
         # Design: auto (wie Home Assistant), sonne (dunkel nach Sonnenuntergang), hell, dunkel
         dunkel: auto
 
+        # Sprache / language: auto (wie Home Assistant / like Home Assistant), de, en
+        sprache: auto
+
         # Optional: Knopf oben, der zu einem anderen Dashboard wechselt (Pfad aus der Adresszeile)
         # zuhause_link: /dashboard-zuhause
         # zuhause_name: Zuhause

@@ -1,158 +1,178 @@
-# Familienplaner für Home Assistant
+# Family Planner for Home Assistant
 
-Ein Wochenplaner für die ganze Familie, gemacht für ein Wandtablet oder Touchdisplay im Hochformat.
+🇩🇪 [Deutsche Version](README.de.md)
 
+A touch-friendly week planner for the whole family, made for a wall tablet or touch display. Calendars per person, meal plan, shopping list, chores and a star reward system the kids can use on their own.
+
+[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5?style=for-the-badge)](https://hacs.xyz)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=000)](https://www.buymeacoffee.com/Waechti)
 
-Der Familienplaner ist kostenlos. Wenn er euch gefällt, freue ich mich über einen Kaffee.
+The planner is free. If your family likes it, I'm happy about a coffee.
 
-| Hell | Dunkel |
+![The planner in action](bilder/demo.gif)
+
+| Portrait, light | Landscape, dark |
 | --- | --- |
-| ![Wochenansicht hell](bilder/hochformat-hell.jpg) | ![Wochenansicht dunkel](bilder/hochformat-dunkel.jpg) |
+| ![Week view, light](bilder/en-portrait-light.jpg) | ![Week view, dark](bilder/en-landscape-dark.jpg) |
 
-<details>
-<summary>Weitere Ansichten: Querformat, Tag, Monat</summary>
+The design follows the light or dark theme of Home Assistant. The interface is available in **English and German** and follows the language of Home Assistant.
 
-![Querformat hell](bilder/querformat-hell.jpg)
-![Querformat dunkel](bilder/querformat-dunkel.jpg)
-![Tagesansicht](bilder/tag-hell.jpg)
-![Monatsansicht dunkel](bilder/monat-dunkel.jpg)
+## Features
 
-</details>
+- **Week, day and month view** with one column per person, each in their own colour and with a photo. The week starts today; past days are hidden. Bigger displays automatically show more days.
+- **Swipe** left or right to go to the next or previous week (or day, month).
+- **Add family members** right on the tablet (name, colour, calendars), e.g. grandma or an au pair.
+- **Pictures on events**: kindergarten, swimming, doctor, shopping and about 50 other topics get a matching photo automatically (German and English keywords). Assign your own topics, photos and emojis on the tablet.
+- **Meal plan**: one dish per day. Suggestions learn your habits (e.g. pizza on Fridays), favour your favourites (heart) and add variety. "Fill the week" plans all empty days with one tap.
+- **Shopping list** (e.g. Bring!): tick off and add items on the tablet.
+- **Chores** per person, with stars for kids. They reset every night.
+- **Stars & rewards for kids** (tap the "Stars" tile, then pick a child):
+  - a big star jar and daily tasks as picture cards (morning / day / evening)
+  - big goals like "4× potty → monster truck" or "7 nights in own bed", each with its own stars and reward
+  - sticker album, bonus star after 5 days in a row 🔥, celebration with confetti and sound
+  - optional: stars only count after a parent confirms (with a 4-digit code)
+- **Coming up**: birthdays, your own countdowns and the next school holidays, shown big with pictures for kids.
+- **Message board** as a sticky note, **weather** for today and tomorrow, **public holidays**, **waste collection** reminders.
+- Night shifts across midnight show up only once ("18:00–06:00").
+- Portrait and landscape, light and dark design (optionally dark after sunset).
 
-Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assistant.
+Events are only displayed; you edit them as usual in your calendar (e.g. Google Calendar).
 
-## Was er kann
+## Requirements
 
-- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto. Die Woche beginnt mit heute, vergangene Tage werden nicht angezeigt. Auf grossen Displays zeigt sie automatisch mehr Tage.
-- **Weitere Familienmitglieder** direkt am Tablet hinzufügen (Name, Farbe, Kalender), z. B. Grosi oder ein Au-pair
-- **Wischen** nach links oder rechts blättert zur nächsten oder vorherigen Woche (bzw. Tag, Monat)
-- **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen.
-- **Essensplan**: pro Tag ein Gericht. Vorschläge lernen eure Gewohnheiten (z. B. Pizza am Freitag), berücksichtigen Lieblingsessen (Herz) und Abwechslung; «Woche füllen» plant die leeren Tage mit einem Tipp
-- **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
-- **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
-- **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung mit Bild und Ziel; kleine Belohnungen (Lolli, Spielzeugauto, Heftli …) lassen sich mit einem Tipp wählen; Sterne gibt es per Tipp oder über die Ämtli
-- **Sterne & Belohnungen** (Kachel «Sterne» antippen, dann Kind wählen): grosses Sternenglas, Tagesaufgaben als Bildkarten (Morgen/Tag/Abend, täglich neu), grosse Ziele wie «4× Töpfchen → Monstertruck» oder «7 Nächte im eigenen Bett» mit eigenen Sternen und eigener Belohnung (jedes Mal oder einmal pro Tag), Sticker-Album, Bonus-Stern nach 5 Tagen am Stück 🔥, Feier mit Konfetti und Ton. Optional zählen Sterne erst nach Eltern-Bestätigung (mit 4-stelligem Code)
-- **«Bald» für Kinder**: Bild, Name und grosse Zahl der Tage; antippen zeigt alle kommenden Ereignisse gross (schliesst nach 30 Sekunden)
-- **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
-- **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
-- Nachtdienste über Mitternacht erscheinen nur einmal («18:00–06:00»)
-- Hoch- und Querformat, helles und dunkles Design (wahlweise automatisch nach Sonnenuntergang)
-
-Termine werden nur angezeigt; bearbeitet werden sie wie gewohnt im Kalender (z. B. Google Kalender).
-
-## Voraussetzungen
-
-- Home Assistant 2025.4 oder neuer
-- Kalender in Home Assistant, z. B. Google Kalender über **Remote Calendar** (siehe unten)
-- Optional: Bring! (Integration «Bring!»), eine Wetter-Integration (Standard: `weather.forecast_home`)
+- Home Assistant 2025.4 or newer
+- Calendars in Home Assistant, e.g. Google Calendar via **Remote Calendar** (see below)
+- Optional: Bring! (integration "Bring!"), a weather integration (default: `weather.forecast_home`)
 
 ## Installation
 
-### Variante A: über HACS
+### Option A: HACS
 
-1. HACS (ab Home Assistant 2026.11: Marketplace) → oben rechts ⋮ → **Benutzerdefinierte Repositories** → `https://github.com/Waechti/familienplaner` eintragen, Typ **Dashboard**.
-2. «Familienplaner» suchen und herunterladen.
-3. Weiter mit Schritt 3 unten.
+1. Search for **Familienplaner** in HACS and download it.
+2. Not found? Top right ⋮ → **Custom repositories** → add `https://github.com/Waechti/familienplaner`, type **Dashboard**, then search and download.
+3. Continue with step 3 below.
 
-### Variante B: von Hand (ZIP)
+### Option B: manually
 
-1. Die Datei `dist/familienplaner-card.js` nach `/config/www/familienplaner/` kopieren (Ordner anlegen; Zugriff z. B. über das Add-on «Samba share» oder «File editor»).
-2. Die Karte als Ressource eintragen: **Einstellungen → Dashboards → ⋮ → Ressourcen → Ressource hinzufügen**
+1. Copy `dist/familienplaner-card.js` to `/config/www/familienplaner/` (create the folder; e.g. with the "Samba share" or "File editor" add-on).
+2. Add the card as a resource: **Settings → Dashboards → ⋮ → Resources → Add resource**
    - URL: `/local/familienplaner/familienplaner-card.js?v=1`
-   - Typ: JavaScript-Modul
+   - Type: JavaScript module
 
-   (Wird «Ressourcen» nicht angezeigt: im eigenen Benutzerprofil den **Erweiterten Modus** einschalten.)
+   (If "Resources" is missing, turn on **Advanced mode** in your user profile.)
 
-   Bei einem Update die Datei ersetzen und die Zahl hinter `?v=` erhöhen.
+   For an update, replace the file and increase the number after `?v=`.
 
-### Schritt 3: Helfer und Automationen
+### Step 3: helpers and automations
 
-1. `beispiel/familienplaner_paket.yaml` als `/config/packages/familienplaner.yaml` speichern.
-2. In `configuration.yaml` prüfen, ob Pakete geladen werden:
+1. Save `beispiel/familienplaner_paket.yaml` as `/config/packages/familienplaner.yaml`.
+2. Make sure packages are loaded in `configuration.yaml`:
    ```yaml
    homeassistant:
      packages: !include_dir_named packages
    ```
-3. Home Assistant neu starten.
+3. Restart Home Assistant.
 
-### Schritt 4: Dashboard
+### Step 4: dashboard
 
-Entweder `beispiel/familienplaner_dashboard.yaml` als eigenes YAML-Dashboard verwenden (Anleitung steht oben in der Datei), oder in einem bestehenden Dashboard eine neue Ansicht vom Typ **Panel** anlegen und eine Karte **Manuell** mit dem Inhalt ab `type: custom:familienplaner-card` einfügen.
+Either use `beispiel/familienplaner_dashboard.yaml` as a YAML dashboard (instructions at the top of the file), or add a view of type **Panel** to an existing dashboard and add a **Manual** card with everything from `type: custom:familienplaner-card` on.
 
-Danach Namen, Farben und Kalender der Personen anpassen.
+Then adjust names, colours and calendars of the people. A minimal example:
 
-### Schritt 5: Listen anlegen
+```yaml
+type: custom:familienplaner-card
+sprache: en
+personen:
+  - name: Mum
+    farbe: "#d6336c"
+    foto: input_text.fp_foto_1
+    kalender: [Mum]
+    aemtli: Ämtli Person 1
+  - name: Emma
+    farbe: "#2b8a3e"
+    foto: input_text.fp_foto_3
+    kalender: [Emma]
+    aemtli: Ämtli Person 3
+    sterne: counter.fp_sterne_3
+familie:
+  name: Family
+  kalender: [Family]
+geburtstage: [Birthdays]
+```
 
-Beim ersten Öffnen zeigt der Planer oben **«Jetzt anlegen»**. Ein Tipp legt automatisch an:
-- den Kalender «Essensplan»
-- die Listen «Countdowns», «Planer Bilder» und «Ämtli …»
+### Step 5: create the lists
 
-Dafür muss man als Administrator angemeldet sein.
+On first start the planner shows **"Create now"** at the top. One tap creates:
+- the calendar "Essensplan" (meal plan)
+- the lists "Countdowns", "Planer Bilder" and "Ämtli …" (chores)
 
-## Google Kalender einbinden (ohne Google-Cloud-Projekt)
+You need to be logged in as an administrator for this.
 
-Für jeden Kalender:
-1. In Google Kalender **im Browser**: Einstellungen → Kalender wählen → «Kalender integrieren» → **Privatadresse im iCal-Format** kopieren (enthält `/private-`, nicht `/public/`).
-2. In Home Assistant: Einstellungen → Geräte & Dienste → Integration hinzufügen → **Remote Calendar**, Name wie im Planer eingetragen (z. B. «Mama»), Adresse einfügen.
+## Adding Google Calendar (no Google Cloud project needed)
 
-Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist wie ein Schlüssel zum Kalender und sollte nicht weitergegeben werden.
+For each calendar:
+1. In Google Calendar **in the browser**: Settings → choose the calendar → "Integrate calendar" → copy the **secret address in iCal format** (contains `/private-`, not `/public/`).
+2. In Home Assistant: Settings → Devices & services → Add integration → **Remote Calendar**, use the name you entered in the planner (e.g. "Mum"), paste the address.
 
-## Bedienung am Tablet
+The automation in the package fetches new events every 15 minutes. The secret address works like a key to your calendar; don't share it.
 
-| Was | Wie |
+## Using it on the tablet
+
+| What | How |
 |---|---|
-| Familienmitglied hinzufügen | Knopf «+ Person» oben links in der Wochenansicht |
-| Hinzugefügte Person ändern oder entfernen | lange auf ihr Foto drücken → «Name & Kalender» |
-| Person aus- oder einblenden | Foto antippen |
-| Foto, Ausschnitt und Farbe ändern | lange auf das Foto drücken (Foto verschieben und vergrössern) |
-| Termin ansehen, Bild zuweisen | Termin antippen → «Bild zuweisen» (oder lange drücken) |
-| Alle Bild-Themen ansehen und ändern | Knopf mit dem Bildsymbol oben rechts |
-| Essen eintragen | beim Tag auf «Essen planen» tippen |
-| Pinnwand schreiben | Post-it antippen |
-| Countdown hinzufügen | «+» bei «Bald» |
-| Alle kommenden Ereignisse gross anzeigen | Kachel «Bald» antippen |
-| Eintrag bei «Bald» ausblenden | in der grossen Ansicht den Eintrag antippen |
-| Hoch- oder Querformat fest einstellen | Knopf oben rechts (Auto / Hoch / Quer) |
-| Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
-| Stern geben | Stern-Knopf beim Kind |
-| Sterne & Belohnungen öffnen | Kachel «Sterne» antippen, dann das Kind wählen |
-| Aufgaben, Ziele, Eltern-Code einstellen | in der Kinder-Ansicht auf ⚙️ |
-| Belohnung festlegen oder einlösen | auf die Sterne oder die Belohnung tippen |
-| Lieblingsessen markieren | im Essen-Fenster auf das Herz tippen; ✕ bei einem Vorschlag = nicht mehr vorschlagen |
+| Add a family member | "+ Person" button at the top left of the week view |
+| Edit or remove an added person | long press their photo → "Name & calendar" |
+| Show or hide a person | tap their photo |
+| Change photo, crop and colour | long press the photo |
+| View an event, assign a picture | tap the event → "Assign picture" (or long press) |
+| See and change all picture topics | picture button at the top right |
+| Plan a meal | tap "Plan a meal" on a day |
+| Write on the message board | tap the sticky note |
+| Add a countdown | "+" at "Coming up" |
+| Show everything coming up full screen | tap the "Coming up" tile |
+| Next / previous week | swipe left / right in the calendar |
+| Open stars & rewards | tap the "Stars" tile, then pick a child |
+| Set tasks, goals, parent code | ⚙️ in the kids view |
+| Set or redeem a reward | tap the stars or the reward |
+| Mark a favourite meal | tap the heart in the meal window; ✕ on a suggestion = don't suggest again |
+| Fix portrait or landscape | button at the top right (Auto / Portrait / Landscape) |
 
-## Einstellungen der Karte
+## Card options
 
-| Option | Bedeutung |
+The option names are German. Here is what they mean:
+
+| Option | Meaning |
 |---|---|
-| `personen` | Liste mit `name`, `farbe`, `foto` (input_text), `kalender` (Namen oder Entity-IDs; ein Teil des Namens genügt), `aemtli` (Listenname), `sterne` (Counter, optional), `bilder` (true/false) |
-| `familie` | gemeinsamer Kalender, erscheint als Band über alle Spalten |
-| `geburtstage` | Kalender mit Geburtstagen |
-| `essensplan`, `countdowns`, `bilderliste` | Namen der lokalen Kalender/Listen |
-| `bring` | Liste von To-do-Entitäten; leer = alle Bring!-Listen |
-| `wetter`, `abfall`, `notiz` | Entitäten für Wetter, Abfallsensor und Pinnwand |
-| `schulferien` | Liste `{von, bis, name}` (JJJJ-MM-TT, «bis» inklusive) |
-| `schulferien_kalender` | Kalender mit ganztägigen Ferienterminen, z. B. ein iCal der Schule |
-| `feiertage` | Auswahl der Feiertage (siehe Beispiel-Dashboard); `[]` blendet alle aus |
-| `eigene_feiertage` | zusätzliche Tage `{datum, name}` |
-| `personen_hinzufuegen` | `false` blendet den Knopf «+ Person» aus (Standard: sichtbar). Am Tablet hinzugefügte Personen werden in der Liste «Planer Bilder» gespeichert |
-| `dunkel` | `auto` (wie Home Assistant, Standard), `sonne` (dunkel zwischen Sonnenuntergang und -aufgang), `hell` oder `dunkel` |
-| `zuhause_link`, `zuhause_name` | Knopf oben, der zu einem anderen Dashboard wechselt, z. B. `zuhause_link: /dashboard-zuhause` (Pfad aus der Adresszeile). Ohne `zuhause_link` kein Knopf |
+| `personen` | people: list with `name`, `farbe` (colour), `foto` (input_text), `kalender` (calendar names or entity IDs; part of the name is enough), `aemtli` (chore list name), `sterne` (counter, optional), `bilder` (true/false: pictures on events) |
+| `familie` | shared family calendar, shown as a band across all columns |
+| `geburtstage` | calendars with birthdays |
+| `essensplan`, `countdowns`, `bilderliste` | names of the local calendar/lists for meals, countdowns and pictures |
+| `bring` | list of to-do entities for shopping; empty = all Bring! lists |
+| `wetter`, `abfall`, `notiz` | entities for weather, waste sensor and message board |
+| `schulferien` | school holidays: list of `{von, bis, name}` (from, to inclusive, name; YYYY-MM-DD) |
+| `schulferien_kalender` | calendar with all-day school holiday events, e.g. your school's iCal |
+| `feiertage` | which public holidays to show (see example dashboard); `[]` hides all |
+| `eigene_feiertage` | extra days `{datum, name}` (date, name) |
+| `personen_hinzufuegen` | `false` hides the "+ Person" button |
+| `dunkel` | dark mode: `auto` (like Home Assistant, default), `sonne` (dark between sunset and sunrise), `hell` (light) or `dunkel` (dark) |
+| `sprache` | language: `auto` (like Home Assistant, default), `en` or `de` |
+| `zuhause_link`, `zuhause_name` | button at the top that opens another dashboard, e.g. `zuhause_link: /dashboard-home` |
 
-### Abfall
+### Waste collection
 
-Die Termine stehen im Sensor `sensor.familienplaner_abfall` (Datei `familienplaner_paket.yaml`) als Liste `{d: Datum, t: Art}`. Die Daten der eigenen Gemeinde dort eintragen. Eine Push-Nachricht am Vorabend ist vorbereitet; dafür in der Automation die eigene `notify.mobile_app_…`-Aktion eintragen und sie aktivieren.
+The dates live in the sensor `sensor.familienplaner_abfall` (file `familienplaner_paket.yaml`) as a list `{d: date, t: type}`. Enter the dates of your town there. A push notification the evening before is prepared; add your own `notify.mobile_app_…` action in the automation and enable it.
 
-## Gut zu wissen
+## Good to know
 
-- **Bilder**: Die Standardfotos stammen von [Unsplash](https://unsplash.com/license) (frei verwendbar) und werden beim Anzeigen aus dem Internet geladen. Eigene Fotos und Zuordnungen bleiben in Home Assistant (Liste «Planer Bilder»).
-- **Schriften** werden von Google Fonts geladen. Ohne Internet erscheinen Ersatzschriften.
-- **Daten**: Termine, Fotos, Essensplan und Pinnwand bleiben in deinem Home Assistant. Die Karte sendet nichts an fremde Server, ausser den Abruf von Bildern und Schriften.
+- **Pictures**: the default photos come from [Unsplash](https://unsplash.com/license) (free to use) and are loaded from the internet when shown. Your own photos and assignments stay in Home Assistant (list "Planer Bilder").
+- **Fonts** are loaded from Google Fonts. Without internet, fallback fonts are used.
+- **Privacy**: events, photos, meal plan and message board stay in your Home Assistant. The card sends nothing to other servers, apart from loading pictures and fonts.
+- Built in Switzerland: public holidays and school holidays default to Swiss settings and can be changed with the options above.
 
-## Lizenz
+## License
 
-[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0): kostenlos nutzen, anpassen und weitergeben für nicht-kommerzielle Zwecke (z. B. für die eigene Familie). Verkaufen oder kommerziell nutzen ist nicht erlaubt. Details in `LICENSE`.
+[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0): free to use, change and share for non-commercial purposes (e.g. for your own family). Selling it or using it commercially is not allowed. Details in `LICENSE`.
 
-## Unterstützen
+## Support
 
-Fehler gefunden oder eine Idee? Gerne als [Issue](https://github.com/Waechti/familienplaner/issues) melden. Und wer mag: [Buy Me a Coffee](https://www.buymeacoffee.com/Waechti) ☕
+Found a bug or have an idea? Please open an [issue](https://github.com/Waechti/familienplaner/issues). And if you like: [Buy Me a Coffee](https://www.buymeacoffee.com/Waechti) ☕
