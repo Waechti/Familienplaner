@@ -41,6 +41,8 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
 - Nachtdienste über Mitternacht erscheinen nur einmal («18:00–06:00»)
+- **Geburtstage**: Am Geburtstag eines Familienmitglieds erscheint ein farbiges Band mit Foto, am Foto ein 🎂, und der Planer feiert einmal mit Konfetti. Das Datum kommt aus den Einstellungen oder aus einem Geburtstags-Termin im Kalender.
+- **Nachtmodus**: Nachts (Zeitfenster frei wählbar) eine ruhige, dunkle Uhr oder eine Diashow mit euren Familienfotos aus dem Medien-Ordner von Home Assistant. Antippen zeigt den Planer für 2 Minuten.
 - **Einstellungen** (Knopf ⚙️ oben): Familienmitglieder mit Foto, Farbe und Kalendern (hinzufügen, ausblenden, löschen), Kinder & Sterne, Bilder zu Terminen, Lieblingsessen, ausgeblendete Einträge, Ausrichtung und dunkles Design an einem Ort. Mit Eltern-Code geschützt, falls einer gesetzt ist.
 - Hoch- und Querformat, helles und dunkles Design (wahlweise automatisch nach Sonnenuntergang)
 - Deutsch und Englisch (richtet sich nach der Sprache von Home Assistant)
@@ -120,7 +122,8 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | Countdown hinzufügen | «+» bei «Bald» |
 | Alle kommenden Ereignisse gross anzeigen | Kachel «Bald» antippen |
 | Eintrag bei «Bald» ausblenden | in der grossen Ansicht den Eintrag antippen |
-| Hoch- oder Querformat, dunkles Design | Einstellungen → Anzeige (gilt für dieses Gerät) |
+| Hoch- oder Querformat, dunkles Design, Nachtmodus | Einstellungen → Anzeige (gilt für dieses Gerät) |
+| Geburtstag eintragen | Einstellungen → Familie → 🎂 |
 | Lieblingsessen verwalten, ausgeblendete Einträge zurückholen | Einstellungen → Essen / Bald |
 | Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
 | Stern geben | Stern-Knopf beim Kind |

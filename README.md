@@ -34,6 +34,8 @@ The design follows the light or dark theme of Home Assistant. The interface is a
 - **Coming up**: birthdays, your own countdowns and the next school holidays, shown big with pictures for kids.
 - **Message board** as a sticky note, **weather** for today and tomorrow, **public holidays**, **waste collection** reminders.
 - Night shifts across midnight show up only once ("18:00–06:00").
+- **Birthdays**: on a family member's birthday a colourful banner with their photo appears, the avatar gets a 🎂 and the planner celebrates once with confetti. The date comes from the settings or from a birthday event in a calendar.
+- **Night mode**: at night (time window of your choice) a calm, dark clock or a slideshow of your family photos from the Home Assistant media folder. Tapping shows the planner for 2 minutes.
 - **Settings** (⚙️ button at the top): family members with photo, colour and calendars (add, hide, delete), kids & stars, event pictures, favourite meals, hidden entries, orientation and dark design, all in one place. Protected by the parent code if one is set.
 - Portrait and landscape, light and dark design (optionally dark after sunset).
 
@@ -137,7 +139,8 @@ The automation in the package fetches new events every 15 minutes. The secret ad
 | Set tasks, goals, parent code | ⚙️ in the kids view |
 | Set or redeem a reward | tap the stars or the reward |
 | Mark a favourite meal | tap the heart in the meal window; ✕ on a suggestion = don't suggest again |
-| Fix portrait or landscape, dark design | Settings → Display (applies to this device) |
+| Fix portrait or landscape, dark design, night mode | Settings → Display (applies to this device) |
+| Enter a birthday | Settings → Family → 🎂 |
 | Manage favourite meals, bring back hidden entries | Settings → Meals / Coming up |
 
 ## Card options

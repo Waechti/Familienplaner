@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.13.0";
+  const VERSION = "1.14.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -318,6 +318,15 @@
     "Ausrichtung": "Orientation", "Automatisch": "Automatic", "Dunkles Design": "Dark design", "Wie Home Assistant": "Like Home Assistant", "Nach Sonnenuntergang": "After sunset", "Immer hell": "Always light", "Immer dunkel": "Always dark",
     "Wieder zeigen": "Show again",
     "Für diese Einstellungen braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.": "These settings need the list “Planer Bilder”. Tap “Create now” at the top.",
+    // Geburtstag und Nacht
+    "Alles Gute! 🎉": "Happy birthday! 🎉", "🎂🎈🎁": "🎂🎈🎁", "Datum": "Date", "Bitte ein Datum wählen.": "Please choose a date.", "Geburtstag": "Birthday",
+    "Am Geburtstag zeigt der Planer ein Band mit Foto und feiert einmal mit Konfetti. Steht der Geburtstag schon im Kalender (Titel mit Name und «Geburtstag»), braucht es hier nichts.": "On the birthday the planner shows a banner with the photo and celebrates once with confetti. If the birthday is already in a calendar (title with name and “birthday”), nothing is needed here.",
+    "🌙 Nachtmodus": "🌙 Night mode", "Aus": "Off", "Grosse Uhr": "Big clock", "Fotos": "Photos", "Von": "From", "Bis": "To", "Ordner wählen": "Choose folder", "Jetzt ansehen": "Preview now",
+    "Alle Medien": "All media", "Antippen zeigt den Planer für 2 Minuten.": "Tapping shows the planner for 2 minutes.",
+    "Nachts zeigt der Planer statt dem Kalender eine ruhige, dunkle Uhr oder eure Familienfotos.": "At night the planner shows a calm, dark clock or your family photos instead of the calendar.",
+    "Fotos für die Nacht": "Photos for the night", "⬆ Zurück": "⬆ Back", "Keine Unterordner.": "No subfolders.", "Diesen Ordner wählen": "Choose this folder", "Medien konnten nicht geladen werden.": "Could not load media.",
+    "Fotos lädst du in Home Assistant unter «Medien» → «My media» hoch (eigenen Ordner anlegen, z. B. «Familienfotos»).": "Upload photos in Home Assistant under “Media” → “My media” (create your own folder, e.g. “Family photos”).",
+    "keine Termine": "no events", "Ordner:": "Folder:", "Morgen:": "Tomorrow:", "Heute:": "Today:",
     "Montag": "Monday", "Dienstag": "Tuesday", "Mittwoch": "Wednesday", "Donnerstag": "Thursday", "Freitag": "Friday", "Samstag": "Saturday", "Sonntag": "Sunday",
   };
   // Texte mit Zahlen oder Namen
@@ -343,6 +352,9 @@
     [/^Wie Karte \((.+)\)$/, "Like the card ($1)"], [/^Diese Einstellungen gelten nur für dieses Gerät\. Familienplaner (.+)\.$/, "These settings only apply to this device. Family planner $1."],
     [/^(\d+) ★ · (\d+) Tagesaufgaben · (\d+) grosse Ziele$/, "$1 ★ · $2 daily tasks · $3 big goals"], [/^📅 (.+)$/, "📅 $1"], [/^(.+) entfernen$/, "Remove $1"],
     [/^(.+) · ohne Bilder$/, (m, a) => `${trEN(a)} · without pictures`], [/^(.+) · ausgeblendet$/, (m, a) => `${trEN(a)} · hidden`],
+        [/^(.+) hat heute Geburtstag!$/, "It's $1's birthday today!"], [/^(\d+) Jahre 🎉$/, "$1 years 🎉"], [/^(\d+) Jahre 🎂🎈🎁$/, "$1 years 🎂🎈🎁"], [/^Alles Gute zum Geburtstag, (.+)!$/, "Happy birthday, $1!"],
+    [/^🎂 Geburtstag von (.+)$/, "🎂 $1's birthday"], [/^(Heute|Morgen): (.*)$/, (m, d, r) => `${d === "Heute" ? "Today" : "Tomorrow"}: ${r.replace(/(\d+) Termine?\b/, (x, n) => `${n} ${n === "1" ? "event" : "events"}`).replace("keine Termine", "no events")}`],
+    [/^Ordner: (.*)$/, "Folder: $1"], [/^(\d+) Termine?$/, (m, n) => `${n} ${n === "1" ? "event" : "events"}`], [/^· (\d+) Bilder?$/, (m, n) => `· ${n} ${n === "1" ? "picture" : "pictures"}`], [/^📁 (.+)$/, "📁 $1"],
         [/^Person (\d)$/, "Person $1"], [/^Ämtli (.+)$/, "Chores $1"], [/^Foto (.+)$/, "Photo $1"],
   ];
   // Datumsformen nach dem Umstellen der Monatsnamen: «3. Nov» -> «Nov 3»
@@ -692,7 +704,7 @@
     _bildListe() { return this._findByName("todo", this._config.bilderliste); }
     _customBilder() {
       const id = this._bildListe();
-      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen)/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
+      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen|Geburtstag: )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
         .sort((a, b) => b.key.length - a.key.length);
     }
     _themaFor(title) { return THEMEN.find((t) => t.re.test(title || "")) || null; }
@@ -928,11 +940,15 @@
       this._farbenAnwenden();
       const root = this.shadowRoot;
       if (!root.querySelector("#app")) {
-        root.innerHTML = `<style>${STYLE}</style><div id="app" lang="de"></div><div id="kid"></div><div id="party"></div><div id="modal"></div>`;
+        root.innerHTML = `<style>${STYLE}</style><div id="app" lang="de"></div><div id="kid"></div><div id="night"></div><div id="party"></div><div id="modal"></div>`;
         root.querySelector("#app").addEventListener("click", (e) => this._click(e));
         root.querySelector("#modal").addEventListener("click", (e) => this._modalClick(e));
         root.querySelector("#kid").addEventListener("click", (e) => this._kidClick(e));
         root.querySelector("#kid").addEventListener("pointerdown", () => this._kidTouch());
+        root.querySelector("#kid").addEventListener("change", (e) => this._settingsChange(e));
+        root.querySelector("#night").addEventListener("click", () => { this._nightSnooze = Date.now() + 120000; this._nightForce = false; this._nightHide(); });
+        // Wer den Planer benutzt, hält ihn wach
+        root.querySelector("#app").addEventListener("pointerdown", () => { if ((this._nightSnooze || 0) > Date.now()) this._nightSnooze = Date.now() + 120000; });
         root.querySelector("#party").addEventListener("click", () => this._partyClose());
         this._bindLongPress(root.querySelector("#app"));
         this._bindSwipe(root.querySelector("#app"));
@@ -946,6 +962,7 @@
       app.className = `fp ${quer ? "quer" : "hoch"} ${dark ? "dark" : ""}`;
       app.innerHTML = `
         ${this._header()}
+        ${this._bdayBand()}
         ${this._setupBanner()}
         <div class="body">
           <section class="main">${this._view === "tag" ? this._dayView() : this._view === "monat" ? this._monthView() : this._weekView()}</section>
@@ -955,6 +972,7 @@
       if (this._slide) { const m = app.querySelector(".main"); if (m) m.classList.add(this._slide > 0 ? "slide-l" : "slide-r"); this._slide = 0; }
       if (this._view === "woche") requestAnimationFrame(() => this._fitWeek());
       if (this._kidOpen) this._renderKid();
+      this._bdayAutoParty();
       if (this._needScrollNow) { this._needScrollNow = false; const nl = app.querySelector(".nowline"); if (nl) nl.closest("[data-scroll]").scrollTop = Math.max(0, nl.offsetTop - 120); }
     }
 
@@ -989,6 +1007,7 @@
       if (this._lastDay && !sameDay(this._lastDay, now)) { this._anchor = sod(now); this._refreshAll(); }
       this._lastDay = now;
       if (this._view === "tag") this._render();
+      this._nightCheck();
     }
 
     _header() {
@@ -1070,7 +1089,7 @@
       const img = this._photo(p);
       const off = this._hidden.has(p.name);
       return `<button class="av ${size} ${off ? "off" : ""}" style="--c:${p.farbe}" data-act="person" data-name="${esc(p.name)}" data-lp="foto" title="Antippen: ein/ausblenden · Lange drücken: Foto ändern">
-          <span class="ring">${img ? `<img src="${esc(img)}" alt="">` : `<span class="ini">${esc(p.name[0])}</span>`}</span>
+          <span class="ring">${img ? `<img src="${esc(img)}" alt="">` : `<span class="ini">${esc(p.name[0])}</span>`}${this._bdayOf(p) ? `<span class="avb">🎂</span>` : ""}</span>
           <span class="nm">${esc(p.name)}</span>
         </button>`;
     }
@@ -1365,6 +1384,182 @@
       draw();
     }
 
+    // ================= Geburtstag =================
+    // Datum am Tablet («Geburtstag: <Name>» = JJJJ-MM-TT) oder ein Geburtstags-Termin heute mit dem Namen im Titel
+    _bdayDate(p) {
+      const it = (this._todos[this._bildListe()] || []).find((i) => i.summary === `Geburtstag: ${p.name}`);
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((it?.description || "").trim());
+      return m ? { y: +m[1], m: +m[2], d: +m[3], uid: it.uid, raw: m[0] } : null;
+    }
+    _bdayOf(p) {
+      const now = new Date();
+      const bd = this._bdayDate(p);
+      if (bd) return bd.m === now.getMonth() + 1 && bd.d === now.getDate() ? { alter: bd.y > 1900 ? now.getFullYear() - bd.y : 0 } : null;
+      const re = new RegExp(`(^|[^\\p{L}])${p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^\\p{L}]|$)`, "iu");
+      const ev = (this._bdays || []).find((e) => sameDay(e.start, now) && re.test(e.title || ""));
+      if (!ev) return null;
+      const a = /(\d{1,3})\s*\.?\s*(geburtstag|geburi|jahre)/i.exec(ev.title || "");
+      return { alter: a ? +a[1] : 0 };
+    }
+    _bdayToday() {
+      const now = new Date();
+      const members = this._config.personen.map((p) => ({ p, b: this._bdayOf(p) })).filter((x) => x.b);
+      const names = members.map((x) => x.p.name.toLowerCase());
+      const others = (this._bdays || []).filter((e) => sameDay(e.start, now) && !names.some((n) => (e.title || "").toLowerCase().includes(n)))
+        .filter((e) => !this._ausgeblendet().includes(`${e.title}|${ymd(e.start)}`));
+      return { members, others };
+    }
+    _bdayBand() {
+      const { members, others } = this._bdayToday();
+      if (!members.length && !others.length) return "";
+      return `<div class="bdband" data-act="bdparty" role="button">
+        <span class="bdconf" aria-hidden="true">${Array.from({ length: 18 }, (_, i) => `<i style="left:${(i * 5.7) % 100}%;animation-delay:${(i * 0.37) % 3}s;background:${["#f2b400", "#d6336c", "#2b8a3e", "#1971c2", "#7048e8"][i % 5]}"></i>`).join("")}</span>
+        ${members.map(({ p, b }) => `<span class="bdm" style="--c:${p.farbe}">${this._kidAvatar(p, 46)}<span><b>${esc(p.name)} hat heute Geburtstag!</b>${b.alter ? `<small>${b.alter} Jahre 🎉</small>` : `<small>Alles Gute! 🎉</small>`}</span></span>`).join("")}
+        ${others.length ? `<span class="bdo">🎂 ${others.map((e) => esc(e.title)).join(" · ")}</span>` : ""}
+      </div>`;
+    }
+    _bdayParty(p, b) {
+      const img = this._photo(p);
+      this._party(p, img ? `url:${img}` : "🎂", `Alles Gute zum Geburtstag, ${p.name}!`, b.alter ? `${b.alter} Jahre 🎂🎈🎁` : "🎂🎈🎁");
+      const el = this.shadowRoot.querySelector("#party .ppic");
+      if (el && img) el.classList.add("round");
+    }
+    // Einmal pro Tag und Gerät von selbst feiern (ab 6 Uhr, nicht im Nachtmodus)
+    _bdayAutoParty() {
+      if (!this._hass || new Date().getHours() < 6 || this._nightOn) return;
+      const { members } = this._bdayToday();
+      if (!members.length) return;
+      const key = ymd(new Date()) + "|" + members.map((x) => x.p.name).join(",");
+      if (lsGet("fp-bdparty", "") === key) return;
+      lsSet("fp-bdparty", key);
+      setTimeout(() => this._bdayParty(members[0].p, members[0].b), 600);
+    }
+    _openBday(p) {
+      const h = this._hass, liste = this._bildListe();
+      const cur = this._bdayDate(p);
+      const save = async (val) => {
+        if (cur) { if (val) await h.callService("todo", "update_item", { item: cur.uid, description: val }, { entity_id: liste }); else await h.callService("todo", "remove_item", { item: cur.uid }, { entity_id: liste }); }
+        else if (val) await h.callService("todo", "add_item", { item: `Geburtstag: ${p.name}`, description: val }, { entity_id: liste });
+        await this._loadTodo(liste);
+        this._modal("");
+      };
+      this._mh = {
+        save: () => { const v = this.shadowRoot.querySelector("#fp-bd").value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { this.shadowRoot.querySelector("#modal .flash").textContent = "Bitte ein Datum wählen."; return; } save(v); },
+        del: () => save(""),
+      };
+      this._modal(`<div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>🎂 Geburtstag von ${esc(p.name)}</h2></div>
+        <div class="dlg-b"><label class="kw">Datum<input id="fp-bd" type="date" value="${esc(cur?.raw || "")}"></label>
+          <p class="hint2">Am Geburtstag zeigt der Planer ein Band mit Foto und feiert einmal mit Konfetti. Steht der Geburtstag schon im Kalender (Titel mit Name und «Geburtstag»), braucht es hier nichts.</p><div class="flash"></div></div>
+        <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
+    }
+
+    // ================= Nachtmodus =================
+    _nightCfg() {
+      let c = {};
+      try { c = JSON.parse(lsGet("fp-nacht", "{}")) || {}; } catch (e) { c = {}; }
+      return { modus: ["uhr", "fotos"].includes(c.modus) ? c.modus : "aus", von: /^\d\d:\d\d$/.test(c.von || "") ? c.von : "21:00", bis: /^\d\d:\d\d$/.test(c.bis || "") ? c.bis : "06:30", ordner: c.ordner || "", ordnerName: c.ordnerName || "" };
+    }
+    _setNightCfg(patch) { lsSet("fp-nacht", JSON.stringify({ ...this._nightCfg(), ...patch })); this._nightCheck(); }
+    _nightWindow(c, now = new Date()) {
+      const m = now.getHours() * 60 + now.getMinutes();
+      const [a, b] = [c.von, c.bis].map((t) => { const [h, mi] = t.split(":").map(Number); return h * 60 + mi; });
+      return a <= b ? m >= a && m < b : m >= a || m < b;
+    }
+    _nightCheck() {
+      const c = this._nightCfg();
+      const want = this._nightForce || (c.modus !== "aus" && this._nightWindow(c) && Date.now() > (this._nightSnooze || 0));
+      if (want) this._nightShow(c); else if (this._nightOn) this._nightHide();
+    }
+    _nightHide() {
+      this._nightOn = false; clearInterval(this._nightT); this._nightT = null;
+      const el = this.shadowRoot.querySelector("#night"); if (el) { el.className = ""; el.innerHTML = ""; }
+    }
+    _nightShow(c) {
+      const el = this.shadowRoot.querySelector("#night");
+      if (!el || !this._hass) return;
+      const modus = this._nightForce ? (c.modus === "aus" ? "uhr" : c.modus) : c.modus;
+      if (!this._nightOn || el.dataset.modus !== modus) {
+        this._nightOn = true; el.dataset.modus = modus;
+        el.className = `night ${modus}`;
+        el.innerHTML = modus === "fotos"
+          ? `<img class="nimg" alt=""><img class="nimg" alt=""><div class="nsmall"><b class="nclock"></b><span class="ndate"></span></div>`
+          : `<div class="nwrap"><div class="nclock"></div><div class="ndate"></div><div class="nnext"></div></div>`;
+        if (modus === "fotos") this._nightPhotos(c);
+      }
+      const now = new Date();
+      el.querySelectorAll(".nclock").forEach((x) => (x.textContent = hm(now)));
+      el.querySelectorAll(".ndate").forEach((x) => (x.textContent = `${WDL[now.getDay()]}, ${now.getDate()}. ${MO[now.getMonth()]}`));
+      const nx = el.querySelector(".nnext");
+      if (nx) {
+        const tom = addDays(sod(now), now.getHours() < 12 ? 0 : 1);
+        const w = this._wx(tom);
+        const evs = new Set();
+        Object.values(this._events || {}).forEach((l) => this._on(l, tom).forEach((e) => evs.add(e.title)));
+        nx.innerHTML = `${now.getHours() < 12 ? "Heute" : "Morgen"}: ${w ? `<ha-icon icon="${WX[w.condition] || "mdi:weather-partly-cloudy"}"></ha-icon> ${Math.round(w.temperature)}°${w.templow != null ? ` / ${Math.round(w.templow)}°` : ""} · ` : ""}${evs.size ? `${evs.size} ${evs.size === 1 ? "Termin" : "Termine"}` : "keine Termine"}`;
+        // gegen Einbrennen: jede Minute etwas verschieben
+        const wrap = el.querySelector(".nwrap");
+        if (wrap && this._nightMin !== now.getMinutes()) { this._nightMin = now.getMinutes(); wrap.style.transform = `translate(${Math.round((Math.random() - 0.5) * 120)}px, ${Math.round((Math.random() - 0.5) * 160)}px)`; }
+      }
+    }
+    // Fotos aus einem Medien-Ordner von Home Assistant (Einstellungen → Medien)
+    async _nightPhotos(c) {
+      const el = this.shadowRoot.querySelector("#night");
+      let list = [];
+      try {
+        const r = await this._hass.callWS({ type: "media_source/browse_media", media_content_id: c.ordner || "media-source://media_source" });
+        const kids = r.children || [];
+        list = kids.filter((x) => x.media_class === "image" || /^image\//.test(x.media_content_type || ""));
+        if (!list.length) {
+          for (const f of kids.filter((x) => x.can_expand).slice(0, 8)) {
+            const r2 = await this._hass.callWS({ type: "media_source/browse_media", media_content_id: f.media_content_id });
+            list.push(...(r2.children || []).filter((x) => x.media_class === "image" || /^image\//.test(x.media_content_type || "")));
+          }
+        }
+      } catch (e) { list = []; }
+      if (!this._nightOn || el.dataset.modus !== "fotos") return;
+      if (!list.length) { el.dataset.modus = ""; this._setNightCfg({ modus: "uhr" }); return; }
+      list.sort(() => Math.random() - 0.5);
+      let i = 0, front = 0;
+      const show = async () => {
+        if (!this._nightOn) return;
+        const it = list[i++ % list.length];
+        try {
+          const res = await this._hass.callWS({ type: "media_source/resolve_media", media_content_id: it.media_content_id, expires: 600 });
+          const imgs = el.querySelectorAll(".nimg"); if (imgs.length < 2) return;
+          const next = imgs[1 - front];
+          next.onload = () => { next.classList.add("on"); imgs[front].classList.remove("on"); front = 1 - front; };
+          next.src = res.url;
+        } catch (e) { /* nächstes Bild */ }
+      };
+      show();
+      clearInterval(this._nightT);
+      this._nightT = setInterval(show, 20000);
+    }
+    async _openFolderPick(id = "media-source://media_source", path = []) {
+      let r;
+      try { r = await this._hass.callWS({ type: "media_source/browse_media", media_content_id: id }); } catch (e) { r = null; }
+      const folders = (r?.children || []).filter((x) => x.can_expand);
+      const imgs = (r?.children || []).filter((x) => x.media_class === "image" || /^image\//.test(x.media_content_type || "")).length;
+      this._mh = {
+        open: (el) => { const f = folders[+el.dataset.i]; this._openFolderPick(f.media_content_id, [...path, { id, title: r.title }]); },
+        up: () => { const prev = path[path.length - 1]; if (prev) this._openFolderPick(prev.id, path.slice(0, -1)); },
+        pick: () => { this._setNightCfg({ ordner: id, ordnerName: r?.title || "" }); this._modal(""); this._renderKid(); },
+      };
+      this._modal(`<div class="dlg-h"><ha-icon icon="mdi:folder-image"></ha-icon><h2>Fotos für die Nacht</h2></div>
+        <div class="dlg-b"><p class="hint2">${r ? `Ordner: <b>${esc(r.title || "Medien")}</b> · ${imgs} ${imgs === 1 ? "Bild" : "Bilder"}` : "Medien konnten nicht geladen werden."}</p>
+          ${path.length ? `<button class="bitem" data-m="up"><span class="bt"><b>⬆ Zurück</b></span></button>` : ""}
+          <div class="blist">${folders.map((f, i) => `<button class="bitem" data-m="open" data-i="${i}"><span class="bt"><b>📁 ${esc(f.title)}</b></span></button>`).join("") || `<p class="hint2">Keine Unterordner.</p>`}</div>
+          <p class="hint2">Fotos lädst du in Home Assistant unter «Medien» → «My media» hoch (eigenen Ordner anlegen, z. B. «Familienfotos»).</p></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="pick">Diesen Ordner wählen</button></div>`);
+    }
+    _settingsChange(e) {
+      const el = e.target;
+      if (this._kidOpen !== "__settings__" || !el.dataset) return;
+      if (el.dataset.k === "s-nvon" || el.dataset.k === "s-nbis") {
+        if (/^\d\d:\d\d$/.test(el.value)) this._setNightCfg(el.dataset.k === "s-nvon" ? { von: el.value } : { bis: el.value });
+      }
+    }
+
     // ================= Einstellungen =================
     _openSettings() {
       const open = () => { this._kidOpen = "__settings__"; this._setTab = this._setTab || "familie"; this._renderKid(); this._kidTouch(); };
@@ -1392,6 +1587,7 @@
           return `<div class="setrow ${hid ? "off" : ""}">
             ${this._kidAvatar(p, 56)}
             <div class="settxt"><b>${esc(p.name)}</b><span>${cal ? `📅 ${esc(cal)}` : "Kein Kalender"}${p.bilder === false ? " · ohne Bilder" : ""}${hid ? " · ausgeblendet" : ""}</span></div>
+            <button class="btn ghost" data-k="s-bday" data-name="${esc(p.name)}">🎂 ${this._bdayDate(p) ? `${this._bdayDate(p).d}.${this._bdayDate(p).m}.` : "Geburtstag"}</button>
             <button class="btn ghost" data-k="s-photo" data-name="${esc(p.name)}">Foto &amp; Farbe</button>
             <button class="btn ghost" data-k="s-person" data-name="${esc(p.name)}">${p.extra ? "Name &amp; Kalender" : "Kalender"}</button>
             <button class="btn ghost" data-k="s-hide" data-name="${esc(p.name)}">${hid ? "Einblenden" : "Ausblenden"}</button>
@@ -1434,9 +1630,16 @@
           <div class="setcard col"><b>Bei «Bald» ausgeblendet</b><div class="setchips">${hid.map((i) => `<span class="setchip">${esc(i.summary.slice(14).split("|")[0])} <small>${esc((i.summary.split("|")[1] || "").slice(0, 10))}</small><button data-k="s-rm" data-uid="${esc(i.uid)}" aria-label="Wieder zeigen">↺</button></span>`).join("") || `<span class="sethint">Nichts ausgeblendet. In der grossen «Bald»-Ansicht einen Eintrag antippen, um ihn auszublenden.</span>`}</div></div>`;
       } else {
         const dk = lsGet("fp-dunkel", "");
+        const nc = this._nightCfg();
         const seg = (k2, cur, opts) => `<div class="seg big">${opts.map(([v, t]) => `<button class="${cur === v ? "on" : ""}" data-k="${k2}" data-v="${v}">${t}</button>`).join("")}</div>`;
         body = `<div class="setcard col"><b>Ausrichtung</b>${seg("s-orient", this._orient, [["auto", "Automatisch"], ["hoch", "Hochformat"], ["quer", "Querformat"]])}</div>
           <div class="setcard col"><b>Dunkles Design</b>${seg("s-dark", dk, [["", `Wie Karte (${esc(String(this._config.dunkel || "auto"))})`], ["auto", "Wie Home Assistant"], ["sonne", "Nach Sonnenuntergang"], ["hell", "Immer hell"], ["dunkel", "Immer dunkel"]])}</div>
+          <div class="setcard col"><b>🌙 Nachtmodus</b>
+            ${seg("s-nmode", nc.modus, [["aus", "Aus"], ["uhr", "Grosse Uhr"], ["fotos", "Fotos"]])}
+            ${nc.modus !== "aus" ? `<div class="settimes"><label>Von <input type="time" data-k="s-nvon" value="${nc.von}"></label><label>Bis <input type="time" data-k="s-nbis" value="${nc.bis}"></label></div>` : ""}
+            ${nc.modus === "fotos" ? `<div class="settimes"><span>📁 ${esc(nc.ordnerName || "Alle Medien")}</span><button class="btn ghost" data-k="s-nfolder">Ordner wählen</button></div>` : ""}
+            <span class="sethint">${nc.modus === "aus" ? "Nachts zeigt der Planer statt dem Kalender eine ruhige, dunkle Uhr oder eure Familienfotos." : "Antippen zeigt den Planer für 2 Minuten."}</span>
+            ${nc.modus !== "aus" ? `<button class="btn ghost" data-k="s-ntest">Jetzt ansehen</button>` : ""}</div>
           <p class="sethint">Diese Einstellungen gelten nur für dieses Gerät. Familienplaner ${VERSION}.</p>`;
       }
       k.innerHTML = `<div class="kwrap setwrap">
@@ -1455,6 +1658,10 @@
       switch (k) {
         case "s-tab": this._setTab = el.dataset.v; return this._renderKid();
         case "s-photo": { const p = person(); if (p) this._openPhoto(p); return; }
+        case "s-bday": { const p = person(); if (p && need()) this._openBday(p); return; }
+        case "s-nmode": this._setNightCfg({ modus: el.dataset.v }); return this._renderKid();
+        case "s-nfolder": return this._openFolderPick();
+        case "s-ntest": this._closeKid(); this._nightForce = true; this._nightSnooze = 0; return this._nightCheck();
         case "s-person": { const p = person(); if (p && need()) this._openPerson(p); return; }
         case "s-add": if (need()) this._openPerson(null); return;
         case "s-hide": { const n = el.dataset.name; this._hidden.has(n) ? this._hidden.delete(n) : this._hidden.add(n); lsSet("fp-hidden", JSON.stringify([...this._hidden])); this._render(); return; }
@@ -2134,6 +2341,7 @@
         case "setup": this._runSetup(); break;
         case "bilder": this._openBilderListe(); break;
         case "einstellungen": this._openSettings(); break;
+        case "bdparty": { const { members } = this._bdayToday(); if (members.length) this._bdayParty(members[0].p, members[0].b); break; }
         case "addperson": this._openPerson(null); break;
         case "kidview": { const p = this._config.personen.find((x) => x.name === el.dataset.name); if (p) this._openKid(p); break; }
         case "rewards": this._openRewards(); break;
@@ -3124,6 +3332,39 @@
   .fire { font-size:14px; font-weight:800; color:#e8590c; margin-left:4px; }
   .fire.big { font-size:26px; background:#fff0e0; padding:4px 12px; border-radius:16px; }
   .dark .fire.big { background:#3a2614; }
+  /* Geburtstag */
+  .bdband { position:relative; overflow:hidden; display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:0 0 10px; padding:10px 16px; border-radius:20px; cursor:pointer;
+    background:linear-gradient(100deg, #fff1bf, #ffd6e7 55%, #d9ecff); color:#1d2430; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .dark .bdband { background:linear-gradient(100deg, #4a3c12, #4a1f33 55%, #1c3550); color:#fff; }
+  .bdm { position:relative; display:flex; align-items:center; gap:12px; }
+  .bdm .kav { font-size:22px; box-shadow:0 0 0 3px #fff, 0 0 0 5px var(--c); }
+  .bdm b { display:block; font-family:var(--f-disp); font-size:22px; font-weight:800; }
+  .bdm small { font-size:14px; font-weight:700; opacity:.75; }
+  .bdo { position:relative; font-size:15px; font-weight:700; }
+  .bdconf i { position:absolute; top:-10px; width:7px; height:12px; border-radius:2px; opacity:.8; animation:bdfall 3.2s linear infinite; }
+  @keyframes bdfall { to { transform:translateY(90px) rotate(320deg); opacity:0; } }
+  .av .ring { position:relative; }
+  .avb { position:absolute; right:-8px; top:-8px; font-size:22px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); animation:bdhop 1.6s ease-in-out infinite; }
+  @keyframes bdhop { 50% { transform:translateY(-4px) rotate(-8deg); } }
+  .ppic.round { width:200px; height:200px; border-radius:50%; }
+  .ppic.round img { width:100%; height:100%; object-fit:cover; }
+  /* Nachtmodus */
+  #night:empty { display:none; }
+  .night { position:fixed; inset:0; z-index:18; background:#000; color:#7d8794; font-family:'Figtree', system-ui, sans-serif; display:grid; place-items:center; overflow:hidden; cursor:pointer; }
+  .night .nwrap { text-align:center; transition:transform 2s ease; }
+  .night .nclock { font-family:'Bricolage Grotesque', 'Figtree', sans-serif; font-size:min(30vw, 260px); font-weight:700; line-height:1; letter-spacing:-.02em; color:#9aa4b1; }
+  .night .ndate { font-size:min(5vw, 36px); margin-top:10px; }
+  .night .nnext { font-size:min(4vw, 26px); margin-top:22px; color:#5f6976; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .night .nnext ha-icon { --mdc-icon-size:30px; }
+  .night.fotos { place-items:stretch; }
+  .nimg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 2.5s ease; filter:brightness(.8); }
+  .nimg.on { opacity:1; animation:kb 22s ease-out forwards; }
+  @keyframes kb { from { transform:scale(1.02); } to { transform:scale(1.1); } }
+  .nsmall { position:absolute; left:28px; bottom:24px; display:flex; flex-direction:column; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.6); }
+  .nsmall .nclock { font-size:64px; color:#fff; }
+  .nsmall .ndate { font-size:20px; margin:0; }
+  .settimes { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:15px; font-weight:600; }
+  .settimes input { font:inherit; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
   /* Einstellungen */
   .homebtn.wide { width:100px; }
   .kidview.setview { --bg:#f3f5f8; --soft:#e9edf2; --line:#dde2e8; }
