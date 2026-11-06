@@ -80,6 +80,9 @@ views:
         # Sprache / language: auto (wie Home Assistant / like Home Assistant), de, en
         sprache: auto
 
+        # Mahlzeiten: abend (nur Abendessen), wochenende (am Wochenende auch Mittag), immer (Mittag und Abend)
+        mahlzeiten: abend
+
         # Optional: Knopf oben, der zu einem anderen Dashboard wechselt (Pfad aus der Adresszeile)
         # zuhause_link: /dashboard-zuhause
         # zuhause_name: Zuhause

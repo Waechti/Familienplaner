@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.14.0";
+  const VERSION = "1.15.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -165,6 +165,24 @@
     ["Länger aufbleiben", "🌙", 6], ["Kuchen backen", "🧁", 8], ["Pizza essen", "🍕", 10], ["Freund einladen", "👫", 10],
     ["Spielplatz", "🛝", 6], ["Badi", "🏊", 10], ["Velotour", "🚲", 10], ["Kino", "🎬", 15], ["Zoo", "🦁", 20], ["Ausflug", "🚂", 20],
   ];
+  // Essen: Standard-Mahlzeiten, Arten (für Abwechslung), verderbliche Zutaten (Reste), Grundvorrat (nicht einkaufen)
+  const MAHLZEITEN_STD = "abend";
+  const ESSEN_ARTEN = [
+    ["pasta", "🍝 Pasta", /pasta|spaghetti|penne|lasagne|makkaroni|magronen|nudel|hörnli|tortellini|ravioli|gnocchi|tagliatelle|fusilli|spätzli/],
+    ["pizza", "🍕 Pizza & Wähe", /pizza|flammkuchen|wähe|quiche|focaccia/],
+    ["fisch", "🐟 Fisch", /fisch|lachs|forelle|thon|thunfisch|crevette|shrimp|egli|dorsch|kabeljau|zander|scampi/],
+    ["fleisch", "🥩 Fleisch", /steak|schnitzel|braten|geschnetzelt|hackfleisch|ghackets|burger|wurst|cervelat|bratwurst|poulet|huhn|chicken|fleisch|cordon|kotelett|speck|rind|schwein|lamm|chili con carne|hackbraten|fleischkäse|nuggets|wienerli|gulasch/],
+    ["suppe", "🍲 Suppe & Eintopf", /suppe|eintopf|bouillon|minestrone|gulasch|chili|ramen/],
+    ["salat", "🥗 Salat", /salat|bowl/],
+    ["ofen", "🧀 Ofen & Käse", /gratin|auflauf|lasagne|raclette|fondue|ofen|überbacken|käseschnitte|moussaka/],
+    ["reis", "🍛 Reis & Asiatisch", /reis|risotto|curry|asia|wok|sushi|nasi|thai|ramen|paella/],
+    ["mex", "🌮 Mexikanisch", /taco|tortilla|burrito|fajita|quesadilla|nacho|enchilada/],
+    ["kartoffel", "🥔 Kartoffeln", /kartoffel|rösti|gschwellti|pommes|härdöpfel|kroketten|wedges/],
+    ["grill", "🔥 Grill", /grill|grilliert|bbq|barbecue|cervelat/],
+    ["leicht", "🥪 Brot & Eier", /sandwich|toast|brot|zmorge|birchermüesli|pfannkuchen|omelett|crêpe|rührei|spiegelei|älplermagronen/],
+  ];
+  const PERISH = /rahm|sahne|crème fraîche|creme fraiche|quark|mascarpone|ricotta|mozzarella|lauch|spinat|zucchet|zucchini|peperoni|paprika|champignon|pilz|broccoli|brokkoli|blumenkohl|hackfleisch|poulet|lachs|koriander|petersilie|basilikum|sellerie|kohl|joghurt|feta|buttermilch|schnittlauch|rucola|salat|tomaten|gurke|aubergine/;
+  const BASICS = /^(salz|pfeffer|zucker|öl|olivenöl|rapsöl|wasser|mehl|essig|bouillon|gemüsebouillon|butter)$/i;
   // Kinder: Vorlagen für Tagesaufgaben [Text, Bild, Zeit] und grosse Ziele [Text, Bild, Anzahl Tage]
   const TAGES_VORLAGEN = [
     ["Zähne putzen", "🪥", "morgen"], ["Anziehen", "👕", "morgen"], ["Bett machen", "🛏️", "morgen"], ["Frühstück essen", "🥣", "morgen"],
@@ -327,6 +345,34 @@
     "Fotos für die Nacht": "Photos for the night", "⬆ Zurück": "⬆ Back", "Keine Unterordner.": "No subfolders.", "Diesen Ordner wählen": "Choose this folder", "Medien konnten nicht geladen werden.": "Could not load media.",
     "Fotos lädst du in Home Assistant unter «Medien» → «My media» hoch (eigenen Ordner anlegen, z. B. «Familienfotos»).": "Upload photos in Home Assistant under “Media” → “My media” (create your own folder, e.g. “Family photos”).",
     "keine Termine": "no events", "Ordner:": "Folder:", "Morgen:": "Tomorrow:", "Heute:": "Today:",
+    // Essen
+    "Essen": "Meals", "🍽️ Essen": "🍽️ Meals", "Mittag": "Lunch", "Abend": "Dinner", "☀️ Mittagessen": "☀️ Lunch", "🌙 Abendessen": "🌙 Dinner", "＋ planen": "＋ plan",
+    "Wie war das Mittagessen?": "How was lunch?", "Wie war das Abendessen?": "How was dinner?", "schlecht": "bad", "geht so": "okay", "fein": "yummy",
+    "Vorschläge": "Suggestions", "Neu ausprobieren": "Try something new", "Rezepte in Mealie": "Recipes in Mealie", "📖 Rezept": "📖 Recipe", "👩‍🍳 Kochen": "👩‍🍳 Cook",
+    "🍽️ Alles zum Essen": "🍽️ All about meals", "Woche": "Week", "Rezepte": "Recipes", "Einkauf": "Shopping", "Was schmeckt": "Favourites",
+    "✨ Woche füllen": "✨ Fill the week", "🛒 Zutaten der Woche": "🛒 This week's ingredients", "Rezept suchen …": "Search recipes …", "＋ Rezept per Link": "＋ Recipe from link",
+    "Nichts gefunden.": "Nothing found.", "Noch keine Rezepte in Mealie. Mit «＋ Rezept per Link» das erste hinzufügen.": "No recipes in Mealie yet. Add the first one with “＋ Recipe from link”.",
+    "🛒 Zutaten auf die Einkaufsliste": "🛒 Ingredients to the shopping list", "Zutaten der Woche sammeln": "Collect this week's ingredients",
+    "Sammelt die Zutaten aller geplanten Essen mit Rezept der nächsten 7 Tage. Du wählst danach aus, was wirklich fehlt.": "Collects the ingredients of all planned meals with a recipe for the next 7 days. Then you choose what's really missing.",
+    "Noch keine Bewertungen. Nach dem Essen erscheint im Planer «Wie war's?», und alle tippen auf 😋, 😐 oder 🤢. Daraus lernt der Planer, was allen schmeckt.": "No ratings yet. After a meal the planner asks “How was it?” and everyone taps 😋, 😐 or 🤢. The planner learns what everyone likes.",
+    "📖 Rezepte mit Mealie": "📖 Recipes with Mealie", "📖 Rezepte (Mealie)": "📖 Recipes (Mealie)", "Noch nicht verbunden.": "Not connected yet.", "Adresse für Fotos": "Address for photos",
+    "Mealie läuft bei euch als Add-on in Home Assistant und speichert Rezepte. Rezepte von Swissmilk, Fooby, Migusto, Chefkoch und vielen anderen Seiten lassen sich per Link übernehmen.": "Mealie runs as an add-on in your Home Assistant and stores recipes. Recipes from most recipe websites can be imported by link.",
+    "In der Seitenleiste von Home Assistant «Mealie» öffnen und das Konto einrichten.": "Open “Mealie” in the Home Assistant sidebar and set up the account.",
+    "In Mealie: Profil → «API-Tokens» → neues Token erstellen und kopieren.": "In Mealie: profile → “API tokens” → create a new token and copy it.",
+    "Den Planer neu laden.": "Reload the planner.", "Rezept wird geladen …": "Loading recipe …", "Zutaten": "Ingredients", "🛒 Zutaten": "🛒 Ingredients", "📅 Planen": "📅 Plan",
+    "Rezept per Link": "Recipe from link", "Link zum Rezept": "Link to the recipe", "Rezept wird übernommen …": "Importing recipe …", "Bitte einen Link einfügen (beginnt mit https://).": "Please paste a link (starts with https://).",
+    "Funktioniert mit den meisten Rezeptseiten (z. B. Swissmilk, Fooby, Migusto, Chefkoch). Mealie übernimmt Zutaten, Schritte, Foto und Kochzeit.": "Works with most recipe websites. Mealie imports ingredients, steps, photo and cooking time.",
+    "Es ist keine Einkaufsliste (Bring!) verbunden.": "No shopping list (Bring!) is connected.", "Zutaten werden gesammelt …": "Collecting ingredients …", "Was fehlt?": "What's missing?",
+    "Dieses Rezept hat keine Zutatenliste.": "This recipe has no ingredient list.", "Auf die Einkaufsliste": "Add to shopping list", "· schon auf der Liste": "· already on the list",
+    "In den nächsten 7 Tagen ist kein Essen mit Rezept geplant. Wähle beim Essen ein Rezept aus Mealie, dann klappt es.": "No meal with a recipe is planned for the next 7 days. Pick a recipe from Mealie for a meal, then it works.",
+    "Weiter →": "Next →", "Fertig 🎉": "Done 🎉", "Dieses Rezept hat keine Schritte.": "This recipe has no steps.", "frei": "free",
+    "Bereits geplante Mahlzeiten bleiben, wie sie sind. Häkchen weg bei allem, was nicht passt.": "Meals already planned stay as they are. Untick anything that doesn't fit.",
+    "🍽️ Mahlzeiten": "🍽️ Meals", "Mittag und Abend": "Lunch and dinner", "Mittag nur am Wochenende": "Lunch only at weekends", "Nur Abendessen": "Dinner only",
+    "Portionen für Rezepte und Einkauf": "Servings for recipes and shopping", "🍽️ Essens-Ansicht öffnen": "🍽️ Open meal view", "Mealie ist nicht eingerichtet": "Mealie is not set up",
+    "Lieblingsessen": "Favourite", "oft gekocht": "cooked often", "lange nicht mehr": "not in a while", "alle mögen's": "everyone likes it", "Besuch": "guests",
+    "passt zum kalten Wetter": "fits the cold weather", "passt zum warmen Wetter": "fits the warm weather",
+    "🍝 Pasta": "🍝 Pasta", "🍕 Pizza & Wähe": "🍕 Pizza & tarts", "🐟 Fisch": "🐟 Fish", "🥩 Fleisch": "🥩 Meat", "🍲 Suppe & Eintopf": "🍲 Soup & stew", "🥗 Salat": "🥗 Salad",
+    "🧀 Ofen & Käse": "🧀 Oven & cheese", "🍛 Reis & Asiatisch": "🍛 Rice & Asian", "🌮 Mexikanisch": "🌮 Mexican", "🥔 Kartoffeln": "🥔 Potatoes", "🔥 Grill": "🔥 Barbecue", "🥪 Brot & Eier": "🥪 Bread & eggs", "🥦 Vegi": "🥦 Veggie",
     "Montag": "Monday", "Dienstag": "Tuesday", "Mittwoch": "Wednesday", "Donnerstag": "Thursday", "Freitag": "Friday", "Samstag": "Saturday", "Sonntag": "Sunday",
   };
   // Texte mit Zahlen oder Namen
@@ -345,7 +391,7 @@
     [/^(.+) nicht mehr vorschlagen$/, "Don't suggest $1 again"], [/^(\d+) von (\d+) Sternen$/, "$1 of $2 stars"], [/^Aufgaben von (.+)$/, "$1's tasks"],
     [/^(\d+)× → (\S+) (.+)$/, (m, n, e, x) => `${n}× → ${e} ${EN[x] || x}`],
     [/^(.+) bearbeiten$/, "Edit $1"], [/^Belohnung für (.+)$/, "Reward for $1"], [/^Worauf sammelt (.+)\?$/, "What is $1 saving up for?"],
-    [/^aktuell (\d+) Sterne?$/, "currently $1 stars"], [/^(\w{2,3}) (\d+)\.(\d+)\.$/, (m, w, d, mo) => `${w} ${+d} ${EN_ARRAYS.MOS[mo - 1]}`],
+    [/^aktuell (\d+) Sterne?$/, "currently $1 stars"], [/^(\w{2,3}) (\d+)\.(\d+)\.( .*)?$/, (m, w, d, mo, x) => `${w} ${+d} ${EN_ARRAYS.MOS[mo - 1]}${x || ""}`],
     [/^Noch eine Liste anlegen:$/, "Create one more list:"], [/^Noch (\d+) Listen anlegen:$/, "Create $1 more lists:"], [/^✓ Eltern bestätigen \((\d+)\)$/, "✓ Parent check ($1)"],
     [/^Ausschnitt für (.+)$/, "Crop for $1"], [/^(\d+) \/ (\d+) ★ → (.*)$/, "$1 / $2 ★ → $3"],
         [/^Kalender von (.+)$/, "Calendars of $1"], [/^Kalender von (.+) wieder wie in der Konfiguration\?$/, "Reset $1's calendars to the configuration?"],
@@ -355,6 +401,13 @@
         [/^(.+) hat heute Geburtstag!$/, "It's $1's birthday today!"], [/^(\d+) Jahre 🎉$/, "$1 years 🎉"], [/^(\d+) Jahre 🎂🎈🎁$/, "$1 years 🎂🎈🎁"], [/^Alles Gute zum Geburtstag, (.+)!$/, "Happy birthday, $1!"],
     [/^🎂 Geburtstag von (.+)$/, "🎂 $1's birthday"], [/^(Heute|Morgen): (.*)$/, (m, d, r) => `${d === "Heute" ? "Today" : "Tomorrow"}: ${r.replace(/(\d+) Termine?\b/, (x, n) => `${n} ${n === "1" ? "event" : "events"}`).replace("keine Termine", "no events")}`],
     [/^Ordner: (.*)$/, "Folder: $1"], [/^(\d+) Termine?$/, (m, n) => `${n} ${n === "1" ? "event" : "events"}`], [/^· (\d+) Bilder?$/, (m, n) => `· ${n} ${n === "1" ? "picture" : "pictures"}`], [/^📁 (.+)$/, "📁 $1"],
+        [/^Mittagessen am (.+)$/, "Lunch on $1"], [/^Abendessen am (.+)$/, "Dinner on $1"], [/^oft am (.+)$/, "often on $1"], [/^schnell \((\d+) Min\.\)$/, "quick ($1 min)"],
+    [/^Rest verwerten: (.+)$/, "use up: $1"], [/^(\d+) Min\.$/, "$1 min"], [/^(☀️ Mittagessen|🌙 Abendessen) · (\d+) Min\.$/, (m, a, n) => `${a.startsWith("☀") ? "☀️ Lunch" : "🌙 Dinner"} · ${n} min`],
+    [/^⏱ (\d+) Min\.(.*)$/, "⏱ $1 min$2"], [/^✨ Neu ausprobieren: (.+)$/, "✨ Try something new: $1"], [/^«(.+)» planen$/, "Plan “$1”"],
+    [/^Schritt (\d+) von (\d+)(.*)$/, "Step $1 of $2$3"], [/^⏱ (.+) starten$/, "⏱ Start $1"], [/^(\d+) Portionen$/, "$1 servings"],
+    [/^Für (\d+) Portionen(.*)\. Häkchen weg bei allem, was ihr schon habt\.$/, "For $1 servings$2. Untick anything you already have."], [/^(\d+) Zutaten auf «(.+)»$/, "$1 ingredients added to “$2”"],
+    [/^Verbunden · (\d+) Rezepte$/, "Connected · $1 recipes"], [/^Hat nicht geklappt: (.*)$/, "Didn't work: $1"], [/^Rezept konnte nicht geladen werden: (.*)$/, "Could not load recipe: $1"],
+    [/^Essen nicht gespeichert: (.*)$/, "Meal not saved: $1"], [/^· (\d+) Rezepte$/, "· $1 recipes"],
         [/^Person (\d)$/, "Person $1"], [/^Ämtli (.+)$/, "Chores $1"], [/^Foto (.+)$/, "Photo $1"],
   ];
   // Datumsformen nach dem Umstellen der Monatsnamen: «3. Nov» -> «Nov 3»
@@ -658,10 +711,11 @@
       const seen = new Set();
       this._bdays = [...b1.flat(), ...b2.flat().filter((e) => /geburtstag|geburi|birthday|bday|🎂|🎁/i.test(e.title))]
         .filter((e) => { const k = e.title + ymd(e.start); if (seen.has(k)) return false; seen.add(k); return true; });
+      this._loadMealie();
       const ess = this._cals([c.essensplan]);
       if (ess.length) {
         const past = await this._fetchCal(ess[0], addDays(t, -365), addDays(t, 60));
-        this._mealHist = past.map((e) => ({ title: (e.title || "").trim(), d: sod(e.start) })).filter((e) => e.title);
+        this._mealHist = past.map((e) => ({ title: (e.title || "").trim(), d: sod(e.start), slot: this._slotOf(e), slug: this._slugOf(e) })).filter((e) => e.title);
         const cnt = {};
         past.forEach((e) => (cnt[e.title] = (cnt[e.title] || 0) + 1));
         this._suggest = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 40);
@@ -704,7 +758,7 @@
     _bildListe() { return this._findByName("todo", this._config.bilderliste); }
     _customBilder() {
       const id = this._bildListe();
-      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen|Geburtstag: )/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
+      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen|Geburtstag: |Essen ★ |Essen-Einstellungen)/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
         .sort((a, b) => b.key.length - a.key.length);
     }
     _themaFor(title) { return THEMEN.find((t) => t.re.test(title || "")) || null; }
@@ -755,7 +809,6 @@
       }
       return hm(e.start);
     }
-    _meal(day) { return this._on(this._events.essen, day).find((e) => e.allDay) || this._on(this._events.essen, day)[0]; }
     _abfall(day) {
       const t = this._hass?.states[this._config.abfall]?.attributes?.termine || [];
       const s = ymd(day);
@@ -963,6 +1016,7 @@
       app.innerHTML = `
         ${this._header()}
         ${this._bdayBand()}
+        ${this._rateBand()}
         ${this._setupBanner()}
         <div class="body">
           <section class="main">${this._view === "tag" ? this._dayView() : this._view === "monat" ? this._monthView() : this._weekView()}</section>
@@ -1049,6 +1103,7 @@
                 </div></div>`;
             })() : ""}
             ${this._config.zuhause_link ? `<button class="homebtn" data-act="zuhause" title="Zum Dashboard «${esc(this._config.zuhause_name || "Zuhause")}»" aria-label="${esc(this._config.zuhause_name || "Zuhause")}"><ha-icon icon="mdi:home"></ha-icon><span>${esc(this._config.zuhause_name || "Zuhause")}</span></button>` : ""}
+            <button class="homebtn" data-act="essen" title="Essen"><ha-icon icon="mdi:silverware-fork-knife"></ha-icon><span>Essen</span></button>
             <button class="homebtn wide" data-act="einstellungen" title="Einstellungen"><ha-icon icon="mdi:cog"></ha-icon><span>Einstellungen</span></button>
           </div>
         </header>
@@ -1121,7 +1176,7 @@
           ${ab.map((t) => `<ha-icon class="trash" title="${esc(t)}" style="--c:${(ABFALL[t] || {}).color || "#888"}" icon="${(ABFALL[t] || {}).icon || "mdi:trash-can"}"></ha-icon>`).join("")}
         </div>
         ${fer ? `<div class="fer">${esc(fer)}</div>` : ""}
-        <button class="meal ${meal ? "" : "empty"}" data-act="meal" data-day="${ymd(d)}"><ha-icon icon="mdi:silverware-fork-knife"></ha-icon><span>${meal ? esc(meal.title) : compact ? "Essen" : "Essen planen"}</span></button>`;
+        ${this._mealButtons(d, false)}`;
     }
 
     _weekView() {
@@ -1211,7 +1266,7 @@
           ${hol ? `<span class="chipx"><ha-icon icon="mdi:flag-variant-outline"></ha-icon>${esc(hol)}</span>` : ""}
           ${fer ? `<span class="chipx"><ha-icon icon="mdi:beach"></ha-icon>${esc(fer)}</span>` : ""}
           ${ab.map((t) => `<span class="chipx" style="--c:${(ABFALL[t] || {}).color}"><ha-icon icon="${(ABFALL[t] || {}).icon}"></ha-icon>${esc(t)}</span>`).join("")}
-          <button class="meal big ${meal ? "" : "empty"}" data-act="meal" data-day="${ymd(d)}"><ha-icon icon="mdi:silverware-fork-knife"></ha-icon><span>${meal ? esc(meal.title) : "Essen planen"}</span></button>
+          ${this._mealButtons(d, true)}
         </div>
         <div class="dhead" style="${grid}">
           <div></div>
@@ -1555,9 +1610,529 @@
     _settingsChange(e) {
       const el = e.target;
       if (this._kidOpen !== "__settings__" || !el.dataset) return;
+      if (el.dataset.k === "s-murl") { const v = el.value.trim().replace(/\/$/, ""); if (!v || /^https?:\/\//.test(v)) this._saveEssenCfg({ mealie_url: v }); return; }
       if (el.dataset.k === "s-nvon" || el.dataset.k === "s-nbis") {
         if (/^\d\d:\d\d$/.test(el.value)) this._setNightCfg(el.dataset.k === "s-nvon" ? { von: el.value } : { bis: el.value });
       }
+    }
+
+    // ================= Essen: Mahlzeiten, Bewertung, lernende Vorschläge, Mealie =================
+    // Einstellungen für alle Geräte (Liste «Planer Bilder», Eintrag «Essen-Einstellungen»)
+    _essenCfg() {
+      const it = (this._todos[this._bildListe()] || []).find((i) => i.summary === "Essen-Einstellungen");
+      let d = {};
+      try { d = JSON.parse(it?.description || "{}") || {}; } catch (e) { d = {}; }
+      const m = ["immer", "wochenende", "abend"].includes(d.mahlzeiten) ? d.mahlzeiten : (["immer", "wochenende", "abend"].includes(this._config.mahlzeiten) ? this._config.mahlzeiten : MAHLZEITEN_STD);
+      return { mahlzeiten: m, portionen: Math.max(1, Math.min(20, +d.portionen || this._config.personen.length || 4)), mealie_url: d.mealie_url || "", bring: d.bring || "", uid: it?.uid };
+    }
+    async _saveEssenCfg(patch) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste) return;
+      const cur = this._essenCfg();
+      const v = { mahlzeiten: cur.mahlzeiten, portionen: cur.portionen, mealie_url: cur.mealie_url, bring: cur.bring, ...patch };
+      const description = JSON.stringify(v);
+      if (cur.uid) await h.callService("todo", "update_item", { item: cur.uid, description }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: "Essen-Einstellungen", description }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    _slots(day) {
+      const m = this._essenCfg().mahlzeiten;
+      if (m === "immer") return ["mittag", "abend"];
+      if (m === "wochenende" && (day.getDay() === 0 || day.getDay() === 6)) return ["mittag", "abend"];
+      return ["abend"];
+    }
+    _slotOf(e) { return !e.allDay && e.start.getHours() < 15 ? "mittag" : "abend"; }
+    _slugOf(e) { const m = /mealie:([\w-]+)/.exec(e?.description || ""); return m ? m[1] : ""; }
+    _meal(day, slot = "abend") { return this._on(this._events.essen, day).find((e) => this._slotOf(e) === slot); }
+    _mealButtons(d, big) {
+      const slots = this._slots(d);
+      const two = slots.length > 1;
+      return slots.map((s) => {
+        const m = this._meal(d, s);
+        const icon = two ? (s === "mittag" ? "mdi:white-balance-sunny" : "mdi:weather-night") : "mdi:silverware-fork-knife";
+        const empty = two ? (s === "mittag" ? "Mittag" : "Abend") : big ? "Essen planen" : "Essen planen";
+        return `<button class="meal ${big ? "big" : ""} ${two ? "two" : ""} ${m ? "" : "empty"}" data-act="meal" data-day="${ymd(d)}" data-slot="${s}"><ha-icon icon="${icon}"></ha-icon><span>${m ? esc(m.title) : empty}</span></button>`;
+      }).join("");
+    }
+    _isoLocal(d) {
+      const o = -d.getTimezoneOffset();
+      return `${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:00${o >= 0 ? "+" : "-"}${pad(Math.floor(Math.abs(o) / 60))}:${pad(Math.abs(o) % 60)}`;
+    }
+    // Speichert ein Essen: Abend = ganztägig (wie bisher), Mittag = 12–13 Uhr. Rezept-Verknüpfung in der Beschreibung.
+    async _saveMeal(day, slot, title, slug, cur) {
+      const h = this._hass, ess = this._cals([this._config.essensplan])[0];
+      if (!ess) return;
+      title = (title || "").trim();
+      const desc = slug ? `mealie:${slug}` : "";
+      const ev = slot === "mittag"
+        ? { summary: title, dtstart: this._isoLocal(new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12)), dtend: this._isoLocal(new Date(day.getFullYear(), day.getMonth(), day.getDate(), 13)), description: desc }
+        : { summary: title, dtstart: ymd(day), dtend: ymd(addDays(day, 1)), description: desc };
+      try {
+        if (cur && cur.uid) {
+          if (!title) await h.callWS({ type: "calendar/event/delete", entity_id: ess, uid: cur.uid, ...(cur.rid ? { recurrence_id: cur.rid } : {}) });
+          else await h.callWS({ type: "calendar/event/update", entity_id: ess, uid: cur.uid, event: ev, ...(cur.rid ? { recurrence_id: cur.rid } : {}) });
+        } else if (title) await h.callWS({ type: "calendar/event/create", entity_id: ess, event: ev });
+      } catch (err) { this._msg = `Essen nicht gespeichert: ${err.message || err.code || err}`; }
+      this._refreshCalendars(true);
+      this._loadExtras();
+    }
+
+    // ---------- Art des Essens (aus Name und Mealie-Stichwörtern) ----------
+    _cats(title, tags = []) {
+      const t = `${title || ""} ${(tags || []).join(" ")}`.toLowerCase();
+      const out = ESSEN_ARTEN.filter(([, , re]) => re.test(t)).map(([k]) => k);
+      if (!out.includes("fleisch") && !out.includes("fisch") && /vegi|vegan|vegetar|gemüse|tofu|linsen|falafel|spinat/.test(t)) out.push("vegi");
+      return out;
+    }
+    _catLabel(k) { const a = ESSEN_ARTEN.find((x) => x[0] === k); return a ? a[1] : k === "vegi" ? "🥦 Vegi" : k; }
+
+    // ---------- Bewertungen 😋 😐 🤢 ----------
+    _rateItem(title) { return (this._todos[this._bildListe()] || []).find((i) => i.summary === `Essen ★ ${title}`); }
+    _rateData(title) {
+      let d = {};
+      try { d = JSON.parse(this._rateItem(title)?.description || "{}") || {}; } catch (e) { d = {}; }
+      if (!d.v || typeof d.v !== "object") d.v = {};
+      return d;
+    }
+    // Durchschnitt pro Person (0 = 🤢, 1 = 😐, 2 = 😋)
+    _rateAvg(title) {
+      const v = this._rateData(title).v;
+      const sum = {}, n = {};
+      Object.values(v).forEach((votes) => Object.entries(votes || {}).forEach(([p, s]) => { sum[p] = (sum[p] || 0) + s; n[p] = (n[p] || 0) + 1; }));
+      const out = {};
+      Object.keys(sum).forEach((p) => (out[p] = sum[p] / n[p]));
+      return out;
+    }
+    async _vote(title, key, person, score) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste || !title) return;
+      const d = this._rateData(title);
+      d.v[key] = { ...(d.v[key] || {}), [person]: score };
+      const keys = Object.keys(d.v).sort();
+      while (keys.length > 30) delete d.v[keys.shift()];
+      const it = this._rateItem(title);
+      const description = JSON.stringify(d);
+      if (it) await h.callService("todo", "update_item", { item: it.uid, description }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: `Essen ★ ${title}`, description }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+    _face(s) { return s >= 1.5 ? "😋" : s >= 0.75 ? "😐" : "🤢"; }
+    // Welches Essen darf gerade bewertet werden?
+    _rateDue() {
+      if (!this._bildListe()) return null;
+      const now = new Date(), t = sod(now), hr = now.getHours() + now.getMinutes() / 60;
+      const cand = [];
+      if (hr < 10) cand.push([addDays(t, -1), "abend"]);
+      if (hr >= 13.25 && this._slots(t).includes("mittag")) cand.push([t, "mittag"]);
+      if (hr >= 19.25) cand.push([t, "abend"]);
+      const skip = lsGet("fp-rate-skip", "");
+      for (const [d, s] of cand.reverse()) {
+        const m = this._meal(d, s);
+        if (!m) continue;
+        const key = `${ymd(d)}|${s}`;
+        if (skip.includes(key)) continue;
+        const votes = this._rateData(m.title).v[key] || {};
+        const who = this._visiblePersons();
+        if (who.every((p) => votes[p.name] !== undefined)) continue;
+        return { m, key, slot: s, votes, who };
+      }
+      return null;
+    }
+    _rateBand() {
+      const r = this._rateDue();
+      if (!r) return "";
+      return `<div class="rateband">
+        <div class="rbq"><span class="rbt">${r.slot === "mittag" ? "Wie war das Mittagessen?" : "Wie war das Abendessen?"}</span><b>${esc(r.m.title)}</b></div>
+        <div class="rbp">${r.who.map((p) => `<span class="rbperson" style="--c:${p.farbe}">${this._kidAvatar(p, 40)}${[2, 1, 0].map((s) => `<button class="rbf ${r.votes[p.name] === s ? "on" : ""} ${r.votes[p.name] !== undefined && r.votes[p.name] !== s ? "dim" : ""}" data-act="vote" data-title="${esc(r.m.title)}" data-key="${r.key}" data-name="${esc(p.name)}" data-s="${s}" aria-label="${["schlecht", "geht so", "fein"][s]}">${["🤢", "😐", "😋"][s]}</button>`).join("")}</span>`).join("")}</div>
+        <button class="rbx" data-act="voteskip" data-key="${r.key}" aria-label="Schliessen">✕</button>
+      </div>`;
+    }
+
+    // ---------- Vorschläge ----------
+    // Bewertet bekannte Gerichte (und Mealie-Rezepte) für einen Tag und eine Mahlzeit
+    _mealSuggest(day, n = 8, extra = [], slot = "abend") {
+      const { fav, no } = this._mealPrefs();
+      const hist = [...(this._mealHist || []), ...extra];
+      const ds = sod(day);
+      const by = new Map();
+      const add = (title) => { const k = title.toLowerCase(); if (!by.has(k)) by.set(k, { title, cnt: 0, dow: 0, slotCnt: 0, last: null, near: false }); return by.get(k); };
+      hist.forEach((e) => {
+        const o = add(e.title);
+        if (e.d < ds) { o.cnt++; if (e.d.getDay() === ds.getDay()) o.dow++; if ((e.slot || "abend") === slot) o.slotCnt++; if (!o.last || e.d > o.last) o.last = e.d; }
+        if (Math.abs(e.d - ds) <= 3 * 864e5 && +e.d !== +ds) o.near = true;
+        if (+e.d === +ds && (e.slot || "abend") !== slot) o.sameDay = true;
+        if (e.slug && !o.slug) o.slug = e.slug;
+      });
+      fav.forEach((f) => add(f.title));
+      (this._mealieList || []).forEach((r) => { const o = add(r.name); o.slug = o.slug || r.slug; o.recipe = r; });
+      // Arten der letzten und nächsten Tage (Abwechslung)
+      const near = {};
+      hist.forEach((e) => { const dd = Math.abs(Math.round((e.d - ds) / 864e5)); if (dd > 0 && dd <= 6) this._cats(e.title).forEach((c) => (near[c] = Math.min(near[c] || 9, dd))); });
+      // Tag: Wetter, Termine am Abend, Besuch
+      const w = this._wx(ds);
+      const kalt = w && (w.temperature <= 8 || /rain|pour|snow|hail/.test(w.condition || ""));
+      const heiss = w && w.temperature >= 25;
+      const evs = [];
+      Object.entries(this._events || {}).forEach(([k, l]) => { if (k !== "essen") this._on(l, ds).forEach((e) => evs.push(e)); });
+      const busy = slot === "abend" ? evs.some((e) => !e.allDay && e.start.getHours() * 60 + e.start.getMinutes() >= 16 * 60 + 30 && e.start.getHours() < 21)
+        : ds.getDay() >= 1 && ds.getDay() <= 5;
+      const besuch = evs.some((e) => /besuch|gäste|\bgast\b|grosi|grossmami|grosspapi|\boma\b|\bopa\b|nonna|party|fest\b/i.test(e.title || ""));
+      // Reste: verderbliche Zutaten aus Rezepten rund um diesen Tag
+      const rest = new Set();
+      hist.forEach((e) => { const dd = Math.round((ds - e.d) / 864e5); if (dd >= 1 && dd <= 2 && e.slug) this._foods(e.slug).forEach((f) => { if (PERISH.test(f)) rest.add(f); }); });
+      const persons = this._config.personen.map((p) => p.name);
+      const out = [];
+      by.forEach((o, k) => {
+        if (no.has(k)) return;
+        const isFav = fav.has(k);
+        const r = o.recipe || (o.slug ? (this._mealieList || []).find((x) => x.slug === o.slug) : null);
+        const mins = r ? this._mins(r) : 0;
+        const cats = this._cats(o.title, r ? this._tagNames(r) : []);
+        const why = [];
+        let score = Math.log(1 + o.cnt) + (isFav ? 2.5 : 0);
+        if (isFav) why.push("Lieblingsessen");
+        if (o.cnt >= 2 && o.dow / o.cnt >= 0.4) { score += 1.5 * (o.dow / o.cnt); why.push(`oft am ${WDL[ds.getDay()]}`); }
+        if (o.cnt >= 3) score += 0.8 * (o.slotCnt / o.cnt - 0.5);
+        if (o.last) {
+          const since = Math.round((ds - o.last) / 864e5);
+          if (since < 7) score -= 4; else if (since < 14) score -= 1.5; else { score += Math.min(since, 90) / 90; if (since >= 30) why.push("lange nicht mehr"); }
+        }
+        if (o.near) score -= 3;
+        if (o.sameDay) score -= 6;
+        cats.forEach((c) => { if (near[c]) score -= near[c] <= 2 ? 1.2 : 0.5; });
+        // Bewertungen
+        const avg = this._rateAvg(o.title);
+        const vals = persons.map((p) => avg[p]).filter((x) => x !== undefined);
+        if (vals.length >= 2 && vals.every((x) => x >= 1.5)) { score += 1.5; why.push("alle mögen's"); }
+        else if (vals.length) score += (vals.reduce((a, b) => a + b, 0) / vals.length - 1) * 1.2;
+        if (vals.some((x) => x <= 0.5)) score -= 1.2;
+        if (busy && mins) { if (mins <= 30) { score += 1; why.push(`schnell (${mins} Min.)`); } else if (mins > 60) score -= 1; }
+        if (kalt && cats.some((c) => c === "suppe" || c === "ofen")) { score += 1.2; why.push("passt zum kalten Wetter"); }
+        if (heiss && cats.some((c) => c === "salat" || c === "grill")) { score += 1.2; why.push("passt zum warmen Wetter"); }
+        if (besuch && (isFav || (vals.length && Math.min(...vals) >= 1.5))) { score += 1; why.push("Besuch"); }
+        if (rest.size && o.slug) { const f = this._foods(o.slug).find((x) => rest.has(x)); if (f) { score += 1; why.push(`Rest verwerten: ${f}`); } }
+        // Rezepte, die noch nie gekocht wurden, nur über «Neu ausprobieren»
+        if (!o.cnt && !isFav && r) return;
+        if (!why.length && o.cnt >= 3) why.push("oft gekocht");
+        out.push({ title: o.title, score, why: why.slice(0, 2).join(" · "), fav: isFav, cnt: o.cnt, slug: o.slug || "", avg });
+      });
+      return out.sort((x, y) => y.score - x.score).slice(0, n);
+    }
+    // Ein Rezept aus Mealie, das ihr noch nie gekocht habt (wechselt jede Woche)
+    _newIdea(exclude = []) {
+      const cooked = new Set((this._mealHist || []).map((e) => e.title.toLowerCase()));
+      const ex = new Set(exclude.map((x) => x.toLowerCase()));
+      const list = (this._mealieList || []).filter((r) => !cooked.has(r.name.toLowerCase()) && !ex.has(r.name.toLowerCase()));
+      if (!list.length) return null;
+      return list[kw(new Date()) % list.length];
+    }
+
+    // ---------- Mealie (über die Home-Assistant-Integration) ----------
+    async _mealieEntry() {
+      if (this._mealieId !== undefined) return this._mealieId;
+      try {
+        const es = await this._hass.callWS({ type: "config_entries/get", domain: "mealie" });
+        const e = (es || []).find((x) => x.state === "loaded") || null;
+        this._mealieId = e ? e.entry_id : null;
+      } catch (err) { this._mealieId = null; }
+      return this._mealieId;
+    }
+    async _mealie(service, data = {}) {
+      const id = await this._mealieEntry();
+      if (!id) throw new Error("Mealie ist nicht eingerichtet");
+      const r = await this._hass.callWS({ type: "call_service", domain: "mealie", service, service_data: { config_entry_id: id, ...data }, return_response: true });
+      return r?.response || {};
+    }
+    _arr(resp, key) { if (Array.isArray(resp)) return resp; if (Array.isArray(resp?.[key])) return resp[key]; if (Array.isArray(resp?.[key]?.items)) return resp[key].items; if (Array.isArray(resp?.items)) return resp.items; return []; }
+    async _loadMealie(force) {
+      if (!force && this._mealieT && Date.now() - this._mealieT < 30 * 60000) return;
+      this._mealieT = Date.now();
+      if (!(await this._mealieEntry())) { this._mealieList = []; return; }
+      try {
+        const resp = await this._mealie("get_recipes", { result_limit: 500 });
+        this._mealieList = this._arr(resp, "recipes").map((r) => this._normRecipe(r)).filter((r) => r.name && r.slug);
+      } catch (err) { this._mealieList = this._mealieList || []; }
+      this._render();
+    }
+    _normRecipe(r) {
+      return {
+        id: r.recipe_id || r.id || "", slug: r.slug || "", name: (r.name || "").trim(), description: r.description || "",
+        tags: [...(r.tags || []), ...(r.categories || r.recipe_category || r.recipeCategory || [])].map((t) => (typeof t === "string" ? t : t.name)).filter(Boolean),
+        total: r.total_time || r.totalTime || "", totalSec: r.total_time_seconds || r.totalTimeSeconds || 0,
+        perform: r.perform_time || r.performTime || "", prep: r.prep_time || r.prepTime || "",
+        servings: +(r.recipe_servings || r.recipeServings || r.recipe_yield_quantity || r.recipeYieldQuantity || 0) || 0, yieldTxt: r.recipe_yield || r.recipeYield || "",
+        url: r.original_url || r.orgURL || r.originalUrl || "", rating: r.rating || 0,
+        ingredients: r.ingredients || r.recipe_ingredient || r.recipeIngredient || null,
+        instructions: r.instructions || r.recipe_instructions || r.recipeInstructions || null,
+      };
+    }
+    _tagNames(r) { return r?.tags || []; }
+    _mins(r) {
+      if (!r) return 0;
+      if (r.totalSec) return Math.round(r.totalSec / 60);
+      const p = (s) => {
+        s = String(s || "").toLowerCase();
+        if (!s) return 0;
+        const iso = /^p(?:t)?(?:(\d+)h)?(?:(\d+)m)?/.exec(s);
+        if (iso && (iso[1] || iso[2])) return (+iso[1] || 0) * 60 + (+iso[2] || 0);
+        const hh = /(\d+(?:[.,]\d+)?)\s*(h|std|stunde|hour)/.exec(s), mm = /(\d+)\s*(m|min)/.exec(s);
+        return Math.round((hh ? parseFloat(hh[1].replace(",", ".")) * 60 : 0) + (mm ? +mm[1] : 0)) || (/^\d+$/.test(s) ? +s : 0);
+      };
+      return p(r.total) || p(r.prep) + p(r.perform);
+    }
+    _mealieUrl() {
+      const u = this._essenCfg().mealie_url || this._config.mealie_url || `${location.protocol}//${location.hostname}:9925`;
+      return u.replace(/\/$/, "");
+    }
+    _recipeImg(r, size = "min-original") { return r && r.id ? `${this._mealieUrl()}/api/media/recipes/${r.id}/images/${size}.webp` : ""; }
+    async _recipe(slug) {
+      this._recipeCache = this._recipeCache || {};
+      if (this._recipeCache[slug]) return this._recipeCache[slug];
+      const resp = await this._mealie("get_recipe", { recipe_id: slug });
+      const r = this._normRecipe(resp.recipe || resp);
+      this._recipeCache[slug] = r;
+      return r;
+    }
+    _ingText(i) {
+      if (typeof i === "string") return i;
+      if (i.display) return i.display;
+      if (i.original_text || i.originalText) return i.original_text || i.originalText;
+      const q = i.quantity ? `${+(+i.quantity).toFixed(2)} ` : "";
+      const u = i.unit ? `${i.unit.abbreviation && i.unit.use_abbreviation ? i.unit.abbreviation : i.unit.name} ` : "";
+      return `${q}${u}${i.food?.name || ""}${i.note ? ` ${i.note}` : ""}`.trim();
+    }
+    _foodName(i) { return (typeof i === "string" ? i.replace(/^[\d.,/\s]+(g|kg|ml|l|dl|el|tl|stk|prise|bund|becher|dose)?\b/i, "") : i.food?.name || i.note || this._ingText(i)).trim().toLowerCase(); }
+    _foods(slug) { const r = this._recipeCache?.[slug]; return r && r.ingredients ? r.ingredients.map((i) => this._foodName(i)).filter(Boolean) : []; }
+    _scaleText(txt, f) {
+      if (f === 1) return txt;
+      return txt.replace(/^(\d+(?:[.,]\d+)?)(\s*[-–]\s*(\d+(?:[.,]\d+)?))?/, (m, a, b, c) => { const fmt = (x) => { const v = parseFloat(x.replace(",", ".")) * f; return String(Math.round(v * 10) / 10).replace(".", ","); }; return fmt(a) + (c ? `–${fmt(c)}` : ""); });
+    }
+
+    // ---------- Grosse Essens-Ansicht ----------
+    _openEssen(tab) {
+      this._kidOpen = "__essen__"; this._essTab = tab || this._essTab || "woche";
+      this._loadMealie();
+      this._renderKid(); this._kidTouch();
+    }
+    _renderEssen(k) {
+      const app0 = this.shadowRoot.querySelector("#app");
+      const prevBody = k.querySelector(".setbody");
+      const scroll = prevBody ? prevBody.scrollTop : 0;
+      k.className = `kidview setview essview ${app0?.classList.contains("dark") ? "dark" : ""}`;
+      const tab = this._essTab;
+      const hasM = !!this._mealieId;
+      const tabs = [["woche", "📅", "Woche"], ["rezepte", "📖", "Rezepte"], ["einkauf", "🛒", "Einkauf"], ["bewertung", "😋", "Was schmeckt"]];
+      let body = "";
+      const today = sod(new Date());
+      if (tab === "woche") {
+        const days = Array.from({ length: 7 }, (_, i) => addDays(today, i));
+        const idea = this._newIdea();
+        body = `<div class="esstools"><button class="btn" data-k="e-fill">✨ Woche füllen</button><button class="btn ghost" data-k="e-shopweek">🛒 Zutaten der Woche</button>${idea ? `<button class="btn ghost" data-k="e-recipe" data-slug="${esc(idea.slug)}">✨ Neu ausprobieren: ${esc(idea.name)}</button>` : ""}</div>
+          <div class="essweek">${days.map((d) => `<div class="essday ${sameDay(d, today) ? "today" : ""}"><div class="essdh"><b>${sameDay(d, today) ? "Heute" : WDL[d.getDay()]}</b><span>${d.getDate()}. ${MOS[d.getMonth()]}</span></div>
+            ${this._slots(d).map((s) => { const m = this._meal(d, s); const slug = this._slugOf(m); const r = slug ? (this._mealieList || []).find((x) => x.slug === slug) : null; const avg = m ? this._rateAvg(m.title) : {};
+              return `<button class="essslot ${m ? "" : "empty"}" data-k="e-slot" data-day="${ymd(d)}" data-slot="${s}">
+                ${r ? `<span class="essimg"><img src="${esc(this._recipeImg(r))}" alt="" onerror="this.parentNode.remove()"></span>` : ""}
+                <span class="esst"><small>${s === "mittag" ? "☀️ Mittagessen" : "🌙 Abendessen"}${r && this._mins(r) ? ` · ${this._mins(r)} Min.` : ""}</small><b>${m ? esc(m.title) : "＋ planen"}</b>${Object.keys(avg).length ? `<span class="essfaces">${Object.entries(avg).map(([p, v]) => `<i title="${esc(p)}">${this._face(v)}</i>`).join("")}</span>` : ""}</span>
+                ${m && slug ? `<span class="esscook" data-k="e-cook" data-slug="${esc(slug)}">👩‍🍳</span>` : ""}</button>`; }).join("")}</div>`).join("")}</div>`;
+      } else if (tab === "rezepte") {
+        if (!hasM) body = this._mealieHelp();
+        else {
+          const q = (this._essQ || "").toLowerCase();
+          const list = (this._mealieList || []).filter((r) => !q || r.name.toLowerCase().includes(q) || r.tags.some((t) => t.toLowerCase().includes(q)));
+          body = `<div class="esssearch"><input id="fp-essq" type="search" placeholder="Rezept suchen …" value="${esc(this._essQ || "")}" data-k="e-q"><button class="btn ghost" data-k="e-import">＋ Rezept per Link</button></div>
+            <div class="essgrid">${list.slice(0, 120).map((r) => `<button class="esscard" data-k="e-recipe" data-slug="${esc(r.slug)}"><span class="essimg big"><img src="${esc(this._recipeImg(r))}" alt="" loading="lazy" onerror="this.style.display='none'"></span><b>${esc(r.name)}</b><small>${this._mins(r) ? `⏱ ${this._mins(r)} Min.` : ""}${r.tags.length ? ` · ${esc(r.tags.slice(0, 2).join(", "))}` : ""}</small></button>`).join("") || `<p class="sethint">${q ? "Nichts gefunden." : "Noch keine Rezepte in Mealie. Mit «＋ Rezept per Link» das erste hinzufügen."}</p>`}</div>`;
+        }
+      } else if (tab === "einkauf") {
+        const lists = this._bringLists();
+        body = `<div class="setcard col"><b>🛒 Zutaten auf die Einkaufsliste</b><span class="sethint">Sammelt die Zutaten aller geplanten Essen mit Rezept der nächsten 7 Tage. Du wählst danach aus, was wirklich fehlt.</span>
+            ${lists.length > 1 ? `<div class="seg big">${lists.map((id) => `<button class="${this._bringTarget() === id ? "on" : ""}" data-k="e-bring" data-v="${esc(id)}">${esc(this._hass.states[id]?.attributes.friendly_name || id)}</button>`).join("")}</div>` : ""}
+            <button class="btn" data-k="e-shopweek">Zutaten der Woche sammeln</button></div>
+          ${hasM ? "" : this._mealieHelp()}`;
+      } else {
+        const names = this._config.personen.map((p) => p.name);
+        const rated = (this._todos[this._bildListe()] || []).filter((i) => /^Essen ★ /.test(i.summary || "")).map((i) => { const t = i.summary.slice(8); const avg = this._rateAvg(t); const vals = Object.values(avg); return { t, avg, m: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0 }; }).sort((a, b) => b.m - a.m);
+        body = rated.length ? `<div class="essrank">${rated.map((x, i) => `<div class="setrow"><span class="essno">${i + 1}</span><div class="settxt"><b>${esc(x.t)}</b><span>${this._cats(x.t).map((c) => this._catLabel(c)).join(" · ")}</span></div><span class="essfaces big">${names.filter((p) => x.avg[p] !== undefined).map((p) => `<span><i>${this._face(x.avg[p])}</i><small>${esc(p)}</small></span>`).join("")}</span></div>`).join("")}</div>`
+          : `<p class="sethint">Noch keine Bewertungen. Nach dem Essen erscheint im Planer «Wie war's?», und alle tippen auf 😋, 😐 oder 🤢. Daraus lernt der Planer, was allen schmeckt.</p>`;
+      }
+      k.innerHTML = `<div class="kwrap setwrap">
+        <header class="khead"><div class="kname">🍽️ Essen</div><button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
+        <div class="setmain">
+          <nav class="setnav">${tabs.map(([t, ic, name]) => `<button class="${t === tab ? "on" : ""}" data-k="e-tab" data-v="${t}"><span>${ic}</span>${name}</button>`).join("")}</nav>
+          <div class="setbody">${body}</div>
+        </div></div>`;
+      const nb = k.querySelector(".setbody");
+      if (nb && scroll) nb.scrollTop = scroll;
+      const q = k.querySelector("#fp-essq");
+      if (q) { q.addEventListener("input", () => { this._essQ = q.value; clearTimeout(this._essQT); this._essQT = setTimeout(() => { const pos = q.selectionStart; this._renderKid(); const q2 = this.shadowRoot.querySelector("#fp-essq"); if (q2) { q2.focus(); q2.setSelectionRange(pos, pos); } }, 350); }); }
+    }
+    _mealieHelp() {
+      return `<div class="setcard col"><b>📖 Rezepte mit Mealie</b>
+        <span class="sethint">Mealie läuft bei euch als Add-on in Home Assistant und speichert Rezepte. Rezepte von Swissmilk, Fooby, Migusto, Chefkoch und vielen anderen Seiten lassen sich per Link übernehmen.</span>
+        <ol class="esshelp"><li>In der Seitenleiste von Home Assistant «Mealie» öffnen und das Konto einrichten.</li><li>In Mealie: Profil → «API-Tokens» → neues Token erstellen und kopieren.</li><li>In Home Assistant: Einstellungen → Geräte &amp; Dienste → «Mealie» (wird meist als «Entdeckt» angezeigt) → Token einfügen.</li><li>Den Planer neu laden.</li></ol></div>`;
+    }
+    _bringTarget() { const lists = this._bringLists(); const c = this._essenCfg().bring; return lists.includes(c) ? c : lists.includes(this._shopList) ? this._shopList : lists[0]; }
+    async _essenClick(el) {
+      const k = el.dataset.k;
+      switch (k) {
+        case "e-tab": this._essTab = el.dataset.v; return this._renderKid();
+        case "e-slot": return this._openMeal(parseYmd(el.dataset.day), el.dataset.slot);
+        case "e-fill": return this._openFillWeek();
+        case "e-recipe": return this._openRecipe(el.dataset.slug);
+        case "e-cook": return this._openCook(el.dataset.slug);
+        case "e-import": return this._openImport();
+        case "e-shopweek": return this._openShop();
+        case "e-bring": await this._saveEssenCfg({ bring: el.dataset.v }); return this._renderKid();
+      }
+    }
+    // Rezept ansehen: kochen, planen, Zutaten einkaufen
+    async _openRecipe(slug) {
+      if (!slug) return;
+      this._mh = {}; this._modal(`<div class="dlg-b center"><p class="hint2">Rezept wird geladen …</p></div>`);
+      let r;
+      try { r = await this._recipe(slug); } catch (err) { this._modal(`<div class="dlg-b"><p>Rezept konnte nicht geladen werden: ${esc(err.message || err)}</p></div><div class="dlg-f"><span class="sp"></span><button class="btn" data-m="close">OK</button></div>`); return; }
+      const ings = (r.ingredients || []).map((i) => this._ingText(i)).filter(Boolean);
+      this._mh = {
+        cook: () => { this._modal(""); this._openCook(slug); },
+        plan: () => this._openPlanRecipe(r),
+        shop: () => this._openShop([r]),
+      };
+      this._modal(`<div class="dlg-h"><ha-icon icon="mdi:book-open-variant"></ha-icon><h2>${esc(r.name)}</h2></div>
+        <div class="dlg-b"><div class="recipehead"><span class="essimg big"><img src="${esc(this._recipeImg(r, "original"))}" alt="" onerror="this.style.display='none'"></span>
+          <div><p class="hint2">${this._mins(r) ? `⏱ ${this._mins(r)} Min. · ` : ""}${r.yieldTxt || (r.servings ? `${r.servings} Portionen` : "")}</p>${r.description ? `<p>${esc(r.description)}</p>` : ""}
+          ${r.tags.length ? `<p class="hint2">${esc(r.tags.join(", "))}</p>` : ""}</div></div>
+          <div class="sect">Zutaten</div><ul class="ingl">${ings.map((t) => `<li>${esc(t)}</li>`).join("") || "<li>–</li>"}</ul></div>
+        <div class="dlg-f"><button class="btn ghost" data-m="shop">🛒 Zutaten</button><button class="btn ghost" data-m="plan">📅 Planen</button><span class="sp"></span><button class="btn ghost" data-m="close">Schliessen</button><button class="btn" data-m="cook">👩‍🍳 Kochen</button></div>`);
+      this.shadowRoot.querySelector("#modal .dlg")?.classList.add("wide");
+    }
+    _openPlanRecipe(r) {
+      const today = sod(new Date());
+      const opts = [];
+      for (let i = 0; i < 14; i++) { const d = addDays(today, i); this._slots(d).forEach((s) => opts.push({ d, s, cur: this._meal(d, s) })); }
+      this._mh = {
+        pick: async (el) => { const o = opts[+el.dataset.i]; this._modal(""); await this._saveMeal(o.d, o.s, r.name, r.slug, o.cur); },
+      };
+      this._modal(`<div class="dlg-h"><ha-icon icon="mdi:calendar-plus"></ha-icon><h2>«${esc(r.name)}» planen</h2></div>
+        <div class="dlg-b"><div class="planpick">${opts.map((o, i) => `<button class="${o.cur ? "taken" : ""}" data-m="pick" data-i="${i}"><b>${WD[o.d.getDay()]} ${o.d.getDate()}.${o.d.getMonth() + 1}.</b><span>${o.s === "mittag" ? "☀️ Mittagessen" : "🌙 Abendessen"}</span><small>${o.cur ? esc(o.cur.title) : "frei"}</small></button>`).join("")}</div></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button></div>`);
+      this.shadowRoot.querySelector("#modal .dlg")?.classList.add("wide");
+    }
+    _openImport() {
+      this._mh = {
+        go: async () => {
+          const url = this.shadowRoot.querySelector("#fp-url").value.trim();
+          const f = this.shadowRoot.querySelector("#modal .flash");
+          if (!/^https?:\/\/\S+\.\S+/.test(url)) { f.textContent = "Bitte einen Link einfügen (beginnt mit https://)."; return; }
+          f.textContent = "Rezept wird übernommen …";
+          try {
+            const resp = await this._mealie("import_recipe", { url, include_tags: true });
+            const r = this._normRecipe(resp.recipe || resp);
+            await this._loadMealie(true);
+            this._modal("");
+            if (r.slug) this._openRecipe(r.slug);
+          } catch (err) { f.textContent = `Hat nicht geklappt: ${err.message || err.code || err}`; }
+        },
+      };
+      this._modal(`<div class="dlg-h"><ha-icon icon="mdi:link-variant-plus"></ha-icon><h2>Rezept per Link</h2></div>
+        <div class="dlg-b"><label class="kw">Link zum Rezept<input id="fp-url" type="url" autofocus placeholder="https://www.swissmilk.ch/de/rezepte-kochideen/…"></label>
+          <p class="hint2">Funktioniert mit den meisten Rezeptseiten (z. B. Swissmilk, Fooby, Migusto, Chefkoch). Mealie übernimmt Zutaten, Schritte, Foto und Kochzeit.</p><div class="flash"></div></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="go">Übernehmen</button></div>`);
+    }
+    // Zutaten sammeln (Rezepte der nächsten 7 Tage oder ein einzelnes Rezept) und auf Bring! setzen
+    async _openShop(recipes) {
+      const target = this._bringTarget();
+      if (!target) { this._openConfirm("Es ist keine Einkaufsliste (Bring!) verbunden.", "OK", async () => {}); return; }
+      this._mh = {}; this._modal(`<div class="dlg-b center"><p class="hint2">Zutaten werden gesammelt …</p></div>`);
+      let list = recipes;
+      if (!list) {
+        list = [];
+        const today = sod(new Date());
+        for (let i = 0; i < 7; i++) { const d = addDays(today, i); for (const s of this._slots(d)) { const m = this._meal(d, s); const slug = this._slugOf(m); if (slug) { try { list.push(await this._recipe(slug)); } catch (e) { /* weiter */ } } } }
+      }
+      const f = this._essenCfg().portionen;
+      const items = new Map();
+      list.forEach((r) => {
+        const factor = r.servings ? f / r.servings : 1;
+        (r.ingredients || []).forEach((i) => {
+          const name = typeof i === "string" ? this._foodName(i) : (i.food?.name || i.note || "").trim();
+          if (!name) return;
+          const key = name.toLowerCase();
+          const qty = typeof i === "string" ? "" : i.quantity ? `${String(Math.round(i.quantity * factor * 10) / 10).replace(".", ",")}${i.unit ? " " + (i.unit.abbreviation || i.unit.name) : ""}` : "";
+          const o = items.get(key) || { name: name[0].toUpperCase() + name.slice(1), qty: [], from: new Set() };
+          if (qty) o.qty.push(qty);
+          o.from.add(r.name);
+          items.set(key, o);
+        });
+      });
+      const all = [...items.values()].sort((a, b) => a.name.localeCompare(b.name));
+      if (!all.length) { this._modal(`<div class="dlg-b"><p>${recipes ? "Dieses Rezept hat keine Zutatenliste." : "In den nächsten 7 Tagen ist kein Essen mit Rezept geplant. Wähle beim Essen ein Rezept aus Mealie, dann klappt es."}</p></div><div class="dlg-f"><span class="sp"></span><button class="btn" data-m="close">OK</button></div>`); return; }
+      const have = new Set(((this._todos[target] || []).filter((i) => i.status !== "completed")).map((i) => (i.summary || "").toLowerCase()));
+      this._mh = {
+        go: async () => {
+          const sel = [...this.shadowRoot.querySelectorAll("#modal .shoppick input:checked")].map((x) => all[+x.value]);
+          for (const o of sel) { try { await this._hass.callService("todo", "add_item", { item: o.name, ...(o.qty.length ? { description: o.qty.join(" + ") } : {}) }, { entity_id: target }); } catch (e) { /* weiter */ } }
+          this._loadTodo(target);
+          this._modal(""); this._flashMain(`${sel.length} Zutaten auf «${this._hass.states[target]?.attributes.friendly_name || "Einkauf"}»`);
+        },
+      };
+      this._modal(`<div class="dlg-h"><ha-icon icon="mdi:cart-plus"></ha-icon><h2>Was fehlt?</h2></div>
+        <div class="dlg-b"><p class="hint2">Für ${f} Portionen${list.length > 1 ? ` · ${list.length} Rezepte` : ` · ${esc(list[0].name)}`}. Häkchen weg bei allem, was ihr schon habt.</p>
+          <div class="shoppick">${all.map((o, i) => `<label class="${have.has(o.name.toLowerCase()) ? "have" : ""}"><input type="checkbox" value="${i}" ${have.has(o.name.toLowerCase()) || BASICS.test(o.name) ? "" : "checked"}><span><b>${esc(o.name)}</b>${o.qty.length ? ` <small>${esc(o.qty.join(" + "))}</small>` : ""}${have.has(o.name.toLowerCase()) ? ` <small>· schon auf der Liste</small>` : ""}</span></label>`).join("")}</div></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="go">Auf die Einkaufsliste</button></div>`);
+      this.shadowRoot.querySelector("#modal .dlg")?.classList.add("wide");
+    }
+    _flashMain(t) { this._msg = t; this._render(); clearTimeout(this._msgT); this._msgT = setTimeout(() => { this._msg = ""; this._render(); }, 4000); }
+
+    // ---------- Kochmodus ----------
+    async _openCook(slug) {
+      let r;
+      try { r = await this._recipe(slug); } catch (err) { this._openConfirm(`Rezept konnte nicht geladen werden: ${err.message || err}`, "OK", async () => {}); return; }
+      this._modal("");
+      this._cook = { r, step: 0, por: this._essenCfg().portionen, done: new Set(), timers: this._cook?.timers || [] };
+      this._kidOpen = "__kochen__"; clearTimeout(this._kidT);
+      this._renderKid();
+    }
+    _renderCook(k) {
+      const app0 = this.shadowRoot.querySelector("#app");
+      k.className = `kidview setview cookview ${app0?.classList.contains("dark") ? "dark" : ""}`;
+      const c = this._cook, r = c.r;
+      const steps = (r.instructions || []).map((s) => (typeof s === "string" ? { text: s } : s)).filter((s) => (s.text || "").trim());
+      c.step = Math.max(0, Math.min(c.step, Math.max(0, steps.length - 1)));
+      const f = r.servings ? c.por / r.servings : 1;
+      const st = steps[c.step];
+      const tm = [...String(st?.text || "").matchAll(/(\d+)(?:\s*[-–]\s*(\d+))?\s*(Minuten|Minute|Min\.?|min|Stunden|Stunde|Std\.?)/gi)].map((m) => ({ min: (+(m[2] || m[1])) * (/^(stund|std)/i.test(m[3]) ? 60 : 1), label: m[0] }));
+      k.innerHTML = `<div class="kwrap setwrap">
+        <header class="khead"><div class="kname">👩‍🍳 ${esc(r.name)}</div>${c.timers.map((t, i) => `<span class="cooktimer ${t.end - Date.now() <= 0 ? "ring" : ""}" data-k="c-tstop" data-i="${i}">⏱ <b data-end="${t.end}">${this._tleft(t.end)}</b></span>`).join("")}<button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
+        <div class="cookmain">
+          <aside class="cooking"><div class="cookpor"><button class="kbtn" data-k="c-por" data-d="-1">−</button><b>${c.por} Portionen</b><button class="kbtn" data-k="c-por" data-d="1">＋</button></div>
+            <ul>${(r.ingredients || []).map((i, n) => `<li class="${c.done.has(n) ? "done" : ""}" data-k="c-ing" data-i="${n}">${esc(this._scaleText(this._ingText(i), f))}</li>`).join("") || "<li>–</li>"}</ul></aside>
+          <section class="cookstep">${steps.length ? `<div class="cookn">Schritt ${c.step + 1} von ${steps.length}${st.title ? ` · ${esc(st.title)}` : ""}</div>
+            <p class="cooktext">${esc(st.text)}</p>
+            <div class="cooktm">${tm.map((t) => `<button class="btn ghost" data-k="c-timer" data-min="${t.min}">⏱ ${esc(t.label)} starten</button>`).join("")}</div>
+            <div class="cooknav"><button class="btn ghost big" data-k="c-step" data-d="-1" ${c.step === 0 ? "disabled" : ""}>← Zurück</button><button class="btn big" data-k="${c.step + 1 >= steps.length ? "close" : "c-step"}" data-d="1">${c.step + 1 >= steps.length ? "Fertig 🎉" : "Weiter →"}</button></div>`
+            : `<p class="cooktext">Dieses Rezept hat keine Schritte.${r.url ? ` Original: ${esc(r.url)}` : ""}</p>`}</section>
+        </div></div>`;
+      clearInterval(this._cookT);
+      if (c.timers.length) this._cookT = setInterval(() => this._cookTick(), 1000);
+    }
+    _tleft(end) { const s = Math.max(0, Math.round((end - Date.now()) / 1000)); return `${Math.floor(s / 60)}:${pad(s % 60)}`; }
+    _cookTick() {
+      if (this._kidOpen !== "__kochen__") { clearInterval(this._cookT); return; }
+      this.shadowRoot.querySelectorAll(".cooktimer b").forEach((b) => {
+        const end = +b.dataset.end; b.textContent = this._tleft(end);
+        if (end - Date.now() <= 0 && !b.parentNode.classList.contains("ring")) { b.parentNode.classList.add("ring"); this._jingle(); }
+      });
+    }
+    async _cookClick(el) {
+      const c = this._cook; if (!c) return;
+      switch (el.dataset.k) {
+        case "c-step": c.step += +el.dataset.d; break;
+        case "c-por": c.por = Math.max(1, Math.min(30, c.por + +el.dataset.d)); break;
+        case "c-ing": { const n = +el.dataset.i; c.done.has(n) ? c.done.delete(n) : c.done.add(n); break; }
+        case "c-timer": c.timers.push({ end: Date.now() + +el.dataset.min * 60000 }); break;
+        case "c-tstop": c.timers.splice(+el.dataset.i, 1); break;
+        default: return;
+      }
+      this._renderKid();
     }
 
     // ================= Einstellungen =================
@@ -1619,7 +2194,15 @@
         const fav = items.filter((i) => /^Essen ♥ /.test(i.summary || "")).sort((a, b) => a.summary.localeCompare(b.summary));
         const no = items.filter((i) => /^Essen ✗ /.test(i.summary || "")).sort((a, b) => a.summary.localeCompare(b.summary));
         const chip = (i, k2) => `<span class="setchip">${esc(i.summary.slice(8))}<button data-k="${k2}" data-uid="${esc(i.uid)}" aria-label="Entfernen">✕</button></span>`;
-        body = `${noList}<div class="setcard col"><b>♥ Lieblingsessen</b><div class="setchips">${fav.map((i) => chip(i, "s-rm")).join("") || `<span class="sethint">Noch keine. Im Essen-Fenster auf das Herz tippen.</span>`}</div></div>
+        const ec = this._essenCfg();
+        body = `${noList}<div class="setcard col"><b>🍽️ Mahlzeiten</b>
+            <div class="seg big">${[["immer", "Mittag und Abend"], ["wochenende", "Mittag nur am Wochenende"], ["abend", "Nur Abendessen"]].map(([v, t]) => `<button class="${ec.mahlzeiten === v ? "on" : ""}" data-k="s-mz" data-v="${v}">${t}</button>`).join("")}</div>
+            <div class="settimes"><span>Portionen für Rezepte und Einkauf</span><button class="btn ghost" data-k="s-por" data-d="-1">−</button><b>${ec.portionen}</b><button class="btn ghost" data-k="s-por" data-d="1">＋</button></div>
+            <button class="btn ghost" data-k="s-essen">🍽️ Essens-Ansicht öffnen</button></div>
+          <div class="setcard col"><b>📖 Rezepte (Mealie)</b>
+            <span class="sethint">${this._mealieId ? `Verbunden · ${(this._mealieList || []).length} Rezepte` : "Noch nicht verbunden."}</span>
+            ${this._mealieId ? `<div class="settimes"><label>Adresse für Fotos <input type="text" data-k="s-murl" value="${esc(ec.mealie_url || this._mealieUrl())}"></label></div>` : this._mealieHelp()}</div>
+          <div class="setcard col"><b>♥ Lieblingsessen</b><div class="setchips">${fav.map((i) => chip(i, "s-rm")).join("") || `<span class="sethint">Noch keine. Im Essen-Fenster auf das Herz tippen.</span>`}</div></div>
           <div class="setcard col"><b>Nicht mehr vorschlagen</b><div class="setchips">${no.map((i) => chip(i, "s-rm")).join("") || `<span class="sethint">Keine. ✕ antippen holt ein Essen zurück in die Vorschläge.</span>`}</div></div>`;
       } else if (tab === "bald") {
         const hid = items.filter((i) => /^Ausgeblendet: /.test(i.summary || ""));
@@ -1659,6 +2242,9 @@
         case "s-tab": this._setTab = el.dataset.v; return this._renderKid();
         case "s-photo": { const p = person(); if (p) this._openPhoto(p); return; }
         case "s-bday": { const p = person(); if (p && need()) this._openBday(p); return; }
+        case "s-mz": if (need()) await this._saveEssenCfg({ mahlzeiten: el.dataset.v }); this._render(); return;
+        case "s-por": if (need()) await this._saveEssenCfg({ portionen: Math.max(1, Math.min(20, this._essenCfg().portionen + +el.dataset.d)) }); return;
+        case "s-essen": return this._openEssen();
         case "s-nmode": this._setNightCfg({ modus: el.dataset.v }); return this._renderKid();
         case "s-nfolder": return this._openFolderPick();
         case "s-ntest": this._closeKid(); this._nightForce = true; this._nightSnooze = 0; return this._nightCheck();
@@ -1700,7 +2286,7 @@
       this._renderKid(); this._kidTouch();
     }
     _closeKid() { this._kidOpen = null; clearTimeout(this._kidT); const k = this.shadowRoot.querySelector("#kid"); if (k) { k.className = ""; k.innerHTML = ""; } }
-    _kidTouch() { clearTimeout(this._kidT); this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, this._kidOpen === "__settings__" ? 120000 : 30000); }
+    _kidTouch() { clearTimeout(this._kidT); if (this._kidOpen === "__kochen__") return; this._kidT = setTimeout(() => { if (!this.shadowRoot.querySelector("#modal .dlg")) this._closeKid(); else this._kidTouch(); }, this._kidOpen === "__settings__" ? 120000 : this._kidOpen === "__essen__" ? 300000 : 30000); }
     _jar(n, ziel, uid = "main") {
       const r = Math.max(0, Math.min(1, n / Math.max(1, ziel)));
       const top = 40, bottom = 196, hgt = (bottom - top) * r;
@@ -1718,6 +2304,8 @@
       const k = this.shadowRoot.querySelector("#kid");
       if (k && this._kidOpen === "__bald__") return this._renderSoonBig(k);
       if (k && this._kidOpen === "__settings__") return this._renderSettings(k);
+      if (k && this._kidOpen === "__essen__") return this._renderEssen(k);
+      if (k && this._kidOpen === "__kochen__") return this._renderCook(k);
       if (k && this._kidOpen === "__menu__") {
         const app0 = this.shadowRoot.querySelector("#app");
         k.className = `kidview ${app0?.classList.contains("dark") ? "dark" : ""}`;
@@ -1801,6 +2389,8 @@
       if (!el) return;
       if (el.dataset.k === "close") return this._closeKid();
       if (this._kidOpen === "__settings__") return this._settingsClick(el);
+      if (this._kidOpen === "__essen__") return this._essenClick(el);
+      if (this._kidOpen === "__kochen__") return this._cookClick(el);
       if (el.dataset.k === "pick") { this._kidOpen = el.dataset.name; this._kidTab = "heute"; return this._renderKid(); }
       if (el.dataset.k === "menu") { this._kidOpen = "__menu__"; return this._renderKid(); }
       if (el.dataset.k === "soonadd") return this._openCountdown();
@@ -2302,7 +2892,10 @@
           lsSet("fp-hidden", JSON.stringify([...this._hidden])); this._render(); break;
         }
         case "ev": { const ev = (this._events[el.dataset.key] || [])[+el.dataset.idx]; if (ev) this._openEvent(ev, el.dataset.key); break; }
-        case "meal": this._openMeal(parseYmd(el.dataset.day)); break;
+        case "meal": this._openMeal(parseYmd(el.dataset.day), el.dataset.slot || "abend"); break;
+        case "essen": this._openEssen(); break;
+        case "vote": this._vote(el.dataset.title, el.dataset.key, el.dataset.name, +el.dataset.s); break;
+        case "voteskip": lsSet("fp-rate-skip", (lsGet("fp-rate-skip", "") + "," + el.dataset.key).split(",").slice(-20).join(",")); this._render(); break;
         case "note": this._openText({ title: "Pinnwand", value: h.states[this._config.notiz]?.state || "", max: 255, multiline: true, clear: true,
           save: (v) => h.callService("input_text", "set_value", { entity_id: this._config.notiz, value: v }) }); break;
         case "shoplist": this._shopList = el.dataset.id; lsSet("fp-shop", this._shopList); this._render(); break;
@@ -2474,114 +3067,103 @@
       else await h.callService("todo", "add_item", { item: `Essen ${kind} ${title}`, description: "essen" }, { entity_id: liste });
       await this._loadTodo(liste);
     }
-    // Bewertet alle bekannten Gerichte für einen Tag: Lieblingsessen, Wochentag-Gewohnheit, Häufigkeit, Abwechslung
-    _mealSuggest(day, n = 8, extra = []) {
-      const { fav, no } = this._mealPrefs();
-      const hist = [...(this._mealHist || []), ...extra];
-      const ds = sod(day);
-      const by = new Map();
-      hist.forEach((e) => {
-        const k = e.title.toLowerCase();
-        const o = by.get(k) || { title: e.title, cnt: 0, dow: 0, last: null, near: false };
-        if (e.d < ds) { o.cnt++; if (e.d.getDay() === ds.getDay()) o.dow++; if (!o.last || e.d > o.last) o.last = e.d; }
-        if (Math.abs(e.d - ds) <= 3 * 864e5 && +e.d !== +ds) o.near = true;
-        by.set(k, o);
-      });
-      fav.forEach((f, k) => { if (!by.has(k)) by.set(k, { title: f.title, cnt: 0, dow: 0, last: null, near: false }); });
-      const out = [];
-      by.forEach((o, k) => {
-        if (no.has(k)) return;
-        const isFav = fav.has(k);
-        let score = Math.log(1 + o.cnt) + (isFav ? 2.5 : 0);
-        let why = isFav ? "Lieblingsessen" : "";
-        if (o.cnt >= 2 && o.dow / o.cnt >= 0.4) { score += 1.5 * (o.dow / o.cnt); why = why || `oft am ${WDL[ds.getDay()]}`; }
-        if (o.last) {
-          const since = Math.round((ds - o.last) / 864e5);
-          if (since < 7) score -= 4; else if (since < 14) score -= 1.5; else { score += Math.min(since, 90) / 90; if (since >= 30) why = why || "lange nicht mehr"; }
-        }
-        if (o.near) score -= 3;
-        if (!why && o.cnt >= 3) why = "oft gekocht";
-        out.push({ title: o.title, score, why, fav: isFav, cnt: o.cnt });
-      });
-      return out.sort((x, y) => y.score - x.score).slice(0, n);
-    }
-
-    _openMeal(day) {
+    _openMeal(day, slot = "abend") {
       const ess = this._cals([this._config.essensplan])[0];
-      const cur = this._meal(day);
+      if (!this._slots(day).includes(slot)) slot = "abend";
+      const cur = this._meal(day, slot);
+      const two = this._slots(day).length > 1;
       const label = `${WDL[day.getDay()]}, ${day.getDate()}. ${MO[day.getMonth()]}`;
+      const titel = two ? `${slot === "mittag" ? "Mittagessen" : "Abendessen"} am ${label}` : `Essen am ${label}`;
       if (!ess) { this._mh = {}; this._modal(`<div class="dlg-h"><h2>Essensplan</h2></div><div class="dlg-b"><p>Der Kalender «${esc(this._config.essensplan)}» fehlt noch. Oben auf «Jetzt anlegen» tippen.</p></div><div class="dlg-f"><button class="btn" data-m="close">OK</button></div>`); return; }
-      const h = this._hass;
+      this._prefetch();
       const { fav } = this._mealPrefs();
-      const vors = this._mealSuggest(day, 8).filter((x) => x.title !== cur?.title);
+      const vors = this._mealSuggest(day, 8, [], slot).filter((x) => x.title !== cur?.title);
       const shown = new Set(vors.map((x) => x.title.toLowerCase()));
       const favs = [...fav.values()].map((f) => f.title).filter((t) => !shown.has(t.toLowerCase()) && t !== cur?.title);
       favs.forEach((t) => shown.add(t.toLowerCase()));
+      const idea = this._newIdea([...shown]);
+      if (idea) shown.add(idea.name.toLowerCase());
       const rest = this._suggest.filter((x) => !shown.has(x.toLowerCase()) && x !== cur?.title).slice(0, 12);
-      const save = async (v) => {
-        v = (v || "").trim();
-        const ev = { summary: v, dtstart: ymd(day), dtend: ymd(addDays(day, 1)) };
-        try {
-          if (cur && cur.uid) {
-            if (!v) await h.callWS({ type: "calendar/event/delete", entity_id: ess, uid: cur.uid, ...(cur.rid ? { recurrence_id: cur.rid } : {}) });
-            else await h.callWS({ type: "calendar/event/update", entity_id: ess, uid: cur.uid, event: ev, ...(cur.rid ? { recurrence_id: cur.rid } : {}) });
-          } else if (v) await h.callWS({ type: "calendar/event/create", entity_id: ess, event: ev });
-        } catch (err) { this._msg = `Essen nicht gespeichert: ${err.message || err.code || err}`; }
-        this._modal("");
-        this._refreshCalendars(true);
-        this._loadExtras();
-      };
+      let slug = this._slugOf(cur);
+      const findRecipe = (t) => (this._mealieList || []).find((r) => r.name.toLowerCase() === t.trim().toLowerCase());
+      const save = async (v, s) => { v = (v || "").trim(); const r = s !== undefined ? null : findRecipe(v); this._modal(""); await this._saveMeal(day, slot, v, s !== undefined ? s : r ? r.slug : (v === cur?.title ? slug : ""), cur); };
       const inp = () => this.shadowRoot.querySelector("#fp-in");
       const favBtn = () => { const t = inp().value.trim(); const b = this.shadowRoot.querySelector('[data-m="fav"]'); if (b) { const on = this._mealPrefs().fav.has(t.toLowerCase()); b.classList.toggle("on", on); b.innerHTML = `<ha-icon icon="${on ? "mdi:heart" : "mdi:heart-outline"}"></ha-icon>${on ? "Lieblingsessen" : "Als Lieblingsessen"}`; } };
+      const recipeHits = () => {
+        const box = this.shadowRoot.querySelector("#fp-rhits"); if (!box) return;
+        const q = inp().value.trim().toLowerCase();
+        const hits = q.length >= 2 ? (this._mealieList || []).filter((r) => r.name.toLowerCase().includes(q) && r.name.toLowerCase() !== q).slice(0, 6) : [];
+        box.innerHTML = hits.length ? `<span class="lbl">Rezepte in Mealie</span>${hits.map((r) => `<span class="mchip"><button data-m="pickr" data-slug="${esc(r.slug)}" data-v="${esc(r.name)}">📖 ${esc(r.name)}${this._mins(r) ? `<small>${this._mins(r)} Min.</small>` : ""}</button></span>`).join("")}` : "";
+      };
       this._mh = {
         save: () => save(inp().value),
-        del: () => save(""),
-        pick: (el) => { inp().value = el.dataset.v; save(el.dataset.v); },
+        del: () => save("", ""),
+        pick: (el) => { inp().value = el.dataset.v; save(el.dataset.v, el.dataset.slug || undefined); },
+        pickr: (el) => save(el.dataset.v, el.dataset.slug),
         fav: async () => { const t = inp().value.trim(); if (!t) return; await this._toggleMealPref("♥", t); favBtn(); },
         nope: async (el) => { const t = el.dataset.v; await this._toggleMealPref("✗", t); el.closest(".mchip")?.remove(); },
         fill: () => this._openFillWeek(),
+        cook: () => { this._modal(""); this._openCook(slug); },
+        recipe: () => this._openRecipe(slug),
+        all: () => { this._modal(""); this._openEssen("woche"); },
       };
-      const chip = (x, why) => `<span class="mchip ${x.fav ? "fav" : ""}"><button data-m="pick" data-v="${esc(x.title)}">${x.fav ? '<ha-icon icon="mdi:heart"></ha-icon>' : ""}${esc(x.title)}${why ? `<small>${esc(why)}</small>` : ""}</button><button class="nope" data-m="nope" data-v="${esc(x.title)}" aria-label="${esc(x.title)} nicht mehr vorschlagen" title="Nicht mehr vorschlagen"><ha-icon icon="mdi:close"></ha-icon></button></span>`;
+      const chip = (x, why) => `<span class="mchip ${x.fav ? "fav" : ""}"><button data-m="pick" data-v="${esc(x.title)}" ${x.slug ? `data-slug="${esc(x.slug)}"` : ""}>${x.fav ? '<ha-icon icon="mdi:heart"></ha-icon>' : ""}${x.slug ? "📖 " : ""}${esc(x.title)}${why ? `<small>${esc(why)}</small>` : ""}</button><button class="nope" data-m="nope" data-v="${esc(x.title)}" aria-label="${esc(x.title)} nicht mehr vorschlagen" title="Nicht mehr vorschlagen"><ha-icon icon="mdi:close"></ha-icon></button></span>`;
       this._modal(`
-        <div class="dlg-h"><ha-icon icon="mdi:silverware-fork-knife"></ha-icon><h2>Essen am ${label}</h2></div>
+        <div class="dlg-h"><ha-icon icon="${two ? (slot === "mittag" ? "mdi:white-balance-sunny" : "mdi:weather-night") : "mdi:silverware-fork-knife"}"></ha-icon><h2>${titel}</h2></div>
         <div class="dlg-b">
           <div class="mealin"><input id="fp-in" type="text" autofocus placeholder="Was gibt es?" value="${esc(cur?.title || "")}" enterkeyhint="done">
             <button class="btn ghost favbtn" data-m="fav"></button></div>
-          ${vors.length ? `<div class="sug"><span class="lbl">Vorschläge für ${WDL[day.getDay()]}</span>${vors.map((x) => chip(x, x.why)).join("")}</div>` : `<p class="hint2">Noch keine Vorschläge: Sobald ein paar Wochen geplant sind, lernt der Planer eure Gewohnheiten. Lieblingsessen mit dem Herz markieren.</p>`}
+          ${slug ? `<div class="mealrec"><button class="btn ghost" data-m="recipe">📖 Rezept</button><button class="btn" data-m="cook">👩‍🍳 Kochen</button></div>` : ""}
+          <div class="sug" id="fp-rhits"></div>
+          ${vors.length ? `<div class="sug"><span class="lbl">Vorschläge</span>${vors.map((x) => chip(x, x.why)).join("")}</div>` : `<p class="hint2">Noch keine Vorschläge: Sobald ein paar Wochen geplant sind, lernt der Planer eure Gewohnheiten. Lieblingsessen mit dem Herz markieren.</p>`}
+          ${idea ? `<div class="sug"><span class="lbl">Neu ausprobieren</span><span class="mchip new"><button data-m="pick" data-v="${esc(idea.name)}" data-slug="${esc(idea.slug)}">✨ ${esc(idea.name)}${this._mins(idea) ? `<small>${this._mins(idea)} Min.</small>` : ""}</button></span></div>` : ""}
           ${favs.length ? `<div class="sug"><span class="lbl">Weitere Lieblingsessen</span>${favs.map((t) => chip({ title: t, fav: true }, "")).join("")}</div>` : ""}
           ${rest.length ? `<div class="sug"><span class="lbl">Schon gekocht</span>${rest.map((t) => chip({ title: t }, "")).join("")}</div>` : ""}
         </div>
-        <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<button class="btn ghost" data-m="fill"><ha-icon icon="mdi:auto-fix"></ha-icon>Woche füllen</button><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
+        <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<button class="btn ghost" data-m="fill"><ha-icon icon="mdi:auto-fix"></ha-icon>Woche füllen</button>${this._kidOpen === "__essen__" ? "" : `<button class="btn ghost" data-m="all">🍽️ Alles zum Essen</button>`}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
       this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
       favBtn();
-      inp().addEventListener("input", favBtn);
+      inp().addEventListener("input", () => { favBtn(); recipeHits(); });
       inp().addEventListener("keydown", (e) => { if (e.key === "Enter") this._mh.save(); });
     }
 
-    // Leere Tage der nächsten 7 Tage mit Vorschlägen füllen (mit Vorschau)
+    // Leere Mahlzeiten der nächsten 7 Tage mit Vorschlägen füllen (mit Vorschau)
     _openFillWeek() {
-      const ess = this._cals([this._config.essensplan])[0];
-      const h = this._hass;
       const today = sod(new Date());
       const plan = [], extra = [];
       for (let k = 0; k < 7; k++) {
         const d = addDays(today, k);
-        if (this._meal(d) || (this._mealHist || []).some((e) => +e.d === +d)) continue;
-        const best = this._mealSuggest(d, 6, extra).find((x) => !plan.some((p) => p.title.toLowerCase() === x.title.toLowerCase()));
-        if (best) { plan.push({ d, title: best.title }); extra.push({ title: best.title, d }); }
+        for (const s of this._slots(d)) {
+          if (this._meal(d, s)) continue;
+          const best = this._mealSuggest(d, 8, extra, s).find((x) => !plan.some((p) => p.title.toLowerCase() === x.title.toLowerCase()));
+          if (best) { plan.push({ d, s, title: best.title, slug: best.slug, why: best.why }); extra.push({ title: best.title, d, slot: s, slug: best.slug }); }
+        }
       }
       if (!plan.length) { this._openConfirm(this._mealHist?.length ? "Die nächsten 7 Tage sind schon geplant." : "Noch zu wenig Erfahrung: Plane zuerst ein paar Essen von Hand oder markiere Lieblingsessen.", "OK", async () => {}); return; }
+      const two = plan.some((p) => p.s === "mittag");
       this._mh = {
         ok: async () => {
-          for (const p of plan) { try { await h.callWS({ type: "calendar/event/create", entity_id: ess, event: { summary: p.title, dtstart: ymd(p.d), dtend: ymd(addDays(p.d, 1)) } }); } catch (e) { /* weiter */ } }
-          this._modal(""); this._refreshCalendars(true); this._loadExtras();
+          const sel = [...this.shadowRoot.querySelectorAll("#modal .fillist input:checked")].map((x) => plan[+x.value]);
+          this._modal("");
+          for (const p of sel) await this._saveMeal(p.d, p.s, p.title, p.slug, null);
         },
       };
       this._modal(`
         <div class="dlg-h"><ha-icon icon="mdi:auto-fix"></ha-icon><h2>Vorschlag für die Woche</h2></div>
-        <div class="dlg-b"><ul class="fillist">${plan.map((p) => `<li><span>${WD[p.d.getDay()]} ${p.d.getDate()}.${p.d.getMonth() + 1}.</span><b>${esc(p.title)}</b></li>`).join("")}</ul>
-          <p class="hint2">Bereits geplante Tage bleiben, wie sie sind. Einzelne Essen kannst du danach wie gewohnt ändern.</p></div>
+        <div class="dlg-b"><ul class="fillist">${plan.map((p, i) => `<li><label><input type="checkbox" value="${i}" checked><span>${WD[p.d.getDay()]} ${p.d.getDate()}.${p.d.getMonth() + 1}.${two ? ` ${p.s === "mittag" ? "☀️" : "🌙"}` : ""}</span><b>${p.slug ? "📖 " : ""}${esc(p.title)}</b>${p.why ? `<small>${esc(p.why)}</small>` : ""}</label></li>`).join("")}</ul>
+          <p class="hint2">Bereits geplante Mahlzeiten bleiben, wie sie sind. Häkchen weg bei allem, was nicht passt.</p></div>
         <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="ok">Übernehmen</button></div>`);
+    }
+    // Rezepte rund um heute laden (für Reste, Zeiten, Einkauf)
+    async _prefetch() {
+      if (!this._mealieId || this._prefetching) return;
+      this._prefetching = true;
+      const t = sod(new Date());
+      const slugs = new Set();
+      (this._mealHist || []).forEach((e) => { const dd = Math.round((e.d - t) / 864e5); if (e.slug && dd >= -3 && dd <= 7) slugs.add(e.slug); });
+      let n = 0;
+      for (const s of slugs) { if (this._recipeCache?.[s]) continue; try { await this._recipe(s); n++; } catch (e) { /* weiter */ } if (n >= 15) break; }
+      this._prefetching = false;
     }
 
     _openText({ title, value = "", placeholder = "", max = 255, multiline = false, clear = false, repeat = false, save }) {
@@ -3332,6 +3914,87 @@
   .fire { font-size:14px; font-weight:800; color:#e8590c; margin-left:4px; }
   .fire.big { font-size:26px; background:#fff0e0; padding:4px 12px; border-radius:16px; }
   .dark .fire.big { background:#3a2614; }
+  /* Essen: zwei Mahlzeiten, Bewertung, Essens-Ansicht, Kochmodus */
+  .meal.two { font-size:12px; margin-top:0; padding:2px 6px; }
+  .meal.two span { -webkit-line-clamp:1; }
+  .meal.big.two { min-width:140px; max-width:38%; margin-left:6px; }
+  .meal.big.two:first-of-type { margin-left:auto; }
+  .rateband { position:relative; display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:0 0 10px; padding:10px 54px 10px 16px; border-radius:20px; background:var(--paper); box-shadow:0 2px 8px rgba(0,0,0,.08), inset 0 0 0 2px #f2b400; }
+  .rbq { display:flex; flex-direction:column; min-width:150px; }
+  .rbt { font-size:13px; font-weight:700; color:var(--ink2); }
+  .rbq b { font-family:var(--f-disp); font-size:20px; font-weight:800; }
+  .rbp { display:flex; gap:14px; flex-wrap:wrap; }
+  .rbperson { display:flex; align-items:center; gap:4px; padding:4px 8px 4px 4px; border-radius:30px; background:var(--soft); }
+  .rbperson .kav { font-size:18px; box-shadow:0 0 0 2px var(--paper), 0 0 0 4px var(--c); margin-right:4px; }
+  .rbf { font-size:30px; line-height:1; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; transition:transform .15s; }
+  .rbf.on { background:#ffe28a; transform:scale(1.15); }
+  .rbf.dim { opacity:.35; }
+  .rbf:active { transform:scale(.9); }
+  .rbx { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:50%; background:var(--soft); color:var(--ink2); font-weight:800; }
+  .mealrec { display:flex; gap:8px; margin:8px 0 2px; }
+  .mchip.new button { background:#fff1bf; }
+  .dark .mchip.new button { background:#4a3c12; }
+  .fillist label { display:flex; align-items:baseline; gap:10px; width:100%; }
+  .fillist small { color:var(--ink2); font-size:12px; margin-left:auto; text-align:right; }
+  .esstools { display:flex; gap:10px; flex-wrap:wrap; }
+  .essweek { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:12px; }
+  .essday { display:flex; flex-direction:column; gap:8px; padding:12px; border-radius:20px; background:var(--paper); box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .essday.today { box-shadow:0 0 0 3px #f2b400; }
+  .essdh { display:flex; align-items:baseline; gap:8px; }
+  .essdh b { font-family:var(--f-disp); font-size:19px; }
+  .essdh span { color:var(--ink2); font-size:13px; font-weight:600; }
+  .essslot { position:relative; display:flex; align-items:center; gap:10px; padding:8px; border-radius:14px; background:var(--soft); text-align:left; min-height:62px; }
+  .essslot.empty { color:var(--ink3); }
+  .esst { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+  .esst small { font-size:12px; color:var(--ink2); font-weight:600; }
+  .esst b { font-size:15px; font-weight:700; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .essimg { width:58px; height:46px; border-radius:10px; overflow:hidden; flex:none; background:var(--line); display:block; }
+  .essimg img { width:100%; height:100%; object-fit:cover; display:block; }
+  .essimg.big { width:100%; height:130px; border-radius:14px; }
+  .esscook { font-size:24px; padding:4px; }
+  .essfaces { display:flex; gap:2px; font-size:15px; }
+  .essfaces i { font-style:normal; }
+  .essfaces.big { gap:10px; }
+  .essfaces.big span { display:flex; flex-direction:column; align-items:center; }
+  .essfaces.big i { font-size:28px; }
+  .essfaces.big small { font-size:11px; color:var(--ink2); font-weight:600; }
+  .essno { width:34px; font-family:var(--f-disp); font-size:22px; font-weight:800; color:var(--ink3); text-align:center; }
+  .esssearch { display:flex; gap:10px; }
+  .esssearch input { flex:1; font:inherit; font-size:16px; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .essgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
+  .esscard { display:flex; flex-direction:column; gap:6px; padding:10px; border-radius:18px; background:var(--paper); text-align:left; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .esscard b { font-size:15px; }
+  .esscard small { color:var(--ink2); font-size:12px; }
+  .esshelp { margin:4px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:6px; font-size:14px; }
+  .recipehead { display:grid; grid-template-columns:minmax(160px, 260px) 1fr; gap:16px; align-items:start; }
+  .recipehead .essimg.big { height:170px; }
+  .ingl { margin:6px 0 0; padding-left:20px; columns:2; column-gap:24px; font-size:15px; line-height:1.5; }
+  .planpick { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px; }
+  .planpick button { display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px; border-radius:12px; background:var(--soft); text-align:left; }
+  .planpick button.taken { opacity:.65; }
+  .planpick small { color:var(--ink2); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+  .shoppick { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px 14px; margin-top:8px; }
+  .shoppick label { display:flex; align-items:flex-start; gap:8px; padding:6px 4px; font-size:15px; }
+  .shoppick label.have { opacity:.6; }
+  .shoppick small { color:var(--ink2); font-size:12px; }
+  .cookmain { flex:1; min-height:0; display:grid; grid-template-columns:minmax(240px, 34%) 1fr; gap:24px; }
+  .cooking { overflow:auto; padding:16px; border-radius:22px; background:var(--paper); }
+  .cookpor { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+  .cookpor .kbtn { width:48px; height:48px; font-size:24px; }
+  .cookpor b { font-size:18px; }
+  .cooking ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+  .cooking li { padding:10px 12px; border-radius:12px; font-size:17px; background:var(--soft); cursor:pointer; }
+  .cooking li.done { text-decoration:line-through; opacity:.5; }
+  .cookstep { display:flex; flex-direction:column; gap:16px; padding:24px; border-radius:22px; background:var(--paper); overflow:auto; }
+  .cookn { font-size:15px; font-weight:700; color:var(--ink2); }
+  .cooktext { flex:1; margin:0; font-size:clamp(22px, 2.6vw, 34px); line-height:1.45; font-weight:500; }
+  .cooktm { display:flex; gap:10px; flex-wrap:wrap; }
+  .cooknav { display:flex; justify-content:space-between; gap:12px; }
+  .btn.big { padding:16px 28px; font-size:20px; border-radius:16px; }
+  .btn:disabled { opacity:.35; }
+  .cooktimer { display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:16px; background:var(--paper); font-size:20px; cursor:pointer; }
+  .cooktimer.ring { background:#ffe28a; color:#1d2430; animation:bdhop .6s ease-in-out infinite; }
+  @media (max-width: 760px) { .cookmain, .recipehead { grid-template-columns:1fr; } .ingl { columns:1; } }
   /* Geburtstag */
   .bdband { position:relative; overflow:hidden; display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:0 0 10px; padding:10px 16px; border-radius:20px; cursor:pointer;
     background:linear-gradient(100deg, #fff1bf, #ffd6e7 55%, #d9ecff); color:#1d2430; box-shadow:0 2px 8px rgba(0,0,0,.08); }

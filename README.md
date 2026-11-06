@@ -23,7 +23,9 @@ The design follows the light or dark theme of Home Assistant. The interface is a
 - **Swipe** left or right to go to the next or previous week (or day, month).
 - **Add family members** right on the tablet (name, colour, calendars), e.g. grandma or an au pair.
 - **Pictures on events**: kindergarten, swimming, doctor, shopping and about 50 other topics get a matching photo automatically (German and English keywords). Assign your own topics, photos and emojis on the tablet.
-- **Meal plan**: one dish per day. Suggestions learn your habits (e.g. pizza on Fridays), favour your favourites (heart) and add variety. "Fill the week" plans all empty days with one tap.
+- **Meal plan**: dinner only, lunch at weekends, or lunch and dinner every day. Suggestions learn from what you enter: habits (e.g. pizza on Fridays), favourites (heart), variety by kind of dish (pasta, fish, soup …), your ratings, quick dishes on busy evenings, soup on cold days, favourites when guests come. Every suggestion says why. "Fill the week" plans all empty meals with one tap.
+- **"How was it?"**: after a meal everyone taps 😋, 😐 or 🤢 – the kids love it, and the planner learns what the whole family likes.
+- **Recipes with [Mealie](https://mealie.io)** (optional, a free recipe manager that runs as a Home Assistant add-on): import recipes from most recipe websites by link, plan them, a big **cooking mode** with steps, timers and servings, and **ingredients to Bring!** for one recipe or the whole week. A "try something new" idea each week, and leftovers (cream, leek …) are used up in the following days. Everything in the 🍽️ meal view.
 - **Shopping list** (e.g. Bring!): tick off and add items on the tablet.
 - **Chores** per person, with stars for kids. They reset every night.
 - **Stars & rewards for kids** (tap the "Stars" tile, then pick a child):
@@ -111,6 +113,13 @@ On first start the planner shows **"Create now"** at the top. One tap creates:
 
 You need to be logged in as an administrator for this.
 
+## Recipes with Mealie (optional)
+
+1. Settings → Add-ons → Add-on store → install **Mealie** (Home Assistant Community Add-ons) and start it. In its network settings you can open port 9925 so the planner can show recipe photos.
+2. Open Mealie from the sidebar, set up your account, then profile → **API tokens** → create a token.
+3. Settings → Devices & services → **Mealie** (usually shown as discovered) → paste the token.
+4. Reload the planner. The 🍽️ button opens the meal view; in Settings → Meals you choose lunch/dinner and servings.
+
 ## Adding Google Calendar (no Google Cloud project needed)
 
 For each calendar:
@@ -161,6 +170,7 @@ The option names are German. Here is what they mean:
 | `eigene_feiertage` | extra days `{datum, name}` (date, name) |
 | `personen_hinzufuegen` | `false` hides the "+ Person" button |
 | `dunkel` | dark mode: `auto` (like Home Assistant, default), `sonne` (dark between sunset and sunrise), `hell` (light) or `dunkel` (dark). Can be overridden per device in Settings → Display |
+| `mahlzeiten` | meals to plan: `abend` (dinner only, default), `wochenende` (lunch at weekends too) or `immer` (lunch and dinner). Can also be changed in Settings → Meals |
 | `sprache` | language: `auto` (like Home Assistant, default), `en` or `de` |
 | `zuhause_link`, `zuhause_name` | button at the top that opens another dashboard, e.g. `zuhause_link: /dashboard-home` |
 

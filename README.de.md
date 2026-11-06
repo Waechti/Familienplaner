@@ -32,7 +32,9 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 - **Weitere Familienmitglieder** direkt am Tablet hinzufügen (Name, Farbe, Kalender), z. B. Grosi oder ein Au-pair
 - **Wischen** nach links oder rechts blättert zur nächsten oder vorherigen Woche (bzw. Tag, Monat)
 - **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen.
-- **Essensplan**: pro Tag ein Gericht. Vorschläge lernen eure Gewohnheiten (z. B. Pizza am Freitag), berücksichtigen Lieblingsessen (Herz) und Abwechslung; «Woche füllen» plant die leeren Tage mit einem Tipp
+- **Essensplan**: nur Abendessen, Mittag am Wochenende oder jeden Tag Mittag und Abend. Die Vorschläge lernen aus dem, was ihr eintragt: Gewohnheiten (z. B. Pizza am Freitag), Lieblingsessen (Herz), Abwechslung nach Art (Pasta, Fisch, Suppe …), eure Bewertungen, Schnelles an vollen Abenden, Suppe an kalten Tagen, Lieblingsessen bei Besuch. Bei jedem Vorschlag steht, warum. «Woche füllen» plant alle leeren Mahlzeiten mit einem Tipp.
+- **«Wie war's?»**: Nach dem Essen tippen alle auf 😋, 😐 oder 🤢. Das macht den Kindern Spass, und der Planer lernt, was allen schmeckt.
+- **Rezepte mit [Mealie](https://mealie.io)** (optional, kostenlose Rezeptverwaltung als Home-Assistant-Add-on): Rezepte von den meisten Rezeptseiten per Link übernehmen, planen, grosser **Kochmodus** mit Schritten, Timern und Portionen, **Zutaten auf Bring!** für ein Rezept oder die ganze Woche. Jede Woche eine Idee zum Neu-Ausprobieren, und Reste (Rahm, Lauch …) werden in den nächsten Tagen verwertet. Alles in der Essens-Ansicht 🍽️.
 - **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
 - **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
 - **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung mit Bild und Ziel; kleine Belohnungen (Lolli, Spielzeugauto, Heftli …) lassen sich mit einem Tipp wählen; Sterne gibt es per Tipp oder über die Ämtli
@@ -98,6 +100,13 @@ Beim ersten Öffnen zeigt der Planer oben **«Jetzt anlegen»**. Ein Tipp legt a
 
 Dafür muss man als Administrator angemeldet sein.
 
+## Rezepte mit Mealie (optional)
+
+1. Einstellungen → Add-ons → Add-on-Store → **Mealie** (Home Assistant Community Add-ons) installieren und starten. In den Netzwerk-Einstellungen des Add-ons Port 9925 freigeben, damit der Planer die Rezeptfotos zeigen kann.
+2. Mealie in der Seitenleiste öffnen, Konto einrichten, dann Profil → **API-Tokens** → Token erstellen.
+3. Einstellungen → Geräte & Dienste → **Mealie** (meist als «Entdeckt» angezeigt) → Token einfügen.
+4. Planer neu laden. Der Knopf 🍽️ öffnet die Essens-Ansicht; unter Einstellungen → Essen wählst du Mahlzeiten und Portionen.
+
 ## Google Kalender einbinden (ohne Google-Cloud-Projekt)
 
 Für jeden Kalender:
@@ -148,6 +157,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | `eigene_feiertage` | zusätzliche Tage `{datum, name}` |
 | `personen_hinzufuegen` | `false` blendet den Knopf «+ Person» aus (Standard: sichtbar). Am Tablet hinzugefügte Personen werden in der Liste «Planer Bilder» gespeichert |
 | `dunkel` | `auto` (wie Home Assistant, Standard), `sonne` (dunkel zwischen Sonnenuntergang und -aufgang), `hell` oder `dunkel`. Pro Gerät änderbar unter Einstellungen → Anzeige |
+| `mahlzeiten` | `abend` (nur Abendessen, Standard), `wochenende` (am Wochenende auch Mittag) oder `immer` (Mittag und Abend). Auch unter Einstellungen → Essen änderbar |
 | `sprache` | `auto` (wie Home Assistant, Standard), `de` oder `en` |
 | `zuhause_link`, `zuhause_name` | Knopf oben, der zu einem anderen Dashboard wechselt, z. B. `zuhause_link: /dashboard-zuhause` (Pfad aus der Adresszeile). Ohne `zuhause_link` kein Knopf |
 
