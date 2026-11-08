@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.16.0";
+  const VERSION = "1.16.2";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -625,7 +625,7 @@
     _watchIds() {
       if (!this._hass) return [];
       const c = this._config;
-      const ids = [c.wetter, c.abfall, c.notiz, "sun.sun"];
+      const ids = [c.wetter, c.abfall, c.notiz, "sun.sun", this._aussenId()];
       c.personen.forEach((p) => { ids.push(p.foto); if (p.sterne) ids.push(p.sterne); const a = this._aemtliId(p); if (a) ids.push(a); });
       const cd = this._findByName("todo", c.countdowns); if (cd) ids.push(cd);
       const bl = this._bildListe(); if (bl) ids.push(bl);
@@ -1148,7 +1148,7 @@
               const tom = this._wx(addDays(now, 1));
               const rain = today && today.precipitation != null ? today.precipitation : null;
               return `<div class="wxbox"><ha-icon class="wxi" icon="${WX[w.state] || "mdi:weather-cloudy"}"></ha-icon>
-                <div class="wxt"><div class="t">${Math.round(w.attributes.temperature ?? 0)}°</div><div class="cond">${esc(WXDE[w.state] || "")}</div></div>
+                <div class="wxt"><div class="t">${Math.round(this._nowWx()?.t ?? w.attributes.temperature ?? 0)}°</div><div class="cond">${esc(WXDE[w.state] || "")}</div></div>
                 <div class="wxd">
                   ${today ? `<div><span class="lbl">Heute</span><b>${Math.round(today.temperature)}°</b> / ${Math.round(today.templow ?? 0)}°${rain ? ` <span class="rain"><ha-icon icon="mdi:water"></ha-icon>${rain} mm</span>` : ""}</div>` : ""}
                   ${tom ? `<div><span class="lbl">Morgen</span><ha-icon icon="${WX[tom.condition] || "mdi:weather-cloudy"}"></ha-icon><b>${Math.round(tom.temperature)}°</b> / ${Math.round(tom.templow ?? 0)}°</div>` : ""}
@@ -1215,6 +1215,22 @@
         </button>`;
     }
 
+    // Aktuelle Temperatur und Wetterlage aus der Wetter-Entität
+    _nowWx() {
+      const w = this._hass?.states[this._config.wetter];
+      const a = this._aussenId();
+      const ta = a ? parseFloat(this._hass.states[a].state) : NaN;
+      const t = Number.isFinite(ta) ? ta : w?.attributes?.temperature;
+      return typeof t === "number" && Number.isFinite(t) ? { t, state: w?.state || "" } : null;
+    }
+    // Eigener Aussenfühler (Option «aussentemperatur», sonst Sensor «Aussentemperatur» / «Outdoor temperature»)
+    _aussenId() {
+      if (!this._hass) return null;
+      const c = this._config.aussentemperatur;
+      if (c === false) return null;
+      const id = c ? this._findByName("sensor", c) : Object.keys(this._hass.states).find((k) => k.startsWith("sensor.") && this._hass.states[k].attributes.device_class === "temperature" && /^(aussentemperatur|außentemperatur|temperatur aussen|outdoor temperature|outside temperature)$/i.test(this._hass.states[k].attributes.friendly_name || ""));
+      return id && this._hass.states[id] && Number.isFinite(parseFloat(this._hass.states[id].state)) ? id : null;
+    }
     _dayInfo(d, compact) {
       const wx = this._wx(d);
       const ab = this._abfall(d);
@@ -1224,7 +1240,7 @@
       return `
         <div class="dnum"><span class="wd">${WD[d.getDay()]}</span><span class="n">${d.getDate()}</span>${today ? `<span class="hd-today">Heute</span>` : ""}</div>
         <div class="dmeta">
-          ${wx ? `<span class="dwx"><ha-icon icon="${WX[wx.condition] || "mdi:weather-cloudy"}"></ha-icon>${Math.round(wx.temperature)}°</span>` : ""}
+          ${wx || (today && this._nowWx()) ? `<span class="dwx"><ha-icon icon="${today && this._nowWx() ? WX[this._nowWx().state] || "mdi:weather-cloudy" : WX[wx.condition] || "mdi:weather-cloudy"}"></ha-icon>${Math.round(today && this._nowWx() ? this._nowWx().t : wx.temperature)}°</span>` : ""}
           ${ab.map((t) => `<ha-icon class="trash" title="${esc(t)}" style="--c:${(ABFALL[t] || {}).color || "#888"}" icon="${(ABFALL[t] || {}).icon || "mdi:trash-can"}"></ha-icon>`).join("")}
         </div>
         ${fer ? `<div class="fer">${esc(fer)}</div>` : ""}
@@ -1314,7 +1330,7 @@
       if (nowTop != null && this._dayScrolled !== ymd(d)) { this._dayScrolled = ymd(d); this._needScrollNow = true; }
       return `<div class="day">
         <div class="dstrip">
-          ${wx ? `<span class="chipx"><ha-icon icon="${WX[wx.condition] || "mdi:weather-cloudy"}"></ha-icon>${Math.round(wx.temperature)}° / ${Math.round(wx.templow ?? 0)}°</span>` : ""}
+          ${wx ? `<span class="chipx"><ha-icon icon="${WX[(sameDay(d, now) && this._nowWx()?.state) || wx.condition] || "mdi:weather-cloudy"}"></ha-icon>${sameDay(d, now) && this._nowWx() ? `${Math.round(this._nowWx().t)}° <small>(${Math.round(wx.temperature)}° / ${Math.round(wx.templow ?? 0)}°)</small>` : `${Math.round(wx.temperature)}° / ${Math.round(wx.templow ?? 0)}°`}</span>` : ""}
           ${hol ? `<span class="chipx"><ha-icon icon="mdi:flag-variant-outline"></ha-icon>${esc(hol)}</span>` : ""}
           ${fer ? `<span class="chipx"><ha-icon icon="mdi:beach"></ha-icon>${esc(fer)}</span>` : ""}
           ${ab.map((t) => `<span class="chipx" style="--c:${(ABFALL[t] || {}).color}"><ha-icon icon="${(ABFALL[t] || {}).icon}"></ha-icon>${esc(t)}</span>`).join("")}

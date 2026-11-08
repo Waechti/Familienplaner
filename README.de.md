@@ -150,6 +150,7 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | `geburtstage` | Kalender mit Geburtstagen |
 | `essensplan`, `countdowns`, `bilderliste` | Namen der lokalen Kalender/Listen |
 | `bring` | Liste von To-do-Entitäten; leer = alle Bring!-Listen |
+| `aussentemperatur` | eigener Aussenfühler für die heutige Temperatur (Standard: Sensor «Aussentemperatur», sonst die Wetter-Entität); `false` = immer die Wetter-Entität |
 | `wetter`, `abfall`, `notiz` | Entitäten für Wetter, Abfallsensor und Pinnwand |
 | `schulferien` | Liste `{von, bis, name}` (JJJJ-MM-TT, «bis» inklusive) |
 | `schulferien_kalender` | Kalender mit ganztägigen Ferienterminen, z. B. ein iCal der Schule |

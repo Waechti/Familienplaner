@@ -163,6 +163,7 @@ The option names are German. Here is what they mean:
 | `geburtstage` | calendars with birthdays |
 | `essensplan`, `countdowns`, `bilderliste` | names of the local calendar/lists for meals, countdowns and pictures |
 | `bring` | list of to-do entities for shopping; empty = all Bring! lists |
+| `aussentemperatur` | your own outdoor temperature sensor for today's temperature (default: a sensor named "Outdoor temperature"/"Aussentemperatur", otherwise the weather entity); `false` = always the weather entity |
 | `wetter`, `abfall`, `notiz` | entities for weather, waste sensor and message board |
 | `schulferien` | school holidays: list of `{von, bis, name}` (from, to inclusive, name; YYYY-MM-DD) |
 | `schulferien_kalender` | calendar with all-day school holiday events, e.g. your school's iCal |
