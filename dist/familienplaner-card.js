@@ -6,7 +6,7 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.15.0";
+  const VERSION = "1.16.0";
   if (customElements.get("familienplaner-card")) return;
 
   // ---------- Schrift ----------
@@ -645,11 +645,60 @@
       return [s, addDays(s, this._weekDays || 7)];
     }
 
+    // Letzter Stand (Termine, Listen, Geburtstage, Essensverlauf) im Gerät, damit der Planer sofort erscheint
+    _saveSnap() {
+      clearTimeout(this._snapT);
+      this._snapT = setTimeout(() => {
+        try {
+          const data = JSON.stringify({ v: 1, t: Date.now(), range: this._range, wd: this._weekDays, ev: this._events, todos: this._todos, bdays: this._bdays || [], hist: this._mealHist || [], suggest: this._suggest || [] });
+          if (data.length < 1500000) lsSet("fp-snap", data);
+        } catch (e) { /* egal */ }
+      }, 1500);
+    }
+    _loadSnap() {
+      try {
+        const d = JSON.parse(lsGet("fp-snap", "") || "null");
+        if (!d || d.v !== 1 || Date.now() - d.t > 24 * 3600000) return;
+        const ev = (x) => ({ ...x, start: new Date(x.start), end: new Date(x.end) });
+        if (d.wd && !this._weekDays) this._weekDays = d.wd;
+        const [s, e] = this._visibleRange();
+        if (d.range === `${ymd(s)}_${ymd(e)}` && d.ev) { const out = {}; Object.entries(d.ev).forEach(([k, l]) => (out[k] = (l || []).map(ev))); this._events = out; this._range = d.range; }
+        if (d.todos) Object.entries(d.todos).forEach(([k, l]) => { if (!this._todos[k]) this._todos[k] = l; });
+        if (!this._bdays && d.bdays) this._bdays = d.bdays.map(ev);
+        if (!this._mealHist && d.hist) this._mealHist = d.hist.map((x) => ({ ...x, d: new Date(x.d) }));
+        if (!this._suggest?.length && d.suggest) this._suggest = d.suggest;
+        if (this._bildListe()) this._syncPersons();
+      } catch (e) { /* egal */ }
+    }
+
     async _refreshAll() {
+      this._loadSnap();
       this._refreshCalendars(true);
       this._loadTodos();
       this._loadExtras();
     }
+
+    // Ein Abruf pro Kalender für «gestern bis +4 Monate» (bzw. grösser, falls nötig); alle Ansichten bedienen sich daraus
+    _calWindow() { const t = sod(new Date()); return [addDays(t, -1), addDays(t, 122)]; }
+    async _getCal(id, s, e, maxAge = 300000) {
+      this._cc = this._cc || {}; this._ccP = this._ccP || {};
+      const pick = (ev) => ev.filter((x) => x.end > s && x.start < e);
+      const c = this._cc[id];
+      if (c && c.s <= s && c.e >= e && Date.now() - c.t < maxAge) return pick(c.ev);
+      const pend = this._ccP[id];
+      if (pend && pend.s <= s && pend.e >= e) return pick(await pend.p);
+      let [ws, we] = this._calWindow();
+      if (c && Date.now() - c.t < 30 * 60000) { if (c.s < ws) ws = c.s; if (c.e > we) we = c.e; }
+      if (s < ws) ws = s;
+      if (e > we) we = e;
+      const pr = this._fetchCal(id, ws, we);
+      this._ccP[id] = { s: ws, e: we, p: pr };
+      const ev = await pr;
+      if (this._ccP[id]?.p === pr) delete this._ccP[id];
+      this._cc[id] = { s: ws, e: we, ev, t: Date.now() };
+      return pick(ev);
+    }
+    _calInvalidate(id) { if (this._cc) delete this._cc[id]; if (this._ccP) delete this._ccP[id]; }
 
     async _fetchCal(id, start, end) {
       const q = `calendars/${id}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
@@ -680,12 +729,13 @@
       const seq = (this._calSeq = (this._calSeq || 0) + 1);
       const out = {};
       await Promise.all(Object.entries(groups).map(async ([g, ids]) => {
-        const lists = await Promise.all(ids.map((id) => this._fetchCal(id, s, e)));
+        const lists = await Promise.all(ids.map((id) => this._getCal(id, s, e, force ? 60000 : 300000)));
         out[g] = lists.flat().sort((a, b) => a.start - b.start);
       }));
       if (seq !== this._calSeq) return;   // inzwischen wurde ein neuerer Bereich angefragt
       this._events = out;
       this._range = key;
+      this._saveSnap();
       this._render();
     }
 
@@ -705,8 +755,8 @@
       const bcals = this._cals(c.geburtstage);
       const other = [...this._cals(c.familie?.kalender), ...c.personen.flatMap((p) => this._cals(p.kalender))].filter((id) => !bcals.includes(id));
       const [b1, b2] = await Promise.all([
-        Promise.all(bcals.map((id) => this._fetchCal(id, t, addDays(t, 120)))),
-        Promise.all(other.map((id) => this._fetchCal(id, t, addDays(t, 120)))),
+        Promise.all(bcals.map((id) => this._getCal(id, t, addDays(t, 120)))),
+        Promise.all(other.map((id) => this._getCal(id, t, addDays(t, 120)))),
       ]);
       const seen = new Set();
       this._bdays = [...b1.flat(), ...b2.flat().filter((e) => /geburtstag|geburi|birthday|bday|🎂|🎁/i.test(e.title))]
@@ -714,12 +764,13 @@
       this._loadMealie();
       const ess = this._cals([c.essensplan]);
       if (ess.length) {
-        const past = await this._fetchCal(ess[0], addDays(t, -365), addDays(t, 60));
+        const past = await this._getCal(ess[0], addDays(t, -365), addDays(t, 60), 30 * 60000);
         this._mealHist = past.map((e) => ({ title: (e.title || "").trim(), d: sod(e.start), slot: this._slotOf(e), slug: this._slugOf(e) })).filter((e) => e.title);
         const cnt = {};
         past.forEach((e) => (cnt[e.title] = (cnt[e.title] || 0) + 1));
         this._suggest = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 40);
       }
+      this._saveSnap();
       this._render();
     }
 
@@ -734,6 +785,7 @@
         const r = await this._hass.callWS({ type: "todo/item/list", entity_id: id });
         this._todos[id] = r.items || [];
         if (id === this._bildListe()) this._syncPersons();
+        this._saveSnap();
         this._render();
       } catch (e) { console.warn("Familienplaner: Liste", id, e); }
     }
@@ -1673,6 +1725,7 @@
           else await h.callWS({ type: "calendar/event/update", entity_id: ess, uid: cur.uid, event: ev, ...(cur.rid ? { recurrence_id: cur.rid } : {}) });
         } else if (title) await h.callWS({ type: "calendar/event/create", entity_id: ess, event: ev });
       } catch (err) { this._msg = `Essen nicht gespeichert: ${err.message || err.code || err}`; }
+      this._calInvalidate(ess);
       this._refreshCalendars(true);
       this._loadExtras();
     }
