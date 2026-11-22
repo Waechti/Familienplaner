@@ -6,8 +6,10 @@
  * Lizenz: PolyForm Noncommercial 1.0.0 – nicht-kommerzielle Nutzung frei, Verkauf nicht erlaubt (siehe LICENSE).
  */
 (() => {
-  const VERSION = "1.16.2";
+  const VERSION = "1.17.0";
   if (customElements.get("familienplaner-card")) return;
+  // Gestaltung 1.17: sanfte Farben, Sternenweg, Belohnungs-Poster, neue Monatsansicht (hell und dunkel)
+  const STYLE2 = "\n/* Sanfte Farben */\n.ev, .ev.bg, .ev.ad { background:color-mix(in srgb, var(--c) 48%, transparent) !important; color:var(--ink) !important; box-shadow:none !important; border:none !important; border-radius:16px !important; }\n.ev.bg::before, .tev.bg::before { display:none !important; }\n.ev .tm { color:var(--ink2) !important; }\n.ev .tt { text-shadow:none !important; }\n.bgtint, .bgemo, .bgblur { display:none !important; }\n.bgimg { left:auto !important; width:38% !important; opacity:.9; -webkit-mask-image:linear-gradient(90deg,transparent,#000 60%); mask-image:linear-gradient(90deg,transparent,#000 60%); }\n.av .ring { box-shadow:none !important; }\n.av .ini { color:color-mix(in srgb, var(--c) 45%, var(--ink)) !important; }\n.note { background:linear-gradient(170deg,#fbf3dc,#f6ead0) !important; color:#4a3d20 !important; box-shadow:0 14px 30px rgba(120,90,30,.12) !important; }\n.al { background:#fbf3dc !important; box-shadow:none !important; border-radius:16px !important; color:#4a3d20 !important; }\n\n\n\n/* Sterne-Menü: Sternenweg */\n.kwrap.weg { gap:20px; max-width:1100px; margin:0 auto; width:100%; box-sizing:border-box; }\n.weg .khead { gap:14px; flex-wrap:wrap; }\n.weg .kname { font-size:clamp(28px, 5vw, 44px); flex:1 1 auto; min-width:0; }\n.weg .kbtn { width:52px; height:52px; border-radius:50%; font-size:22px; }\n.weg .kbtn ha-icon { --mdc-icon-size:26px; }\n.weg .kbtn.ghost { background:color-mix(in srgb, var(--paper) 55%, transparent) !important; box-shadow:none !important; }\n.wcount { font-weight:800; font-size:20px; white-space:nowrap; padding:10px 16px; border-radius:999px; background:color-mix(in srgb, var(--paper) 60%, transparent); }\n.wboard { position:relative; width:100%; aspect-ratio:780 / 400; max-height:46vh; container-type:size; border-radius:clamp(24px, 5cqw, 44px); background:linear-gradient(160deg,color-mix(in srgb, var(--paper) 80%, transparent),color-mix(in srgb, var(--paper) 38%, transparent)); box-shadow:inset 1.5px 1.5px 0 color-mix(in srgb, var(--paper) 90%, transparent), 0 20px 50px rgba(40,70,140,.12); overflow:hidden; }\n.wboard svg { position:absolute; inset:0; width:100%; height:100%; }\n.wcap { position:absolute; left:4.5cqw; top:4cqw; font-size:clamp(13px, 2.4cqw, 20px); color:var(--ink2); font-weight:600; }\n.wcap b { color:var(--ink); }\n.wsp { position:absolute; width:var(--ds); height:var(--ds); transform:translate(-50%,-50%); border-radius:50%; background:var(--paper); box-shadow:0 .5cqw 1.4cqw rgba(40,70,140,.14); display:grid; place-items:center; font-size:calc(var(--ds) * .42); font-weight:800; color:color-mix(in srgb, var(--ink) 22%, transparent); }\n.wsp.on { background:linear-gradient(160deg,#ffe48a,#f5b82e); color:#fff; font-size:calc(var(--ds) * .5); }\n.wme { position:absolute; width:calc(var(--ds) * 1.6); height:calc(var(--ds) * 1.6); min-width:44px; min-height:44px; transform:translate(-50%,-50%); border-radius:50%; overflow:hidden; border:max(3px, .6cqw) solid var(--paper); background:var(--c); color:#fff; display:grid; place-items:center; font-weight:800; font-size:calc(var(--ds) * .7); box-shadow:0 1.2cqw 3cqw color-mix(in srgb, var(--c) 60%, transparent); z-index:3; transition:left .8s cubic-bezier(.3,1.4,.5,1), top .8s cubic-bezier(.3,1.4,.5,1); }\n.wme img { width:100%; height:100%; object-fit:cover; }\n.wprize { position:absolute; width:min(15cqw, 29cqh); height:min(15cqw, 29cqh); transform:translate(-50%,-50%); border-radius:4cqw; background:var(--paper); box-shadow:0 1.6cqw 4cqw rgba(40,70,140,.18); display:grid; place-items:center; padding:0; z-index:2; }\n.wprize .wpic { width:100%; height:100%; display:grid; place-items:center; font-size:min(8cqw, 15.5cqh); border-radius:4cqw; overflow:hidden; }\n.wprize .wpic img { width:100%; height:100%; object-fit:cover; }\n.wpt { position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:1cqw; font-size:clamp(12px, 2.2cqw, 18px); font-weight:700; white-space:nowrap; color:var(--ink); }\n.wboard.ready .wprize { box-shadow:0 0 0 1cqw #ffe48a, 0 1.6cqw 4cqw rgba(245,184,46,.5); animation:wiggle 1.2s ease-in-out infinite; }\n.wsect { margin:4px 0 -6px; font-family:var(--f-disp); font-size:24px; font-weight:800; }\n.wtasks { display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:16px 12px; }\n.wtask { display:flex; flex-direction:column; align-items:center; gap:6px; background:none; text-align:center; min-width:0; }\n.wtask .wc { position:relative; width:clamp(84px, 12vw, 120px); aspect-ratio:1; border-radius:50%; background:var(--paper); display:grid; place-items:center; font-size:clamp(38px, 5.5vw, 54px); box-shadow:0 8px 20px rgba(40,70,140,.1); }\n.wtask b { font-size:17px; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }\n.wtask small { color:var(--ink3); font-weight:600; font-size:14px; margin-top:-4px; }\n.wtask.ok .wc { background:color-mix(in srgb, var(--c) 25%, var(--paper)); box-shadow:0 0 0 5px var(--c); }\n.wtask.ok .wc::after { content:\"✓\"; position:absolute; right:0; bottom:0; width:32%; height:32%; border-radius:50%; background:color-mix(in srgb, var(--c) 70%, #12151b); color:#fff; font-size:18px; font-weight:800; display:grid; place-items:center; }\n.wtask.wait .wc { box-shadow:0 0 0 5px #ffe48a; }\n.wtask:active .wc { transform:scale(.94); }\n.wgoals { display:flex; flex-direction:column; gap:12px; }\n.wgoal { display:flex; align-items:center; gap:16px; padding:16px 20px; border-radius:30px; background:color-mix(in srgb, var(--paper) 62%, transparent); min-width:0; }\n.wgi { font-size:42px; flex:none; }\n.wgb { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }\n.wgb b { font-size:19px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wgb small { color:var(--ink2); font-weight:600; font-size:14px; }\n.wsteps { display:flex; gap:6px; margin-top:6px; } .wsteps i { flex:1; height:12px; border-radius:99px; background:color-mix(in srgb, var(--ink) 8%, transparent); } .wsteps i.on { background:#a6d4c2; } .wsteps i.wt { background:#ffe48a; }\n.wbar { display:block; height:12px; border-radius:99px; background:color-mix(in srgb, var(--ink) 8%, transparent); margin-top:6px; overflow:hidden; } .wbar i { display:block; height:100%; background:#a6d4c2; border-radius:99px; }\n.wgr { flex:none; display:flex; flex-direction:column; align-items:center; gap:2px; max-width:84px; }\n.wgr small { font-size:12px; font-weight:700; color:var(--ink2); max-width:84px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wgrpic { width:56px; height:48px; border-radius:14px; overflow:hidden; display:grid; place-items:center; font-size:38px; }\n.wgrpic img { width:100%; height:100%; object-fit:cover; }\n.wbtn { flex:none; padding:14px 22px; border-radius:999px; background:var(--ink); color:var(--paper); font-weight:800; font-size:18px; white-space:nowrap; }\n.wbtn.soft { background:color-mix(in srgb, var(--ink) 7%, transparent); color:var(--ink2); }\n.wgoal.fertig { background:linear-gradient(145deg,#fff6d6,#ffeec0); }\n.weg .kconfirm { border-radius:999px; background:var(--ink); color:var(--paper); }\n.walbum { display:flex; flex-direction:column; gap:12px; }\n@media (max-width: 640px) { .wgoal { flex-wrap:wrap; } .wgr { display:none; } .wcount { order:5; } }\n\n.weg .fire.big { background:#fff0e0 !important; color:#e8590c; font-size:20px; }\n.wme { box-shadow:0 0 0 max(3px,.6cqw) var(--c), 0 1.2cqw 3cqw color-mix(in srgb, var(--c) 60%, transparent); }\n\n/* keine Auswahl-Seite; Kinder in der Kachel direkt antippbar, Wechsel oben über Fotos */\n.gkid { cursor:pointer; text-align:left; font:inherit; color:inherit; border:none; width:100%; }\n.gkid:active { transform:scale(.98); }\n.wswitch { display:flex; align-items:center; gap:8px; padding:5px 14px 5px 5px; border-radius:999px; background:color-mix(in srgb, var(--paper) 60%, transparent); font-weight:700; font-size:16px; color:var(--ink); }\n.wswitch .kav { box-shadow:0 0 0 2px var(--paper), 0 0 0 4px var(--c) !important; font-size:20px; }\n.wswitch:active { transform:scale(.95); }\n\n/* Hintergrundfoto und grosse Ziele als Sternenweg */\n.wbg { position:absolute; top:0; right:0; bottom:0; width:70%; background-size:cover; background-position:center; opacity:.32; filter:saturate(.9); -webkit-mask-image:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.6) 45%, #000 85%); mask-image:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.6) 45%, #000 85%); pointer-events:none; }\n.wboard svg, .wcap, .wsp, .wme, .wprize, .wgo { z-index:1; }\n.wme { z-index:3; } .wprize { z-index:2; }\n.wcap { background:color-mix(in srgb, var(--paper) 70%, transparent); padding:.6cqw 1.6cqw; border-radius:999px; max-width:calc(100% - 9cqw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.wboard.goal .wsp.on { background:linear-gradient(160deg,#d9f0e5,#a6d4c2); color:#2d6b57; }\n.wboard.goal.ready .wprize { box-shadow:0 0 0 1cqw #a6d4c2, 0 1.6cqw 4cqw rgba(60,140,110,.4); }\n.wgo { position:absolute; right:3.5cqw; bottom:3.5cqw; font-size:clamp(15px, 2.4cqw, 20px); padding:clamp(10px, 1.8cqw, 16px) clamp(16px, 3cqw, 26px); }\n.wgo.soft { background:color-mix(in srgb, var(--paper) 85%, transparent); color:var(--ink2); }\n\n\n/* Sterne-Kachel als Belohnungs-Poster (je Kind Tagessterne und grosses Ziel gleich gross) */\n.starsp.posters { display:flex; flex-direction:column; gap:8px; overflow:hidden; cursor:pointer; container-type:size; }\n.starsp.posters .ph h3 { font-size:18px !important; }\n.pgrid { flex:1; min-height:0; display:grid; grid-template-columns:repeat(var(--kids, 2), minmax(0, 1fr)); gap:10px; }\n.pkid { min-height:0; min-width:0; display:grid; grid-template-rows:1fr 1fr; gap:8px; }\n.pkid.one { grid-template-rows:1fr; }\n.pstrip { position:relative; min-height:0; min-width:0; overflow:hidden; border-radius:20px; padding:0; border:none; text-align:left; color:#fff; container-type:size; font:inherit; box-shadow:0 8px 20px rgba(40,70,140,.14); background:color-mix(in srgb, var(--c) 75%, #3a3f55); }\n.pstrip.gz { background:linear-gradient(135deg, #7fb8a3, #4f8f78); }\n.pbg { position:absolute; inset:0; background-size:cover; background-position:center; }\n.pbg.none { background:radial-gradient(circle at 80% 30%, color-mix(in srgb, var(--c) 60%, var(--paper)) 0, var(--c) 45%, color-mix(in srgb, var(--c) 55%, #1d2230) 100%); }\n.pstrip.gz .pbg.none { background:radial-gradient(circle at 80% 30%, #cdeadd 0, #8cc4ae 45%, #3f7a65 100%); }\n.pbg::after { content:\"\"; position:absolute; inset:0; background:linear-gradient(100deg, rgba(10,14,25,.62) 0%, rgba(10,14,25,.35) 55%, rgba(10,14,25,.05) 100%); }\n.pemo { position:absolute; right:4cqw; top:50%; transform:translateY(-50%); font-size:clamp(20px, min(50cqh, 26cqw), 84px); line-height:1; filter:drop-shadow(0 4px 10px rgba(0,0,0,.3)); z-index:1; }\n.ptxt { position:absolute; left:0; top:0; bottom:0; right:calc(clamp(20px, min(50cqh, 26cqw), 84px) + 7cqw); padding:clamp(6px, 7cqh, 16px) clamp(8px, 5cqw, 18px); display:flex; flex-direction:column; justify-content:center; gap:clamp(1px, 2cqh, 5px); z-index:2; min-width:0; }\n.pkopf { display:flex; align-items:center; gap:8px; font-size:clamp(12px, 13cqh, 17px); min-width:0; white-space:nowrap; overflow:hidden; }\n.pkopf b { overflow:hidden; text-overflow:ellipsis; }\n.pkopf .kav { box-shadow:0 0 0 2px color-mix(in srgb, var(--paper) 90%, transparent) !important; flex:none; width:clamp(20px, 22cqh, 30px) !important; height:clamp(20px, 22cqh, 30px) !important; font-size:12px; }\n.pkopf.ziel { font-weight:600; }\n.pnum { font-weight:800; font-size:clamp(15px, min(30cqh, 14cqw), 46px); line-height:1; font-variant-numeric:tabular-nums; text-shadow:0 2px 10px rgba(0,0,0,.25); white-space:nowrap; }\n.pnum small { font-size:.45em; opacity:.8; font-weight:700; }\n.plab { font-weight:700; font-size:clamp(11px, 11cqh, 16px); opacity:.92; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.pbar { display:block; height:clamp(5px, 6cqh, 9px); border-radius:99px; background:color-mix(in srgb, var(--paper) 30%, transparent); overflow:hidden; margin-top:clamp(1px, 2cqh, 4px); }\n.pbar i { display:block; height:100%; border-radius:99px; background:var(--paper); }\n.pstrip:active { transform:scale(.98); }\n@container (max-height: 70px) { .plab { display:none; } }\n@container (max-height: 52px) { .pkopf { display:none; } }\n/* schmale Kachel (Querformat): Kinder untereinander, Sterne und Ziel nebeneinander */\n@container (max-width: 520px) { .pgrid { grid-template-columns:1fr; grid-template-rows:repeat(var(--kids, 2), minmax(0, 1fr)); } .pkid { grid-template-rows:none; grid-template-columns:1fr 1fr; } .pkid.one { grid-template-columns:1fr; } }\n@container (max-width: 300px) and (min-height: 340px) { .pkid { grid-template-columns:1fr; grid-template-rows:1fr 1fr; } }\n.quer .starsp.posters { height:clamp(230px, calc(100vh - 560px), 360px); }\n\n/* Poster dezent wie Kalendereinträge (helle Fläche, Foto rechts weich eingeblendet) */\n.pstrip { color:var(--ink) !important; background:color-mix(in srgb, var(--c) 34%, color-mix(in srgb, var(--paper) 75%, transparent)) !important; box-shadow:none !important; }\n.pstrip.gz { background:color-mix(in srgb, #a6d4c2 40%, color-mix(in srgb, var(--paper) 75%, transparent)) !important; }\n.pbg { left:auto !important; width:50%; opacity:.7; -webkit-mask-image:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.55) 40%, #000 80%); mask-image:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.55) 40%, #000 80%); }\n.pbg::after { display:none !important; }\n.pbg.none { display:none; }\n.pstrip.hasfoto .pemo { display:none; }\n.pemo { font-size:clamp(18px, min(40cqh, 20cqw), 60px) !important; filter:none !important; opacity:.9; }\n.pstrip.hasfoto .ptxt { right:30cqw; }\n.pnum { text-shadow:none !important; }\n.pnum small { opacity:.55 !important; }\n.plab { opacity:1 !important; color:var(--ink2); }\n.pbar { background:color-mix(in srgb, var(--ink) 10%, transparent) !important; }\n.pbar i { background:color-mix(in srgb, var(--c) 80%, #12151b) !important; }\n.pstrip.gz .pbar i { background:#4f8f78 !important; }\n.pkopf .kav { box-shadow:0 0 0 2px var(--paper) !important; }\n\n/* Foto per Google und Link */\n.flinkbox { display:flex; flex-direction:column; gap:8px; }\n.fgoogle { align-self:flex-start; display:inline-flex; align-items:center; gap:8px; }\n.fgoogle ha-icon { --mdc-icon-size:20px; }\n.fprev { display:flex; align-items:center; gap:12px; min-height:40px; }\n.fprev img { width:120px; height:80px; object-fit:cover; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,.12); }\n\n/* Monatsansicht neu – 5 Wochen ab heute, lesbare Einträge, Tag antippen öffnet Tagesansicht */\n.vmonth { padding:4px 6px 8px; }\n.vmonth .mhead { padding:0 2px 4px; }\n.vgrid { flex:1; min-height:0; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); grid-template-rows:repeat(5, minmax(58px,1fr)); gap:6px; overflow-y:auto; overscroll-behavior:contain; }\n.vcell { position:relative; min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column; gap:3px; padding:6px 6px 6px; border-radius:14px; background:color-mix(in srgb, var(--paper) 55%, transparent); text-align:left; font:inherit; color:var(--ink); container-type:size; }\n.vcell.we { background:color-mix(in srgb, var(--paper) 35%, transparent); }\n.vcell.fer { background:color-mix(in srgb, #a6d4c2 28%, color-mix(in srgb, var(--paper) 50%, transparent)); }\n.vcell.past { opacity:.45; }\n.vcell.now { background:var(--paper); box-shadow:0 0 0 2px var(--ink); }\n.vtop { display:flex; align-items:center; gap:3px; flex:none; }\n.vn { font-weight:800; font-size:clamp(13px, 15cqw, 20px); line-height:1; }\n.vn small { font-size:.6em; font-weight:700; color:var(--ink2); margin-left:4px; text-transform:uppercase; letter-spacing:.04em; }\n\n.vtop .trash { --mdc-icon-size:15px; color:var(--c); }\n.vtop .vmore[hidden] + .trash, .vtop .vn + .trash { margin-left:auto; }\n.vmore[hidden] { display:none !important; }\n.vhol { flex:none; font-size:10px; font-weight:700; color:#b0413e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }\n.vlist { flex:1; min-height:0; display:flex; flex-direction:column; gap:2px; overflow:hidden; }\n.vev { flex:none; display:flex; align-items:center; gap:4px; font-size:clamp(10px, 11cqw, 13px); font-weight:600; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }\n.vev::before { content:\"\"; flex:none; width:7px; height:7px; border-radius:50%; background:var(--c); }\n.vev.ad { padding:1px 5px; border-radius:6px; background:color-mix(in srgb, var(--c) 45%, var(--paper)); }\n.vev.ad::before { display:none; }\n.vmore { margin-left:auto; min-width:18px; height:18px; padding:0 5px; border-radius:99px; background:color-mix(in srgb, var(--ink) 8%, transparent); font-size:11px; font-weight:800; display:grid; place-items:center; color:var(--ink2); }\n@container (max-width: 70px) { .vev { font-size:0; gap:0; } .vev::before { width:8px; height:8px; } .vlist { flex-direction:row; flex-wrap:wrap; align-content:flex-start; gap:3px; } .vev.ad { font-size:0; padding:0; width:8px; height:8px; border-radius:50%; background:var(--c); } }\n\n/* Öffentliche Version: Sterne-Poster brauchen Breite */\n.hoch .side.tileonly { grid-template-columns:1fr 1.2fr 1fr; }\n\n.kidview { --wline: color-mix(in srgb, var(--ink) 16%, transparent); }\n@media (max-width: 700px) { .starsp.posters { height:330px; } }\n";
 
   // ---------- Schrift ----------
   if (!document.getElementById("fp-fonts")) {
@@ -373,10 +375,30 @@
     "passt zum kalten Wetter": "fits the cold weather", "passt zum warmen Wetter": "fits the warm weather",
     "🍝 Pasta": "🍝 Pasta", "🍕 Pizza & Wähe": "🍕 Pizza & tarts", "🐟 Fisch": "🐟 Fish", "🥩 Fleisch": "🥩 Meat", "🍲 Suppe & Eintopf": "🍲 Soup & stew", "🥗 Salat": "🥗 Salad",
     "🧀 Ofen & Käse": "🧀 Oven & cheese", "🍛 Reis & Asiatisch": "🍛 Rice & Asian", "🌮 Mexikanisch": "🌮 Mexican", "🥔 Kartoffeln": "🥔 Potatoes", "🔥 Grill": "🔥 Barbecue", "🥪 Brot & Eier": "🥪 Bread & eggs", "🥦 Vegi": "🥦 Veggie",
+    // 1.17: Sternenweg, Poster, Fotos
+    "Sterne & Ziele": "Stars & goals", "Sternenweg": "Star path", "Grosses Ziel": "Big goal", "Grosse Ziele": "Big goals", "Tagessterne": "Daily stars", "grosses Ziel": "big goal",
+    "Einlösen!": "Redeem!", "Geschafft!": "Done!", "Belohnung wählen": "Choose reward", "✓ Heute": "✓ Today", "wartet": "waiting",
+    "Foto im Hintergrund des Sternenwegs": "Background photo for the star path", "Bei Google suchen": "Search on Google", " Bei Google suchen": " Search on Google",
+    "Bild antippen und gedrückt halten → «Bildadresse kopieren» → hier einfügen.": "Tap and hold an image → “Copy image address” → paste it here.",
+    "Noch kein Foto": "No photo yet", "Bitte einen Link einfügen, der mit https:// beginnt.": "Please paste a link that starts with https://.",
+    "Unter diesem Link ist kein Bild. In Google das Bild öffnen und «Bildadresse kopieren» wählen (nicht die Seitenadresse).": "There is no image at this link. Open the image in Google and choose “Copy image address” (not the page address).",
+    "Das Foto erscheint dezent im Hintergrund der Sterne-Kachel und des Sternenwegs.": "The photo appears subtly in the background of the stars tile and the star path.",
+    "Link zum Bild (https://…)": "Link to the image (https://…)", "Foto für das grosse Ziel wählen": "Choose a photo for the big goal", "Sterne und Belohnungen öffnen": "Open stars and rewards",
+    "Sticker-Album": "Sticker album", "Einstellungen für Eltern": "Settings for parents", "Mai": "May", "Okt": "Oct", "Dez": "Dec",
+    "Beim Zuweisen eines Bildes sucht der Planer passende Fotos. Ohne Einstellung bei Wikimedia Commons (frei, eher dokumentarische Fotos). Mit einem kostenlosen Unsplash-Zugangsschlüssel gibt es schönere Fotos: unsplash.com/developers → «New Application» → «Access Key» hier einfügen.": "When you assign a picture, the planner searches for matching photos. Without a key it uses Wikimedia Commons (free, rather documentary photos). With a free Unsplash access key you get nicer photos: unsplash.com/developers → “New Application” → paste the “Access Key” here.",
+    "Bitte als Tag.Monat eingeben, z. B. 18.11. oder 18.11.2023": "Please enter as day.month, e.g. 18.11. or 18.11.2023", "Foto wird übernommen …": "Saving photo …",
+    "Jede Nacht wird das Ämtli wieder offen.": "The chore opens again every night.", "Nach dem Abhaken verschwindet die Aufgabe in der Nacht.": "After it is ticked off, the task disappears overnight.",
+    "Nichts gefunden. Ein anderes Wort probieren, z. B. allgemeiner («Turnen» statt «Kinderturnen Halle 2»).": "Nothing found. Try another word, e.g. more general (“gym” instead of “kids gym hall 2”).",
+    "Noch keine Aufgaben. Eltern: Einstellungen antippen.": "No tasks yet. Parents: tap settings.", "Suchen": "Search", "Tag und Monat (Jahr freiwillig)": "Day and month (year optional)",
+    "Unsplash Access Key": "Unsplash access key", "leer = Wikimedia Commons": "empty = Wikimedia Commons", "z. B. 18.11. oder 18.11.2023": "e.g. 18.11. or 18.11.2023",
+    "z. B. Kindergarten, Schwimmen": "e.g. kindergarten, swimming", "🔍 Bildsuche im Web": "🔍 Web photo search", "🔍 Im Web suchen": "🔍 Search the web",
+    "🔁 Jeden Tag": "🔁 Every day", "1× Nur einmal": "1× Only once", "Neues Ämtli": "New chore", "Nichts gefunden. Ein anderes Wort probieren.": "Nothing found. Try another word.",
     "Montag": "Monday", "Dienstag": "Tuesday", "Mittwoch": "Wednesday", "Donnerstag": "Thursday", "Freitag": "Friday", "Samstag": "Saturday", "Sonntag": "Sunday",
   };
   // Texte mit Zahlen oder Namen
   const EN_RX = [
+    [/^⭐ (\d+) von (\d+)$/, "⭐ $1 of $2"], [/^(\d+) von (\d+)( · einmal pro Tag)?$/, (m, a, b, c) => `${a} of ${b}${c ? " · once a day" : ""}`],
+    [/^bis (?!\d\d:\d\d$)(.+)$/, "for $1"], [/^(.+) öffnen$/, "Open $1"], [/^Zu (.+) wechseln$/, "Switch to $1"], [/^Foto für «(.+)»$/, "Photo for “$1”"], [/^Suche «(.+)» …$/, "Searching “$1” …"],
     [/^in (\d+) Tagen$/, "in $1 days"], [/^(\d+) Tage$/, "$1 days"], [/^(\d+) Tagen$/, "$1 days"], [/^bis (\d\d:\d\d)$/, "until $1"], [/^ab (\d\d:\d\d)$/, "from $1"],
     [/^KW (\d+)(–\d+)?$/, "Week $1$2"], [/^noch (\d+) ★$/, "$1 ★ to go"], [/^noch (\d+) ★ · einmal pro Tag$/, "$1 ★ to go · once a day"],
     [/^noch (\d+) Aufgaben? heute$/, (m, n) => `${n} ${n === "1" ? "task" : "tasks"} left today`], [/^noch (\d+)× schlafen$/, "$1 more sleeps"],
@@ -638,7 +660,12 @@
     _visibleRange() {
       const a = this._anchor;
       if (this._view === "tag") return [a, addDays(a, 1)];
-      if (this._view === "monat") { const f = sow(new Date(a.getFullYear(), a.getMonth(), 1)); return [f, addDays(f, 42)]; }
+      if (this._view === "monat") {
+        // Monat: 5 Wochen ab der laufenden Woche (laufender Monat) bzw. ab der Woche mit dem Monatsersten, ohne vergangene Wochen
+        const t0 = sod(new Date());
+        const f = a.getFullYear() === t0.getFullYear() && a.getMonth() === t0.getMonth() ? sow(t0) : sow(new Date(a.getFullYear(), a.getMonth(), 1));
+        return [f, addDays(f, 35)];
+      }
       const today = sod(new Date());
       const s0 = sow(a);
       const s = today >= s0 && today < addDays(s0, 7) ? today : s0;   // laufende Woche: ab heute
@@ -810,7 +837,7 @@
     _bildListe() { return this._findByName("todo", this._config.bilderliste); }
     _customBilder() {
       const id = this._bildListe();
-      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen|Geburtstag: |Essen ★ |Essen-Einstellungen)/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
+      return (this._todos[id] || []).filter((i) => i.summary && i.description && !/^(Farbe |Ausgeblendet: |Belohnung |Essen [♥✗] |Person |Foto |Kind |Sterne-Einstellungen|Geburtstag: |Essen ★ |Essen-Einstellungen|Bildsuche-Einstellungen)/.test(i.summary)).map((i) => ({ uid: i.uid, key: i.summary.trim(), val: i.description.trim() }))
         .sort((a, b) => b.key.length - a.key.length);
     }
     _themaFor(title) { return THEMEN.find((t) => t.re.test(title || "")) || null; }
@@ -1045,7 +1072,7 @@
       this._farbenAnwenden();
       const root = this.shadowRoot;
       if (!root.querySelector("#app")) {
-        root.innerHTML = `<style>${STYLE}</style><div id="app" lang="de"></div><div id="kid"></div><div id="night"></div><div id="party"></div><div id="modal"></div>`;
+        root.innerHTML = `<style>${STYLE}${STYLE2}</style><div id="app" lang="de"></div><div id="kid"></div><div id="night"></div><div id="party"></div><div id="modal"></div>`;
         root.querySelector("#app").addEventListener("click", (e) => this._click(e));
         root.querySelector("#modal").addEventListener("click", (e) => this._modalClick(e));
         root.querySelector("#kid").addEventListener("click", (e) => this._kidClick(e));
@@ -1357,31 +1384,46 @@
       const today = sod(new Date());
       const ps = this._visiblePersons();
       const fam = this._config.familie;
-      let cells = "";
-      for (let k = 0; k < 42; k++) {
+      let cells = "", lastMonth = -1;
+      for (let k = 0; k < 35; k++) {
         const d = addDays(s, k);
         const list = [];
         this._onChips(this._events.familie, d).forEach((e) => list.push([e, fam.farbe]));
-        ps.forEach((p) => this._onChips(this._events["p" + p.i], d).forEach((e) => list.push([e, p.farbe, p.bilder])));
-        list.sort((a, b) => (b[0].allDay - a[0].allDay) || (a[0].start - b[0].start));
+        ps.forEach((p) => this._onChips(this._events["p" + p.i], d).forEach((e) => list.push([e, p.farbe])));
+        list.sort((x, y) => (y[0].allDay - x[0].allDay) || (x[0].start - y[0].start));
         const hol = holidayOn(d), fer = ferienOn(d);
         const ab = this._abfall(d);
-        const max = this._isQuer() ? 3 : 4;
-        cells += `<button class="mcell ${d.getMonth() !== m ? "out" : ""} ${sameDay(d, today) ? "now" : ""} ${fer ? "fer" : ""} ${d.getDay() === 0 || d.getDay() === 6 ? "we" : ""}" data-act="goday" data-day="${ymd(d)}">
-          <div class="mtop"><span class="mn">${d.getDate()}</span>${ab.map((t) => `<ha-icon class="trash" style="--c:${(ABFALL[t] || {}).color}" icon="${(ABFALL[t] || {}).icon}"></ha-icon>`).join("")}</div>
-          ${hol ? `<div class="mhol">${esc(hol)}</div>` : ""}
-          ${list.slice(0, max).map(([e, c, pic]) => `<div class="mev ${e.allDay ? "ad" : ""}" style="--c:${c}">${pic ? this._bildHtml(this._bildFor(e.title), "mpic") : ""}${e.allDay ? "" : `<span class="tm">${this._timeLabel(e, d)}</span>`}${esc(e.title)}</div>`).join("")}
-          ${list.length > max ? `<div class="more">+${list.length - max} weitere</div>` : ""}
+        const neuMonat = d.getMonth() !== lastMonth; lastMonth = d.getMonth();
+        const past = d < today;
+        cells += `<button class="vcell ${past ? "past" : ""} ${sameDay(d, today) ? "now" : ""} ${fer ? "fer" : ""} ${d.getDay() === 0 || d.getDay() === 6 ? "we" : ""}" data-act="goday" data-day="${ymd(d)}" style="--n:${list.length}">
+          <span class="vtop"><span class="vn">${d.getDate()}${neuMonat ? `<small>${MOS[d.getMonth()]}</small>` : ""}</span><span class="vmore" hidden></span>${ab.map((t) => `<ha-icon class="trash" style="--c:${(ABFALL[t] || {}).color}" icon="${(ABFALL[t] || {}).icon}"></ha-icon>`).join("")}</span>
+          ${hol ? `<span class="vhol">${esc(hol)}</span>` : ""}
+          <span class="vlist">${list.map(([e, c]) => `<span class="vev ${e.allDay ? "ad" : ""}" style="--c:${c}">${esc(e.title)}</span>`).join("")}</span>
         </button>`;
       }
-      return `<div class="month">
+      setTimeout(() => this._fitMonth(), 0);
+      return `<div class="month vmonth">
         <div class="mlegend">${ps.map((p) => this._avatar(p, "mini")).join("")}${this._config.personen.filter((p) => this._hidden.has(p.name)).map((p) => this._avatar(p, "mini")).join("")}
           ${this._cals(fam.kalender).length ? `<span class="famlegend" style="--c:${fam.farbe}"><span class="dot"></span>${esc(fam.name)}</span>` : ""}</div>
         <div class="mhead">${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((w) => `<div>${w}</div>`).join("")}</div>
-        <div class="mgrid" data-scroll="month">${cells}</div>
+        <div class="vgrid">${cells}</div>
       </div>`;
     }
 
+    // Monat: nur ganze Zeilen zeigen, Rest als «+n»
+    _fitMonth() {
+      const sr = this.shadowRoot;
+      sr.querySelectorAll(".vcell").forEach((c) => {
+        const l = c.querySelector(".vlist"), b = c.querySelector(".vmore");
+        if (!l || !b) return;
+        const evs = [...l.children];
+        evs.forEach((e) => { e.style.display = ""; });
+        const L = l.getBoundingClientRect().bottom;
+        let n = 0;
+        evs.forEach((e) => { if (e.getBoundingClientRect().bottom > L + 1) { e.style.display = "none"; n++; } });
+        b.hidden = !n; b.textContent = n ? `+${n}` : "";
+      });
+    }
     // ---------- Seitenleiste ----------
     _hasChores() {
       return this._config.personen.some((p) => { const id = this._aemtliId(p); return id && (this._todos[id] || []).length > 0; });
@@ -1401,7 +1443,7 @@
       const it = this._rewardItem(p);
       let r = {};
       try { r = JSON.parse(it?.description || "{}") || {}; } catch (e) { r = {}; }
-      return { ziel: Math.max(1, Math.min(50, +r.ziel || 10)), text: r.text || "", bild: r.bild || "" };
+      return { ziel: Math.max(1, Math.min(50, +r.ziel || 10)), text: r.text || "", bild: r.bild || "", foto: r.foto || "" };
     }
     async _setReward(p, r) {
       const h = this._hass, liste = this._bildListe();
@@ -1415,14 +1457,26 @@
     _kids() { return this._config.personen.filter((p) => p.sterne && this._hass.states[p.sterne]); }
     _starsPanel() {
       const ks = this._kids();
-      return `<button class="panel starsp tile" data-act="rewards" aria-label="Sterne und Belohnungen öffnen">
-        <div class="ph"><ha-icon icon="mdi:star-circle-outline"></ha-icon><h3>Sterne</h3></div>
-        <div class="tilebody">
-          <span class="tilestar">⭐</span>
-          <span class="tilekids">${ks.map((p) => this._kidAvatar(p, 46)).join("")}</span>
-          <span class="tilehint">Aufgaben &amp; Belohnungen</span>
-        </div>
-      </button>`;
+      const em = (v, d) => (v && !/^(url:|img:)/.test(v) ? v : d);
+      const pct = (a, b) => Math.max(0, Math.min(100, Math.round((a / Math.max(1, b)) * 100)));
+      const strip = (p, cls, bg, emo, kopf, num, ziel, label) => `<button class="pstrip ${cls} ${bg ? "hasfoto" : ""}" data-act="kidview" data-name="${esc(p.name)}" aria-label="${esc(p.name)} öffnen">
+          ${bg ? `<span class="pbg" style="background-image:url('${cssUrl(bg)}')"></span>` : `<span class="pbg none"></span>`}
+          <span class="pemo">${esc(emo)}</span>
+          <span class="ptxt">${kopf}<span class="pnum">${num}<small> / ${ziel}${cls === "st" ? " ★" : ""}</small></span><span class="plab">${label}</span><span class="pbar"><i style="width:${pct(num, ziel)}%"></i></span></span>
+        </button>`;
+      return `<div class="panel starsp tile posters" data-act="rewards" role="button" aria-label="Sterne und Belohnungen öffnen">
+        <div class="ph"><ha-icon icon="mdi:star-circle-outline"></ha-icon><h3>Sterne &amp; Ziele</h3></div>
+        <div class="pgrid" style="--kids:${ks.length}">${ks.map((p) => {
+          const n = this._stars(p), r = this._reward(p), d = this._kid(p);
+          const z = d.ziele.find((x) => !x.fertig);
+          const zb = z?.belohnung || {};
+          const kopf = `<span class="pkopf">${this._kidAvatar(p, 30)}<b>${esc(p.name)}</b></span>`;
+          return `<div class="pkid ${z ? "" : "one"}" style="--c:${p.farbe}">
+            ${strip(p, "st", this._wegFoto(r.foto, r.bild, r.text), em(r.bild, "🎁"), kopf, n, r.ziel, r.text ? `bis ${esc(r.text)}` : "Tagessterne")}
+            ${z ? strip(p, "gz", this._wegFoto(zb.foto, zb.bild, zb.text, z.text), em(zb.bild, z.bild || "🎯"), `<span class="pkopf ziel">${esc(z.bild || "🎯")} <b>${esc(z.text)}</b></span>`, Math.min(z.n, z.ziel), z.ziel, zb.text ? `bis ${esc(zb.text)}` : "grosses Ziel") : ""}
+          </div>`;
+        }).join("")}</div>
+      </div>`;
     }
     // ================= Kinder: Aufgaben, grosse Ziele, Sticker =================
     _kidSettings() {
@@ -1567,11 +1621,18 @@
         this._modal("");
       };
       this._mh = {
-        save: () => { const v = this.shadowRoot.querySelector("#fp-bd").value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { this.shadowRoot.querySelector("#modal .flash").textContent = "Bitte ein Datum wählen."; return; } save(v); },
+        save: () => {
+          // Eingabe «18.11.» oder «18.11.2023» (Jahr freiwillig, ohne Jahr kein Alter)
+          const m = /^\s*(\d{1,2})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]?\s*(\d{4})?\s*$/.exec(this.shadowRoot.querySelector("#fp-bd").value);
+          const d = m && +m[1], mo = m && +m[2], y = m && m[3] ? +m[3] : 0;
+          const ok = m && mo >= 1 && mo <= 12 && d >= 1 && d <= new Date(2024, mo, 0).getDate() && (!y || (y > 1900 && y <= new Date().getFullYear()));
+          if (!ok) { this.shadowRoot.querySelector("#modal .flash").textContent = "Bitte als Tag.Monat eingeben, z. B. 18.11. oder 18.11.2023"; return; }
+          save(`${String(y).padStart(4, "0")}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
+        },
         del: () => save(""),
       };
       this._modal(`<div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>🎂 Geburtstag von ${esc(p.name)}</h2></div>
-        <div class="dlg-b"><label class="kw">Datum<input id="fp-bd" type="date" value="${esc(cur?.raw || "")}"></label>
+        <div class="dlg-b"><label class="kw">Tag und Monat (Jahr freiwillig)<input id="fp-bd" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 18.11. oder 18.11.2023" value="${cur ? `${cur.d}.${cur.m}.${cur.y > 1900 ? cur.y : ""}` : ""}"></label>
           <p class="hint2">Am Geburtstag zeigt der Planer ein Band mit Foto und feiert einmal mit Konfetti. Steht der Geburtstag schon im Kalender (Titel mit Name und «Geburtstag»), braucht es hier nichts.</p><div class="flash"></div></div>
         <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Entfernen</button>` : ""}<span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
     }
@@ -1678,6 +1739,7 @@
     _settingsChange(e) {
       const el = e.target;
       if (this._kidOpen !== "__settings__" || !el.dataset) return;
+      if (el.dataset.k === "s-unsplash") { this._saveBildSucheCfg({ unsplash: el.value.trim() }); return; }
       if (el.dataset.k === "s-murl") { const v = el.value.trim().replace(/\/$/, ""); if (!v || /^https?:\/\//.test(v)) this._saveEssenCfg({ mealie_url: v }); return; }
       if (el.dataset.k === "s-nvon" || el.dataset.k === "s-nbis") {
         if (/^\d\d:\d\d$/.test(el.value)) this._setNightCfg(el.dataset.k === "s-nvon" ? { von: el.value } : { bis: el.value });
@@ -1917,6 +1979,7 @@
       if (!force && this._mealieT && Date.now() - this._mealieT < 30 * 60000) return;
       this._mealieT = Date.now();
       if (!(await this._mealieEntry())) { this._mealieList = []; return; }
+      this._mealieImgInit();
       try {
         const resp = await this._mealie("get_recipes", { result_limit: 500 });
         this._mealieList = this._arr(resp, "recipes").map((r) => this._normRecipe(r)).filter((r) => r.name && r.slug);
@@ -1950,8 +2013,27 @@
       return p(r.total) || p(r.prep) + p(r.perform);
     }
     _mealieUrl() {
-      const u = this._essenCfg().mealie_url || this._config.mealie_url || `${location.protocol}//${location.hostname}:9925`;
+      const u = this._essenCfg().mealie_url || this._config.mealie_url || this._mImg || `${location.protocol}//${location.hostname}:9925`;
       return u.replace(/\/$/, "");
+    }
+    // Rezeptfotos über den Ingress des Mealie-Add-ons laden (gleiche Adresse wie Home Assistant, kein offener Port nötig)
+    async _mealieImgInit() {
+      if (this._mImgTried) return;
+      this._mImgTried = true;
+      const sv = (endpoint, method = "get", data) => this._hass.callWS({ type: "supervisor/api", endpoint, method, ...(data ? { data } : {}) });
+      try {
+        const a = await sv("/addons");
+        const ad = (a.addons || []).find((x) => /mealie/i.test(x.slug) && x.state === "started");
+        if (!ad) return;
+        const inf = await sv(`/addons/${ad.slug}/info`);
+        if (!inf.ingress_url) return;
+        const neu = async () => { const r = await sv("/ingress/session", "post"); document.cookie = `ingress_session=${r.session};path=/api/hassio_ingress/;SameSite=Strict`; this._mSess = r.session; };
+        await neu();
+        this._mImg = inf.ingress_url.replace(/\/$/, "");
+        clearInterval(this._mSessT);
+        this._mSessT = setInterval(async () => { try { await sv("/ingress/validate_session", "post", { session: this._mSess }); } catch (e) { try { await neu(); } catch (e2) { /* egal */ } } }, 5 * 60000);
+        this._render();
+      } catch (e) { /* kein Admin oder kein Supervisor: Port 9925 als Rückfall */ }
     }
     _recipeImg(r, size = "min-original") { return r && r.id ? `${this._mealieUrl()}/api/media/recipes/${r.id}/images/${size}.webp` : ""; }
     async _recipe(slug) {
@@ -1963,14 +2045,26 @@
       return r;
     }
     _ingText(i) {
-      if (typeof i === "string") return i;
-      if (i.display) return i.display;
-      if (i.original_text || i.originalText) return i.original_text || i.originalText;
+      const clean = (t) => String(t).replace(/(\d+)\.0\b/g, "$1").replace(/(\d)\.(\d)/g, "$1,$2");
+      if (typeof i === "string") return clean(i);
+      if (i.display) return clean(i.display);
+      if (i.original_text || i.originalText) return clean(i.original_text || i.originalText);
       const q = i.quantity ? `${+(+i.quantity).toFixed(2)} ` : "";
       const u = i.unit ? `${i.unit.abbreviation && i.unit.use_abbreviation ? i.unit.abbreviation : i.unit.name} ` : "";
       return `${q}${u}${i.food?.name || ""}${i.note ? ` ${i.note}` : ""}`.trim();
     }
-    _foodName(i) { return (typeof i === "string" ? i.replace(/^[\d.,/\s]+(g|kg|ml|l|dl|el|tl|stk|prise|bund|becher|dose)?\b/i, "") : i.food?.name || i.note || this._ingText(i)).trim().toLowerCase(); }
+    // Zutat zerlegen: Menge, Einheit, Name – auch wenn Mealie sie noch nicht «geparst» hat (dann steht alles im Text)
+    _ingParse(i) {
+      if (i && typeof i === "object" && i.food?.name) return { qty: +i.quantity || 0, unit: i.unit ? i.unit.abbreviation || i.unit.name : "", name: i.food.name.trim() };
+      const t = (typeof i === "string" ? i : i?.display || i?.note || i?.original_text || i?.originalText || "").trim();
+      const m = /^(\d+(?:[.,]\d+)?|\d+\/\d+|½|¼|¾)(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?\s*(kg|g|mg|ml|cl|dl|l|el|tl|esslöffel|teelöffel|prisen?|stk\.?|stück|bund|becher|dosen?|pck\.?|päckchen|packungen?|zehen?|scheiben?|msp\.?|tassen?|handvoll|würfel|zweige?)?\.?\s+(.+)$/i.exec(t);
+      const frac = { "½": 0.5, "¼": 0.25, "¾": 0.75 };
+      let qty = 0, unit = "", name = t;
+      if (m) { qty = frac[m[1]] || (m[1].includes("/") ? m[1].split("/")[0] / m[1].split("/")[1] : parseFloat(m[1].replace(",", "."))); unit = m[2] || ""; name = m[3]; }
+      name = name.split(",")[0].replace(/\s*\(.*?\)\s*/g, " ").replace(/^(etwas|ca\.?|evtl\.?|nach belieben)\s+/i, "").trim();
+      return { qty, unit, name };
+    }
+    _foodName(i) { return this._ingParse(i).name.toLowerCase(); }
     _foods(slug) { const r = this._recipeCache?.[slug]; return r && r.ingredients ? r.ingredients.map((i) => this._foodName(i)).filter(Boolean) : []; }
     _scaleText(txt, f) {
       if (f === 1) return txt;
@@ -2122,10 +2216,11 @@
       list.forEach((r) => {
         const factor = r.servings ? f / r.servings : 1;
         (r.ingredients || []).forEach((i) => {
-          const name = typeof i === "string" ? this._foodName(i) : (i.food?.name || i.note || "").trim();
-          if (!name) return;
+          const ip = this._ingParse(i);
+          const name = ip.name;
+          if (!name || i.title && !i.food && !ip.qty && /:$/.test(name)) return;
           const key = name.toLowerCase();
-          const qty = typeof i === "string" ? "" : i.quantity ? `${String(Math.round(i.quantity * factor * 10) / 10).replace(".", ",")}${i.unit ? " " + (i.unit.abbreviation || i.unit.name) : ""}` : "";
+          const qty = ip.qty ? `${String(Math.round(ip.qty * factor * 10) / 10).replace(".", ",")}${ip.unit ? " " + ip.unit : ""}` : "";
           const o = items.get(key) || { name: name[0].toUpperCase() + name.slice(1), qty: [], from: new Set() };
           if (qty) o.qty.push(qty);
           o.from.add(r.name);
@@ -2256,7 +2351,10 @@
           <button class="btn ghost" data-k="s-kidopt">Ändern</button></div>`;
       } else if (tab === "bilder") {
         const it = this._bilderItems();
-        body = `<p class="sethint">Ein Termin bekommt das Bild des ersten Themas, dessen Stichwort im Titel vorkommt. Antippen, um ein Bild zu ändern.</p>
+        const bs = this._bildSucheCfg();
+        body = `<div class="setcard col"><b>🔍 Bildsuche im Web</b><span class="sethint">Beim Zuweisen eines Bildes sucht der Planer passende Fotos. Ohne Einstellung bei Wikimedia Commons (frei, eher dokumentarische Fotos). Mit einem kostenlosen Unsplash-Zugangsschlüssel gibt es schönere Fotos: unsplash.com/developers → «New Application» → «Access Key» hier einfügen.</span>
+            <div class="settimes"><label>Unsplash Access Key <input type="text" data-k="s-unsplash" value="${esc(bs.unsplash)}" placeholder="leer = Wikimedia Commons" autocomplete="off"></label></div></div>
+          <p class="sethint">Ein Termin bekommt das Bild des ersten Themas, dessen Stichwort im Titel vorkommt. Antippen, um ein Bild zu ändern.</p>
           <div class="blist">${it.map((x, i) => `<button class="bitem" data-k="s-bild" data-i="${i}">${this._bildHtml(x.val, "bthumb")}<span class="bt"><b>${esc(x.name)}</b><span>${esc(x.keys)}</span></span>${x.changed ? `<span class="bchg">geändert</span>` : ""}</button>`).join("")}</div>
           <button class="btn setadd" data-k="s-bildneu">＋ Neues Thema</button>`;
       } else if (tab === "essen") {
@@ -2285,7 +2383,7 @@
         const nc = this._nightCfg();
         const seg = (k2, cur, opts) => `<div class="seg big">${opts.map(([v, t]) => `<button class="${cur === v ? "on" : ""}" data-k="${k2}" data-v="${v}">${t}</button>`).join("")}</div>`;
         body = `<div class="setcard col"><b>Ausrichtung</b>${seg("s-orient", this._orient, [["auto", "Automatisch"], ["hoch", "Hochformat"], ["quer", "Querformat"]])}</div>
-          <div class="setcard col"><b>Dunkles Design</b>${seg("s-dark", dk, [["", `Wie Karte (${esc(String(this._config.dunkel || "auto"))})`], ["auto", "Wie Home Assistant"], ["sonne", "Nach Sonnenuntergang"], ["hell", "Immer hell"], ["dunkel", "Immer dunkel"]])}</div>
+          <div class="setcard col"><b>Dunkles Design</b>${seg("s-dark", dk, [["", `Standard (${{ auto: "wie Home Assistant", sonne: "nach Sonnenuntergang", hell: "immer hell", dunkel: "immer dunkel" }[String(this._config.dunkel || "auto")] || "wie Home Assistant"})`], ["auto", "Wie Home Assistant"], ["sonne", "Nach Sonnenuntergang"], ["hell", "Immer hell"], ["dunkel", "Immer dunkel"]])}</div>
           <div class="setcard col"><b>🌙 Nachtmodus</b>
             ${seg("s-nmode", nc.modus, [["aus", "Aus"], ["uhr", "Grosse Uhr"], ["fotos", "Fotos"]])}
             ${nc.modus !== "aus" ? `<div class="settimes"><label>Von <input type="time" data-k="s-nvon" value="${nc.von}"></label><label>Bis <input type="time" data-k="s-nbis" value="${nc.bis}"></label></div>` : ""}
@@ -2347,7 +2445,8 @@
       const ks = this._kids();
       if (ks.length === 1) return this._openKid(ks[0]);
       if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
-      this._kidOpen = "__menu__"; this._renderKid(); this._kidTouch();
+      // ohne Auswahl-Seite: direkt das erste Kind öffnen, gewechselt wird oben über die Fotos
+      this._openKid(ks[0]);
     }
     _openKid(p) {
       if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
@@ -2427,31 +2526,72 @@
         </div>`;
       };
       const done = n >= r.ziel;
+      k.classList.add("weg");
       k.innerHTML = `
-        <div class="kwrap" style="--c:${p.farbe}">
-          <header class="khead">${this._kids().length > 1 ? `<button class="kbtn" data-k="menu" aria-label="Zurück zur Übersicht">←</button>` : ""}${this._kidAvatar(p, 84)}<div class="kname">${esc(p.name)}${d.streak.n >= 2 ? `<span class="fire big">🔥 ${d.streak.n}</span>` : ""}</div>
-            <button class="kbtn" data-k="album" aria-label="Sticker-Album">📒</button>
-            <button class="kbtn" data-k="settings" aria-label="Einstellungen für Eltern">⚙️</button>
+        <div class="kwrap weg" style="--c:${p.farbe}">
+          <header class="khead">${this._kidAvatar(p, 64)}<div class="kname">${esc(p.name)}${d.streak.n >= 2 ? `<span class="fire big">🔥 ${d.streak.n}</span>` : ""}</div>
+            ${this._kids().filter((o) => o.name !== p.name).map((o) => `<button class="wswitch" data-k="pick" data-name="${esc(o.name)}" style="--c:${o.farbe}" aria-label="Zu ${esc(o.name)} wechseln">${this._kidAvatar(o, 46)}<span>${esc(o.name)}</span></button>`).join("")}
+            <span class="wcount">⭐ ${n} von ${r.ziel}</span>
+            <button class="kbtn ghost" data-k="album" aria-label="Sticker-Album"><ha-icon icon="mdi:book-open-page-variant-outline"></ha-icon></button>
+            <button class="kbtn ghost" data-k="settings" aria-label="Einstellungen für Eltern"><ha-icon icon="mdi:cog-outline"></ha-icon></button>
             <button class="kbtn close" data-k="close" aria-label="Schliessen">✕</button></header>
-          <div class="kmain">
-            <section class="kleft">
-              ${this._jar(Math.min(n, r.ziel), r.ziel)}
-              <div class="kcount">${n} ★</div>
-              <button class="kreward ${done ? "ready" : ""}" data-k="${done ? "redeem" : "reward"}">
-                ${r.bild ? this._bildHtml(r.bild, "krpic") : `<span class="krpic">🎁</span>`}
-                <span>${done ? `<b>Geschafft!</b>${esc(r.text || "Belohnung")}` : r.text ? `${esc(r.text)}<small>noch ${r.ziel - n} ★</small>` : "Belohnung wählen"}</span></button>
-              ${waiting ? `<button class="kconfirm" data-k="confirm">✓ Eltern bestätigen (${waiting})</button>` : ""}
-            </section>
-            <section class="kright">
-              ${this._kidTab === "album" ? `
+          ${this._kidTab === "album" ? `<section class="walbum">
                 <h3 class="ksect">Meine Sticker</h3>
                 ${d.sticker.length ? `<div class="kalbum">${d.sticker.slice().reverse().map((x) => `<div class="kst">${this._bildHtml(x.bild, "kstpic")}<span>${esc(x.text)}</span><small>${esc(x.datum.slice(8, 10) + "." + x.datum.slice(5, 7) + ".")}</small></div>`).join("")}</div>` : `<p class="khint">Noch keine Sticker. Für jede Belohnung und jedes grosse Ziel gibt es einen.</p>`}
-                <button class="kback" data-k="tab" data-v="heute">← Zurück</button>` : `
-                ${groups.map(([z, t, list]) => `<h3 class="ksect">${zeitIcon[z]} ${t}</h3><div class="kcards">${list.map(card).join("")}</div>`).join("") || `<p class="khint">Noch keine Aufgaben. Eltern: ⚙️ antippen.</p>`}
-                ${d.ziele.length ? `<h3 class="ksect">🏆 Grosse Ziele</h3><div class="kgoals">${d.ziele.map(zielCard).join("")}</div>` : ""}`}
-            </section>
-          </div>
+                <button class="kback" data-k="tab" data-v="heute">← Zurück</button></section>` : `
+          ${this._wegBoard(p, n, r.ziel, { done, bild: r.bild, text: r.text, act: done ? "redeem" : "reward", bg: this._wegFoto(r.foto, r.bild, r.text), cap: `<b>Sternenweg</b> ${r.text ? `bis ${esc(r.text)}` : ""}` })}
+          ${waiting ? `<button class="kconfirm" data-k="confirm">Eltern bestätigen (${waiting})</button>` : ""}
+          ${d.aufgaben.length ? `<h3 class="wsect">Heute</h3>
+          <div class="wtasks">${groups.flatMap(([z, t, list]) => list.map((a) => {
+            const state = d.heute.done[a.id];
+            return `<button class="wtask ${state === "ok" ? "ok" : state === "wait" ? "wait" : ""}" data-k="task" data-id="${esc(a.id)}"><span class="wc">${esc(a.bild)}</span><b>${esc(a.text)}</b><small>${state === "wait" ? "wartet" : { morgen: "Morgen", tag: "Tag", abend: "Abend" }[z]}</small></button>`;
+          })).join("")}</div>` : `<p class="khint">Noch keine Aufgaben. Eltern: Einstellungen antippen.</p>`}
+          ${d.ziele.length ? `<h3 class="wsect">${d.ziele.length > 1 ? "Grosse Ziele" : "Grosses Ziel"}</h3>${d.ziele.map((z) => {
+            const lock = this._goalLocked(z, today), bel = z.belohnung || {};
+            const btn = z.fertig ? `<button class="wbtn wgo soft" data-k="goalagain" data-id="${esc(z.id)}">Nochmals</button>`
+              : `<button class="wbtn wgo ${lock ? "soft" : ""}" data-k="goal" data-id="${esc(z.id)}" ${lock ? "disabled" : ""}>${lock ? (z.wait ? "wartet" : "✓ Heute") : "+1 ★"}</button>`;
+            return this._wegBoard(p, Math.min(z.n, z.ziel), z.ziel, { goal: true, done: z.fertig, bild: bel.bild, text: bel.text, mark: z.bild,
+              bg: this._wegFoto(bel.foto, bel.bild, bel.text, z.text),
+              act: "goalfoto", actId: z.id,
+              cap: `<b>${esc(z.bild)} ${esc(z.text)}</b> ${z.n} von ${z.ziel}${z.oft === "tag" ? " · einmal pro Tag" : ""}`, extra: btn });
+          }).join("")}` : ""}`}
         </div>`;
+    }
+    // Hintergrundfoto für den Sternenweg: eigenes Foto, Foto-Belohnung, sonst passendes Thema
+    _wegFoto(foto, bild, ...texte) {
+      const src = (v) => (v && /^(url:|img:|https?:)/.test(v) ? this._bildSrc(v) : null);
+      if (src(foto)) return src(foto);
+      if (src(bild)) return src(bild);
+      const EXTRA = [[/mc ?donald|pommes|burger|pizza|glace|restaurant/i, "Essen"], [/heftli|buch|comic|bibliothek/i, "Bibliothek"], [/spielzeug|lego|playmobil/i, "Malen / Basteln"]];
+      for (const t of texte) {
+        if (!t) continue;
+        const v = this._bildFor(t);
+        if (src(v)) return src(v);
+        const ex = EXTRA.find(([re]) => re.test(t));
+        const th = ex && THEMEN.find((x) => x.name === ex[1]);
+        if (th) return th.url;
+      }
+      return null;
+    }
+    // Sternenweg: Felder als Spielweg, Kind steht auf seinem Feld, am Ende die Belohnung
+    _wegBoard(p, n, ziel, o = {}) {
+      const z = Math.max(1, ziel);
+      const pt = (t) => [6 + t * 82, 80 - t * 50 + 17 * Math.sin(t * 2 * Math.PI)];
+      const pts = Array.from({ length: z }, (_, i) => pt(((i + 1) / (z + 1)) * 0.86));
+      const end = pt(1), me = n <= 0 ? pt(0) : n >= z ? end : pts[n - 1];
+      const line = [pt(0), ...pts, end].map((q) => q.join(",")).join(" ");
+      const ds = Math.max(4.2, Math.min(6.2, 80 / z));
+      const img = this._photo(p);
+      const mark = o.goal ? "✓" : "★";
+      return `<div class="wboard ${o.done ? "ready" : ""} ${o.goal ? "goal" : ""}" style="--ds:min(${ds}cqw, ${(ds * 1.95).toFixed(2)}cqh)">
+        ${o.bg ? `<span class="wbg" style="background-image:url('${cssUrl(o.bg)}')"></span>` : ""}
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${line}" fill="none" stroke="var(--wline)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+        <span class="wcap">${o.cap || ""}</span>
+        ${pts.map(([x, y], i) => i + 1 === n && n < z ? "" : `<span class="wsp ${i < n ? "on" : ""}" style="left:${x}%;top:${y}%">${i < n ? mark : z <= 12 || (i + 1) % 5 === 0 ? i + 1 : ""}</span>`).join("")}
+        <${o.act ? `button data-k="${o.act}"${o.actId ? ` data-id="${esc(o.actId)}"` : ""}` : "span"} class="wprize" style="left:${end[0]}%;top:${end[1]}%">${o.bild ? this._bildHtml(o.bild, "wpic") : `<span class="wpic">🎁</span>`}<span class="wpt">${o.done ? (o.goal ? "Geschafft!" : "Einlösen!") : esc(o.text || (o.goal ? "" : "Belohnung wählen"))}</span></${o.act ? "button" : "span"}>
+        <span class="wme" style="left:${me[0]}%;top:${me[1]}%">${img ? `<img src="${esc(img)}" alt="">` : `<span>${esc(p.name[0])}</span>`}</span>
+        ${o.extra || ""}
+      </div>`;
     }
     async _kidClick(e) {
       const el = e.target.closest("[data-k]");
@@ -2505,6 +2645,16 @@
         await this._saveKid(p, d);
         if (!st.bestaetigen && z.fertig) this._goalDone(p, z);
         return;
+      }
+      if (k === "goalfoto") {
+        const id = el.dataset.id, z0 = d.ziele.find((x) => x.id === id);
+        if (!z0) return;
+        const bel0 = z0.belohnung || {};
+        return this._parent("Foto für das grosse Ziel wählen", () => this._openFotoPick(`Foto für «${z0.text}»`, bel0.text || z0.text, bel0.foto || "", async (foto) => {
+          const d2 = this._kid(p), z = d2.ziele.find((x) => x.id === id);
+          if (z) { z.belohnung = { ...(z.belohnung || {}), foto }; await this._saveKid(p, d2); }
+          this._renderKid();
+        }));
       }
       if (k === "goalagain") {
         const id = el.dataset.id;
@@ -2734,7 +2884,7 @@
       const h = this._hass;
       if (!this._bildListe()) { this._openConfirm("Dafür braucht es die Liste «Planer Bilder». Oben auf «Jetzt anlegen» tippen.", "OK", async () => {}); return; }
       const r = this._reward(p);
-      let wahl = r.bild, ziel = r.ziel;
+      let wahl = r.bild, ziel = r.ziel, foto = r.foto;
       const n = Math.max(0, parseInt(h.states[p.sterne]?.state, 10) || 0);
       // Für Belohnungen passende Themen zuerst, Arbeit/Arzt/Handwerker weglassen
       const PREF = ["zoo", "kino", "europa", "spielplatz", "schwimm", "ferien", "essen", "velo", "ski", "bibliothek", "reiten", "musik", "malen", "fest", "geburtstag", "wander", "fussball", "ballett", "turnen", "haustier", "zug", "reisen", "konzert", "kürbis", "weihnacht", "laterne", "familie", "einkauf"];
@@ -2755,7 +2905,8 @@
         },
         minus: async () => { await h.callService("counter", "decrement", { entity_id: p.sterne }); this._modal(""); },
         reset: () => this._openConfirm(`Sterne von ${p.name} auf 0 setzen?`, "Auf 0 setzen", () => h.callService("counter", "reset", { entity_id: p.sterne })),
-        save: async () => { await this._setReward(p, { ziel, text: this.shadowRoot.querySelector("#fp-in").value.trim(), bild: wahl }); this._modal(""); },
+        ...this._fotoLinkHandlers(() => foto, (v) => { foto = v; }),
+        save: async () => { await this._setReward(p, { ziel, text: this.shadowRoot.querySelector("#fp-in").value.trim(), bild: wahl, foto }); this._modal(""); },
       };
       this._modal(`
         <div class="dlg-h" style="--c:${p.farbe}"><span class="bar"></span><h2>Belohnung für ${esc(p.name)}</h2></div>
@@ -2772,10 +2923,50 @@
           <div class="thm">${themen.map((t, i) => `<button data-m="thema" data-i="${i}" class="${t.val === wahl ? "on" : ""}">${this._bildHtml(t.val, "thpic")}<span>${esc(t.name)}</span></button>`).join("")}</div>
           <div class="sect">Oder ein Emoji</div>
           <div class="emo">${EMOJI_WAHL.map((e) => `<button data-m="pick" data-v="${e}" class="${e === wahl ? "on" : ""}">${e}</button>`).join("")}</div>
+          <div class="sect">Foto im Hintergrund des Sternenwegs</div>
+          ${this._fotoLinkHtml(r.text, foto)}
         </div>
         <div class="dlg-f"><button class="btn ghost" data-m="minus">Stern abziehen</button><button class="btn ghost" data-m="reset">Auf 0</button><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
       this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
       prev();
+    }
+
+    // Foto per Google-Bildersuche und eingefügtem Link (für Belohnungen und grosse Ziele)
+    _fotoLinkHtml(query, foto) {
+      const src = foto ? this._bildSrc(foto) : "";
+      return `<div class="flinkbox">
+          <button class="btn ghost fgoogle" data-m="fgoogle" data-q="${esc(query || "")}"><ha-icon icon="mdi:google"></ha-icon> Bei Google suchen</button>
+          <p class="hint2">Bild antippen und gedrückt halten → «Bildadresse kopieren» → hier einfügen.</p>
+          <div class="websuche"><input id="fp-flink" type="url" inputmode="url" autocomplete="off" placeholder="Link zum Bild (https://…)" enterkeyhint="done"><button class="btn" data-m="flink">Übernehmen</button></div>
+          <div class="fprev" id="fp-fprev">${src ? `<img src="${esc(src)}" alt=""><button class="btn ghost" data-m="fnone">Entfernen</button>` : `<span class="hint2">Noch kein Foto</span>`}</div>
+        </div>`;
+    }
+    _fotoLinkHandlers(get, set) {
+      const show = () => { const b = this.shadowRoot.querySelector("#fp-fprev"); const src = get() ? this._bildSrc(get()) : ""; if (b) b.innerHTML = src ? `<img src="${esc(src)}" alt=""><button class="btn ghost" data-m="fnone">Entfernen</button>` : `<span class="hint2">Noch kein Foto</span>`; };
+      const take = () => {
+        const inp = this.shadowRoot.querySelector("#fp-flink"), v = (inp?.value || "").trim();
+        if (!/^https?:\/\/\S+$/i.test(v)) { const b = this.shadowRoot.querySelector("#fp-fprev"); if (b) b.innerHTML = `<span class="hint2">Bitte einen Link einfügen, der mit https:// beginnt.</span>`; return; }
+        const im = new Image();
+        im.onload = () => { set("url:" + v); inp.value = ""; show(); };
+        im.onerror = () => { const b = this.shadowRoot.querySelector("#fp-fprev"); if (b) b.innerHTML = `<span class="hint2">Unter diesem Link ist kein Bild. In Google das Bild öffnen und «Bildadresse kopieren» wählen (nicht die Seitenadresse).</span>`; };
+        im.src = v;
+      };
+      setTimeout(() => this.shadowRoot.querySelector("#fp-flink")?.addEventListener("keydown", (e) => { if (e.key === "Enter") take(); }), 0);
+      return {
+        fgoogle: (el) => { const q = el.dataset.q || this.shadowRoot.querySelector("#fp-in")?.value || ""; window.open(`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(q)}`, "_blank", "noopener"); },
+        flink: () => take(),
+        fnone: () => { set(""); show(); },
+      };
+    }
+    _openFotoPick(titel, query, cur, onSave) {
+      let foto = cur || "";
+      this._mh = {
+        ...this._fotoLinkHandlers(() => foto, (v) => { foto = v; }),
+        save: async () => { await onSave(foto); this._modal(""); },
+      };
+      this._modal(`<div class="dlg-h"><h2>${esc(titel)}</h2></div>
+        <div class="dlg-b"><p class="hint2">Das Foto erscheint dezent im Hintergrund der Sterne-Kachel und des Sternenwegs.</p>${this._fotoLinkHtml(query, foto)}</div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
     }
 
     _notePanel() {
@@ -2792,6 +2983,20 @@
       const items = [];
       const t = sod(new Date());
       (this._bdays || []).forEach((e) => { const n = daysUntil(e.start); if (n >= 0) items.push({ n, d: sod(e.start), icon: "mdi:cake-variant-outline", title: e.title, key: `${e.title}|${ymd(e.start)}` }); });
+      // Geburtstage aus den Einstellungen (Familie → 🎂), falls kein Kalendertermin dafür da ist
+      this._config.personen.forEach((pp) => {
+        const bd = this._bdayDate(pp);
+        if (!bd) return;
+        let d = new Date(t.getFullYear(), bd.m - 1, bd.d);
+        if (d < t) d = new Date(t.getFullYear() + 1, bd.m - 1, bd.d);
+        const n = daysUntil(d);
+        if (n > 120) return;
+        const re = new RegExp(`(^|[^\\p{L}])${pp.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^\\p{L}]|$)`, "iu");
+        if ((this._bdays || []).some((e) => sameDay(e.start, d) && re.test(e.title || ""))) return;
+        const alter = bd.y > 1900 ? d.getFullYear() - bd.y : 0;
+        const title = `${pp.name}${alter ? ` wird ${alter}` : " Geburtstag"}`;
+        items.push({ n, d, icon: "mdi:cake-variant-outline", title, key: `Geburtstag ${pp.name}|${ymd(d)}` });
+      });
       const cd = this._findByName("todo", this._config.countdowns);
       (this._todos[cd] || []).filter((i) => i.status !== "completed" && i.due).forEach((i) => {
         const d = parseYmd(i.due); const n = daysUntil(d); if (n >= 0) items.push({ n, d, icon: "mdi:party-popper", title: i.summary, uid: i.uid });
@@ -2870,8 +3075,8 @@
           const stars = p.sterne ? this._hass.states[p.sterne]?.state : null;
           return `<div class="cper" style="--c:${p.farbe}">
             <div class="cph">${this._avatar(p, "xs")}${stars != null ? `<button class="stars" data-act="stars" data-id="${p.sterne}" data-name="${esc(p.name)}"><ha-icon icon="mdi:star"></ha-icon>${esc(stars)}</button>` : ""}<button class="add" data-act="addchore" data-id="${id}" aria-label="Ämtli hinzufügen"><ha-icon icon="mdi:plus"></ha-icon></button></div>
-            <ul>${open.map((i) => `<li><button data-act="chore" data-id="${id}" data-uid="${esc(i.uid)}" data-st="${p.sterne || ""}" data-done="0"><span class="box"></span><span class="tt">${esc(i.summary)}</span></button></li>`).join("")}
-            ${done.map((i) => `<li class="done"><button data-act="chore" data-id="${id}" data-uid="${esc(i.uid)}" data-st="${p.sterne || ""}" data-done="1"><span class="box"><ha-icon icon="mdi:check"></ha-icon></span><span class="tt">${esc(i.summary)}</span></button></li>`).join("")}
+            <ul>${open.map((i) => `<li><button data-act="chore" data-id="${id}" data-uid="${esc(i.uid)}" data-st="${p.sterne || ""}" data-done="0"><span class="box"></span><span class="tt">${esc(i.summary)}${/\[einmalig\]/.test(i.description || "") ? ` <small class="once">1×</small>` : ""}</span></button></li>`).join("")}
+            ${done.map((i) => `<li class="done"><button data-act="chore" data-id="${id}" data-uid="${esc(i.uid)}" data-st="${p.sterne || ""}" data-done="1"><span class="box"><ha-icon icon="mdi:check"></ha-icon></span><span class="tt">${esc(i.summary)}${/\[einmalig\]/.test(i.description || "") ? ` <small class="once">1×</small>` : ""}</span></button></li>`).join("")}
             ${!items.length ? `<li class="ph-empty">Keine Ämtli</li>` : ""}</ul>
           </div>`;
         }).join("")}</div>` : `<p class="ph-empty">Die Ämtli-Listen werden mit «Jetzt anlegen» erstellt.</p>`}
@@ -2983,8 +3188,7 @@
           if (!done) this._celebrate(el);
           break;
         }
-        case "addchore": { const id = el.dataset.id; this._openText({ title: "Neues Ämtli", placeholder: "z. B. Tisch decken", repeat: true,
-          save: (v) => h.callService("todo", "add_item", { item: v }, { entity_id: id }).then(() => this._loadTodo(id)) }); break; }
+        case "addchore": this._openChoreAdd(el.dataset.id); break;
         case "stars": this._openConfirm(`Sterne von ${el.dataset.name} auf 0 setzen?`, "Auf 0 setzen", () => h.callService("counter", "reset", { entity_id: el.dataset.id })); break;
         case "addcd": this._openCountdown(); break;
         case "cdinfo": {
@@ -3258,6 +3462,29 @@
       inp.addEventListener("keydown", (e) => { if (e.key === "Enter" && !multiline) this._mh.save(); });
     }
 
+    // Ämtli hinzufügen: «Jeden Tag» (wird jede Nacht wieder offen) oder «Nur einmal» (wird nach dem Abhaken in der Nacht gelöscht)
+    _openChoreAdd(id) {
+      const h = this._hass;
+      let einmal = false;
+      const segHtml = () => `<div class="seg big">${[[false, "🔁 Jeden Tag"], [true, "1× Nur einmal"]].map(([v, t]) => `<button class="${einmal === v ? "on" : ""}" data-m="art" data-v="${v ? 1 : 0}">${t}</button>`).join("")}</div>`;
+      this._mh = {
+        art: (el) => { einmal = el.dataset.v === "1"; this.shadowRoot.querySelector("#fp-art").innerHTML = segHtml(); this.shadowRoot.querySelector("#fp-arthint").textContent = einmal ? "Nach dem Abhaken verschwindet die Aufgabe in der Nacht." : "Jede Nacht wird das Ämtli wieder offen."; },
+        save: async () => {
+          const inp = this.shadowRoot.querySelector("#fp-in");
+          const v = inp.value.trim();
+          if (!v) return;
+          await h.callService("todo", "add_item", { item: v, ...(einmal ? { description: "[einmalig]" } : {}) }, { entity_id: id });
+          this._loadTodo(id);
+          inp.value = ""; inp.focus(); this._flash(`«${v}» hinzugefügt`);
+        },
+      };
+      this._modal(`<div class="dlg-h"><h2>Neues Ämtli</h2></div>
+        <div class="dlg-b"><input id="fp-in" type="text" maxlength="255" autofocus placeholder="z. B. Tisch decken" enterkeyhint="done">
+          <div id="fp-art" style="margin-top:12px">${segHtml()}</div><p class="hint2" id="fp-arthint">Jede Nacht wird das Ämtli wieder offen.</p><div class="flash"></div></div>
+        <div class="dlg-f"><span class="sp"></span><button class="btn ghost" data-m="close">Fertig</button><button class="btn" data-m="save">Hinzufügen</button></div>`);
+      this.shadowRoot.querySelector("#fp-in").addEventListener("keydown", (e) => { if (e.key === "Enter") this._mh.save(); });
+    }
+
     _flash(t) { const f = this.shadowRoot.querySelector("#modal .flash"); if (f) { f.textContent = t; clearTimeout(this._ft); this._ft = setTimeout(() => (f.textContent = ""), 1800); } }
 
     _openConfirm(text, okLabel, ok) {
@@ -3309,6 +3536,44 @@
         <div class="dlg-f"><button class="btn ghost" data-m="neu">+ Neues Thema</button><span class="sp"></span><button class="btn" data-m="close">Fertig</button></div>`);
       this.shadowRoot.querySelector("#modal .dlg").classList.add("wide");
     }
+    // Suchwort aus dem Termintitel: ohne Namen der Familie, Uhrzeiten, «@Ort», Klammern und Zahlen
+    _suchwort(t) {
+      let q = String(t || "").replace(/\(.*?\)/g, " ").replace(/@.*$/, " ").replace(/\d{1,2}[.:]\d{2}/g, " ").replace(/\d+/g, " ");
+      this._config.personen.forEach((p) => { q = q.replace(new RegExp(`(^|\\s)${p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=\\s|$|[,:.!-])`, "gi"), " "); });
+      return q.replace(/[|,:;!?–-]+/g, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 4).join(" ");
+    }
+    _bildSucheCfg() {
+      const it = (this._todos[this._bildListe()] || []).find((i) => i.summary === "Bildsuche-Einstellungen");
+      let d = {};
+      try { d = JSON.parse(it?.description || "{}") || {}; } catch (e) { d = {}; }
+      return { unsplash: d.unsplash || "", uid: it?.uid };
+    }
+    async _bildSuche(q) {
+      const key = this._bildSucheCfg().unsplash;
+      if (key) {
+        const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=12&orientation=squarish&content_filter=high&lang=de&client_id=${encodeURIComponent(key)}`);
+        if (!r.ok) throw new Error(r.status === 401 ? "Unsplash-Schlüssel ungültig" : `Unsplash ${r.status}`);
+        const j = await r.json();
+        return (j.results || []).map((x) => ({ thumb: x.urls.thumb, full: x.urls.small, titel: x.alt_description || x.description || "", quelle: "Unsplash" }));
+      }
+      const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=24&gsrsearch=${encodeURIComponent(q + " filetype:bitmap filew:>500")}&prop=imageinfo&iiprop=url|mime&iiurlwidth=400`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`Wikimedia ${r.status}`);
+      const j = await r.json();
+      return Object.values(j.query?.pages || {}).sort((a, b) => a.index - b.index)
+        .filter((x) => /jpe?g|png|webp/.test(x.imageinfo?.[0]?.mime || "") && !/logo|map|karte|plan|wappen|coat of arms|diagram|signature/i.test(x.title))
+        .slice(0, 12).map((x) => ({ thumb: x.imageinfo[0].thumburl, full: x.imageinfo[0].thumburl, titel: x.title.replace(/^File:|\.\w+$/g, ""), quelle: "Wikimedia Commons" }));
+    }
+    async _saveBildSucheCfg(patch) {
+      const h = this._hass, liste = this._bildListe();
+      if (!liste) return;
+      const cur = this._bildSucheCfg();
+      const description = JSON.stringify({ unsplash: cur.unsplash, ...patch });
+      if (cur.uid) await h.callService("todo", "update_item", { item: cur.uid, description }, { entity_id: liste });
+      else await h.callService("todo", "add_item", { item: "Bildsuche-Einstellungen", description }, { entity_id: liste });
+      await this._loadTodo(liste);
+    }
+
     _openBildKey(title, fixedKey) {
       const ev = { title };
       const h = this._hass;
@@ -3329,6 +3594,19 @@
         await this._loadTodo(liste);
         this._modal("");
       };
+      let webWahl = "";
+      const suchen = async () => {
+        const q = this.shadowRoot.querySelector("#fp-wq")?.value.trim();
+        const box = this.shadowRoot.querySelector("#fp-wt");
+        if (!q || !box) return;
+        box.innerHTML = `<p class="hint2">Suche «${esc(q)}» …</p>`;
+        try {
+          const list = await this._bildSuche(q);
+          if (!this.shadowRoot.querySelector("#fp-wt")) return;
+          box.innerHTML = list.length ? list.map((x) => `<button data-m="wpick" data-v="${esc(x.full)}" title="${esc(x.titel)}"><img src="${esc(x.thumb)}" alt="" loading="lazy"></button>`).join("") + `<p class="hint2 quelle">Fotos: ${esc(list[0].quelle)}</p>`
+            : `<p class="hint2">Nichts gefunden. Ein anderes Wort probieren, z. B. allgemeiner («Turnen» statt «Kinderturnen Halle 2»).</p>`;
+        } catch (err) { box.innerHTML = `<p class="hint2">Suche hat nicht geklappt: ${esc(err.message || err)}</p>`; }
+      };
       const themen = [
         ...THEMEN.map((t) => { const c = this._customBilder().find((m) => t.re.test(m.key)); return { name: t.name, val: c ? c.val : "url:" + t.url }; }),
         ...this._customBilder().filter((m) => !THEMEN.some((t) => t.re.test(m.key))).map((m) => ({ name: m.key, val: m.val })),
@@ -3337,7 +3615,26 @@
         pick: (el) => { wahl = el.dataset.v; prev(); this.shadowRoot.querySelectorAll(".emo button, .thm button").forEach((b) => b.classList.toggle("on", b === el)); },
         thema: (el) => { wahl = themen[+el.dataset.i].val; prev(); this.shadowRoot.querySelectorAll(".emo button, .thm button").forEach((b) => b.classList.toggle("on", b === el)); },
         foto: () => this.shadowRoot.querySelector("#fp-file").click(),
-        save: () => wahl && save(wahl),
+        wsuche: () => suchen(),
+        wpick: (el) => { wahl = "url:" + el.dataset.v; webWahl = el.dataset.v; prev(); this.shadowRoot.querySelectorAll(".emo button, .thm button, .webtreffer button").forEach((b) => b.classList.toggle("on", b === el)); },
+        save: async () => {
+          if (!wahl) return;
+          // Foto aus dem Web: einmal in Home Assistant ablegen, damit es lokal und dauerhaft verfügbar ist
+          if (webWahl && wahl === "url:" + webWahl) {
+            this._flash("Foto wird übernommen …");
+            try {
+              const r = await fetch(webWahl, { mode: "cors" });
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              const blob = await this._squareJpeg(await r.blob(), 400);
+              const fd = new FormData();
+              fd.append("file", blob, "termin.jpg");
+              const res = await h.fetchWithAuth("/api/image/upload", { method: "POST", body: fd });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              wahl = `img:${(await res.json()).id}`;
+            } catch (err) { /* sonst als Link speichern */ }
+          }
+          save(wahl);
+        },
         del: async () => { await h.callService("todo", "remove_item", { item: cur.uid }, { entity_id: liste }); await this._loadTodo(liste); this._modal(""); },
       };
       this._modal(`
@@ -3345,6 +3642,9 @@
         <div class="dlg-b">
           <div class="bildtop"><div id="fp-prev"></div>
             <label class="kw">Gilt für alle Termine mit<input id="fp-in" type="text" value="${esc(keyDefault)}"></label></div>
+          <div class="sect">🔍 Im Web suchen</div>
+          <div class="websuche"><input id="fp-wq" type="search" value="${esc(this._suchwort(keyDefault || ev.title))}" placeholder="z. B. Kindergarten, Schwimmen" enterkeyhint="search"><button class="btn" data-m="wsuche">Suchen</button></div>
+          <div class="webtreffer" id="fp-wt"></div>
           <div class="sect">Bestehendes Thema wählen</div>
           <div class="thm">${themen.map((t, i) => `<button data-m="thema" data-i="${i}" class="${t.val === wahl ? "on" : ""}">${this._bildHtml(t.val, "thpic")}<span>${esc(t.name)}</span></button>`).join("")}</div>
           <div class="sect">Oder ein Emoji</div>
@@ -3355,6 +3655,8 @@
         </div>
         <div class="dlg-f">${cur ? `<button class="btn ghost" data-m="del">Standard</button>` : ""}<button class="btn ghost" data-m="foto">Eigenes Foto …</button><span class="sp"></span><button class="btn ghost" data-m="close">Abbrechen</button><button class="btn" data-m="save">Speichern</button></div>`);
       prev();
+      this.shadowRoot.querySelector("#fp-wq").addEventListener("keydown", (e4) => { if (e4.key === "Enter") suchen(); });
+      if (!cur && !def) suchen();
       this.shadowRoot.querySelector("#fp-url").addEventListener("input", (e3) => { const v = e3.target.value.trim(); if (/^https?:\/\//.test(v)) { wahl = "url:" + v; prev(); } });
       this.shadowRoot.querySelector("#fp-file").addEventListener("change", async (e2) => {
         const f = e2.target.files[0];
@@ -3759,6 +4061,8 @@
   .ev.bgphoto .tt, .tev.bgphoto .tt { text-shadow:0 0 6px color-mix(in srgb, var(--paper) 80%, transparent); }
   .ev.ad.bgphoto .tt { text-shadow:0 1px 4px rgba(0,0,0,.35); }
   .tev.bg .bgemo { font-size:110px; }
+  /* Tagesansicht: Termine mit Bild bleiben absolut positioniert (sonst rutschen sie im Raster nach unten) */
+  .tcol > .tev.bg { position:absolute; }
   .ev .pic { flex:none; width:40px; height:40px; border-radius:10px; background:var(--paper); display:grid; place-items:center; font-size:28px; line-height:1; overflow:hidden; }
   .ev.ad .pic { background:rgba(255,255,255,.9); }
   .ev .pic img, .tpic img, .mpic img, .bigpic img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -3962,6 +4266,10 @@
     .homebtn { width:56px; height:54px; border-radius:16px; } .homebtn ha-icon { --mdc-icon-size:30px; } .homebtn span { font-size:10px; }
   }
   @media (prefers-reduced-motion: reduce) { .burst { display:none; } .av .ring { transition:none; } }
+  /* Feinschliff 12.11.2026: sofortige Reaktion beim Berühren für alle antippbaren Elemente, sanft zurück */
+  :where(button, .calpick label, .chk, .cd li[data-act], .cooking li, .cooktimer, .bdband, .night, .sw.eigene) { transition:transform .28s cubic-bezier(.2,.9,.3,1), background-color .15s ease-out; -webkit-tap-highlight-color:transparent; }
+  :where(button, .calpick label, .chk, .cd li[data-act], .cooking li, .cooktimer, .bdband, .sw.eigene):active { transform:scale(.97); }
+  @media (prefers-reduced-motion: reduce) { :where(button, .calpick label, .chk, .cd li[data-act], .cooking li, .cooktimer, .bdband, .sw.eigene):active { transform:none; opacity:.8; } }
 
   /* Dialog */
   .fp-modal:empty { display:none; }
@@ -4097,8 +4405,22 @@
   .nsmall .ndate { font-size:20px; margin:0; }
   .settimes { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:15px; font-weight:600; }
   .settimes input { font:inherit; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
+  .once { display:inline-block; padding:0 6px; border-radius:8px; background:var(--soft); color:var(--ink2); font-size:11px; font-weight:700; text-decoration:none; vertical-align:1px; }
+  .websuche { display:flex; gap:8px; }
+  .websuche input { flex:1; font:inherit; font-size:15px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .webtreffer { display:grid; grid-template-columns:repeat(auto-fill, minmax(96px, 1fr)); gap:8px; margin:8px 0 4px; }
+  .webtreffer button { aspect-ratio:1; border-radius:12px; overflow:hidden; padding:0; background:var(--soft); box-shadow:0 0 0 0 transparent; }
+  .webtreffer button.on { box-shadow:0 0 0 3px var(--accent, #1971c2); }
+  .webtreffer img { width:100%; height:100%; object-fit:cover; display:block; }
+  .webtreffer .hint2 { grid-column:1 / -1; margin:0; }
+  .webtreffer .quelle { font-size:11px; text-align:right; }
   /* Einstellungen */
-  .homebtn.wide { width:100px; }
+  .homebtn.wide { width:auto; min-width:100px; padding:0 12px; }
+  .seg.big { display:flex; flex-wrap:wrap; gap:4px; border-radius:16px; }
+  .seg.big button { border-radius:12px; }
+  .starsp .tilebody { flex-direction:row; flex-wrap:wrap; align-content:center; gap:8px 12px; min-height:0; }
+  .starsp .tilestar { font-size:40px; }
+  .starsp .tilehint { flex-basis:100%; }
   .kidview.setview { --bg:#f3f5f8; --soft:#e9edf2; --line:#dde2e8; }
   .kidview.setview.dark { --bg:#11161d; --soft:#232c37; --line:#2f3a48; }
   .setwrap { height:100%; min-height:0; }

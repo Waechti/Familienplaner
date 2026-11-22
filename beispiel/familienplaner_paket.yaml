@@ -83,6 +83,7 @@ automation:
         continue_on_error: true
 
   # Erledigte Ämtli (Listen, deren Name mit «Ämtli» beginnt) jede Nacht wieder öffnen.
+  # Einmalige Aufgaben («Nur einmal», Beschreibung «[einmalig]») werden nach dem Abhaken gelöscht.
   - id: fp_aemtli_reset
     alias: "Familienplaner: Ämtli täglich zurücksetzen"
     mode: single
@@ -109,9 +110,13 @@ automation:
           sequence:
             - variables:
                 liste: "{{ repeat.item }}"
-                uids: "{{ erledigt[repeat.item]['items'] | map(attribute='uid') | list }}"
+                taeglich: >
+                  {{ erledigt[repeat.item]['items'] | rejectattr('description', 'defined') | map(attribute='uid') | list
+                     + erledigt[repeat.item]['items'] | selectattr('description', 'defined') | rejectattr('description', 'search', '\\[einmalig\\]') | map(attribute='uid') | list }}
+                einmalig: >
+                  {{ erledigt[repeat.item]['items'] | selectattr('description', 'defined') | selectattr('description', 'search', '\\[einmalig\\]') | map(attribute='uid') | list }}
             - repeat:
-                for_each: "{{ uids }}"
+                for_each: "{{ taeglich }}"
                 sequence:
                   - action: todo.update_item
                     target:
@@ -119,6 +124,15 @@ automation:
                     data:
                       item: "{{ repeat.item }}"
                       status: needs_action
+            - if:
+                - condition: template
+                  value_template: "{{ einmalig | count > 0 }}"
+              then:
+                - action: todo.remove_item
+                  target:
+                    entity_id: "{{ liste }}"
+                  data:
+                    item: "{{ einmalig }}"
 
   # Optional: Push am Vorabend der Abfuhr. Unten «mobile_app_mein_handy» durch dein Handy
   # ersetzen (Entwicklerwerkzeuge → Aktionen, nach «notify.mobile_app» suchen) und

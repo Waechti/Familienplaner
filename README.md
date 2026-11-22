@@ -15,20 +15,24 @@ The planner is free. If your family likes it, I'm happy about a coffee.
 | --- | --- |
 | ![Week view, light](bilder/en-portrait-light.jpg) | ![Week view, dark](bilder/en-landscape-dark.jpg) |
 
+![Star path for kids](bilder/sternenweg-hell.jpg)
+
 The design follows the light or dark theme of Home Assistant. The interface is available in **English and German** and follows the language of Home Assistant.
 
 ## Features
 
-- **Week, day and month view** with one column per person, each in their own colour and with a photo. The week starts today; past days are hidden. Bigger displays automatically show more days.
+- **Week, day and month view** with one column per person, each in their own colour and with a photo, in calm, soft colours. The week starts today; past days are hidden. Bigger displays automatically show more days. The **month** shows 5 weeks from the current week with readable entries (colour dot + title, "+3" when there is no room); tap a day to open the day view.
 - **Swipe** left or right to go to the next or previous week (or day, month).
 - **Add family members** right on the tablet (name, colour, calendars), e.g. grandma or an au pair.
-- **Pictures on events**: kindergarten, swimming, doctor, shopping and about 50 other topics get a matching photo automatically (German and English keywords). Assign your own topics, photos and emojis on the tablet.
+- **Pictures on events**: kindergarten, swimming, doctor, shopping and about 50 other topics get a matching photo automatically (German and English keywords). Assign your own topics, photos and emojis on the tablet, with a web photo search.
 - **Meal plan**: dinner only, lunch at weekends, or lunch and dinner every day. Suggestions learn from what you enter: habits (e.g. pizza on Fridays), favourites (heart), variety by kind of dish (pasta, fish, soup …), your ratings, quick dishes on busy evenings, soup on cold days, favourites when guests come. Every suggestion says why. "Fill the week" plans all empty meals with one tap.
 - **"How was it?"**: after a meal everyone taps 😋, 😐 or 🤢 – the kids love it, and the planner learns what the whole family likes.
 - **Recipes with [Mealie](https://mealie.io)** (optional, a free recipe manager that runs as a Home Assistant add-on): import recipes from most recipe websites by link, plan them, a big **cooking mode** with steps, timers and servings, and **ingredients to Bring!** for one recipe or the whole week. A "try something new" idea each week, and leftovers (cream, leek …) are used up in the following days. Everything in the 🍽️ meal view.
 - **Shopping list** (e.g. Bring!): tick off and add items on the tablet.
-- **Chores** per person, with stars for kids. They reset every night.
-- **Stars & rewards for kids** (tap the "Stars" tile, then pick a child):
+- **Chores** per person, with stars for kids. Daily chores reset every night, "only once" chores disappear after they are ticked off.
+- **Stars & goals as posters**: the tile shows two posters of the same size per child, daily stars and big goal, with progress and a subtle photo of the reward in the background. Tap one to open the child's star path.
+- **Star path**: the stars are a game board path, the child stands on its square with its photo and the reward waits at the end. The big goal has its own path. Today's tasks are big round buttons; switch between children with the photos at the top. Reward photos via Google image search or your own image link.
+- **More for kids**:
   - a big star jar and daily tasks as picture cards (morning / day / evening)
   - big goals like "4× potty → monster truck" or "7 nights in own bed", each with its own stars and reward
   - sticker album, bonus star after 5 days in a row 🔥, celebration with confetti and sound
@@ -115,7 +119,7 @@ You need to be logged in as an administrator for this.
 
 ## Recipes with Mealie (optional)
 
-1. Settings → Add-ons → Add-on store → install **Mealie** (Home Assistant Community Add-ons) and start it. In its network settings you can open port 9925 so the planner can show recipe photos.
+1. Settings → Add-ons → Add-on store → install **Mealie** (Home Assistant Community Add-ons) and start it. The planner loads recipe photos through Home Assistant itself (for admin users). Only if the tablet uses a non-admin user: open port 9925 in the add-on's network settings.
 2. Open Mealie from the sidebar, set up your account, then profile → **API tokens** → create a token.
 3. Settings → Devices & services → **Mealie** (usually shown as discovered) → paste the token.
 4. Reload the planner. The 🍽️ button opens the meal view; in Settings → Meals you choose lunch/dinner and servings.
@@ -144,9 +148,12 @@ The automation in the package fetches new events every 15 minutes. The secret ad
 | Add a countdown | "+" at "Coming up" |
 | Show everything coming up full screen | tap the "Coming up" tile |
 | Next / previous week | swipe left / right in the calendar |
-| Open stars & rewards | tap the "Stars" tile, then pick a child |
+| Open a child's star path | tap one of the child's posters in the "Stars & goals" tile |
+| Switch to the other child | tap the other child's photo at the top of the star path |
+| Change a reward photo | tap the reward at the end of the path → "Search on Google" or paste an image link |
+| One-time chore | choose "1× only once" when adding it |
 | Set tasks, goals, parent code | ⚙️ in the kids view |
-| Set or redeem a reward | tap the stars or the reward |
+| Set or redeem a reward | tap the reward at the end of the star path |
 | Mark a favourite meal | tap the heart in the meal window; ✕ on a suggestion = don't suggest again |
 | Fix portrait or landscape, dark design, night mode | Settings → Display (applies to this device) |
 | Enter a birthday | Settings → Family → 🎂 |

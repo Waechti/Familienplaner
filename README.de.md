@@ -15,8 +15,10 @@ Der Familienplaner ist kostenlos. Wenn er euch gefällt, freue ich mich über ei
 | ![Wochenansicht hell](bilder/hochformat-hell.jpg) | ![Wochenansicht dunkel](bilder/hochformat-dunkel.jpg) |
 
 <details>
-<summary>Weitere Ansichten: Querformat, Tag, Monat</summary>
+<summary>Weitere Ansichten: Sternenweg, Querformat, Tag, Monat</summary>
 
+![Sternenweg hell](bilder/sternenweg-hell.jpg)
+![Sternenweg dunkel](bilder/sternenweg-dunkel.jpg)
 ![Querformat hell](bilder/querformat-hell.jpg)
 ![Querformat dunkel](bilder/querformat-dunkel.jpg)
 ![Tagesansicht](bilder/tag-hell.jpg)
@@ -28,17 +30,19 @@ Das Design wechselt automatisch mit dem hellen oder dunklen Thema von Home Assis
 
 ## Was er kann
 
-- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto. Die Woche beginnt mit heute, vergangene Tage werden nicht angezeigt. Auf grossen Displays zeigt sie automatisch mehr Tage.
+- **Woche, Tag und Monat** mit einer Spalte pro Person, jede in ihrer Farbe und mit Foto, in ruhigen, sanften Farben. Die Woche beginnt mit heute, vergangene Tage werden nicht angezeigt. Auf grossen Displays zeigt sie automatisch mehr Tage. Der **Monat** zeigt 5 Wochen ab der laufenden Woche mit lesbaren Einträgen (Farbpunkt + Titel, «+3» wenn es nicht Platz hat); ein Tag antippen öffnet die Tagesansicht.
 - **Weitere Familienmitglieder** direkt am Tablet hinzufügen (Name, Farbe, Kalender), z. B. Grosi oder ein Au-pair
 - **Wischen** nach links oder rechts blättert zur nächsten oder vorherigen Woche (bzw. Tag, Monat)
-- **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen.
+- **Bilder auf den Terminen**: Kindergarten, Turnen, Arzt, Einkauf und rund 50 weitere Themen bekommen automatisch ein passendes Foto. Eigene Themen, Fotos und Emojis lassen sich am Tablet zuweisen, mit Fotosuche im Web.
 - **Essensplan**: nur Abendessen, Mittag am Wochenende oder jeden Tag Mittag und Abend. Die Vorschläge lernen aus dem, was ihr eintragt: Gewohnheiten (z. B. Pizza am Freitag), Lieblingsessen (Herz), Abwechslung nach Art (Pasta, Fisch, Suppe …), eure Bewertungen, Schnelles an vollen Abenden, Suppe an kalten Tagen, Lieblingsessen bei Besuch. Bei jedem Vorschlag steht, warum. «Woche füllen» plant alle leeren Mahlzeiten mit einem Tipp.
 - **«Wie war's?»**: Nach dem Essen tippen alle auf 😋, 😐 oder 🤢. Das macht den Kindern Spass, und der Planer lernt, was allen schmeckt.
 - **Rezepte mit [Mealie](https://mealie.io)** (optional, kostenlose Rezeptverwaltung als Home-Assistant-Add-on): Rezepte von den meisten Rezeptseiten per Link übernehmen, planen, grosser **Kochmodus** mit Schritten, Timern und Portionen, **Zutaten auf Bring!** für ein Rezept oder die ganze Woche. Jede Woche eine Idee zum Neu-Ausprobieren, und Reste (Rahm, Lauch …) werden in den nächsten Tagen verwertet. Alles in der Essens-Ansicht 🍽️.
 - **Einkaufsliste** (z. B. Bring!): abhaken und hinzufügen direkt am Tablet
-- **Ämtli** pro Person, für Kinder mit Sternen. Jede Nacht werden sie wieder auf offen gesetzt.
+- **Ämtli** pro Person, für Kinder mit Sternen. Tägliche Ämtli werden jede Nacht wieder offen, Ämtli «Nur einmal» verschwinden nach dem Abhaken.
 - **Sterne und Belohnungen**: Jedes Kind sammelt auf eine eigene Belohnung mit Bild und Ziel; kleine Belohnungen (Lolli, Spielzeugauto, Heftli …) lassen sich mit einem Tipp wählen; Sterne gibt es per Tipp oder über die Ämtli
-- **Sterne & Belohnungen** (Kachel «Sterne» antippen, dann Kind wählen): grosses Sternenglas, Tagesaufgaben als Bildkarten (Morgen/Tag/Abend, täglich neu), grosse Ziele wie «4× Töpfchen → Monstertruck» oder «7 Nächte im eigenen Bett» mit eigenen Sternen und eigener Belohnung (jedes Mal oder einmal pro Tag), Sticker-Album, Bonus-Stern nach 5 Tagen am Stück 🔥, Feier mit Konfetti und Ton. Optional zählen Sterne erst nach Eltern-Bestätigung (mit 4-stelligem Code)
+- **Sterne & Ziele als Poster**: Die Kachel zeigt pro Kind zwei gleich grosse Poster, Tagessterne und grosses Ziel, mit Fortschritt und dezentem Foto der Belohnung im Hintergrund. Antippen öffnet direkt den Sternenweg des Kindes.
+- **Sternenweg**: Die Sterne sind ein Spielweg, das Kind steht mit seinem Foto auf seinem Feld, am Ende wartet die Belohnung. Das grosse Ziel hat einen eigenen Weg. Aufgaben von heute als grosse runde Knöpfe; zwischen den Kindern wechselt man oben über die Fotos. Fotos der Belohnungen per Google-Bildersuche oder eigenem Bildlink.
+- **Weitere Funktionen für Kinder**: grosses Sternenglas, Tagesaufgaben als Bildkarten (Morgen/Tag/Abend, täglich neu), grosse Ziele wie «4× Töpfchen → Monstertruck» oder «7 Nächte im eigenen Bett» mit eigenen Sternen und eigener Belohnung (jedes Mal oder einmal pro Tag), Sticker-Album, Bonus-Stern nach 5 Tagen am Stück 🔥, Feier mit Konfetti und Ton. Optional zählen Sterne erst nach Eltern-Bestätigung (mit 4-stelligem Code)
 - **«Bald» für Kinder**: Bild, Name und grosse Zahl der Tage; antippen zeigt alle kommenden Ereignisse gross (schliesst nach 30 Sekunden)
 - **Bald**: Geburtstage, eigene Countdowns, nächste Schulferien und Abfuhrtermine
 - **Pinnwand** als Post-it, **Wetter** für heute und morgen, **Feiertage**
@@ -102,7 +106,7 @@ Dafür muss man als Administrator angemeldet sein.
 
 ## Rezepte mit Mealie (optional)
 
-1. Einstellungen → Add-ons → Add-on-Store → **Mealie** (Home Assistant Community Add-ons) installieren und starten. In den Netzwerk-Einstellungen des Add-ons Port 9925 freigeben, damit der Planer die Rezeptfotos zeigen kann.
+1. Einstellungen → Add-ons → Add-on-Store → **Mealie** (Home Assistant Community Add-ons) installieren und starten. Die Rezeptfotos lädt der Planer über Home Assistant selbst (für Admin-Benutzer). Nur wenn du am Tablet mit einem Benutzer ohne Admin-Rechte angemeldet bist: in den Netzwerk-Einstellungen des Add-ons Port 9925 freigeben.
 2. Mealie in der Seitenleiste öffnen, Konto einrichten, dann Profil → **API-Tokens** → Token erstellen.
 3. Einstellungen → Geräte & Dienste → **Mealie** (meist als «Entdeckt» angezeigt) → Token einfügen.
 4. Planer neu laden. Der Knopf 🍽️ öffnet die Essens-Ansicht; unter Einstellungen → Essen wählst du Mahlzeiten und Portionen.
@@ -136,9 +140,12 @@ Die Automation im Paket holt alle 15 Minuten neue Termine. Die Privatadresse ist
 | Lieblingsessen verwalten, ausgeblendete Einträge zurückholen | Einstellungen → Essen / Bald |
 | Nächste / vorherige Woche | im Kalender nach links / rechts wischen |
 | Stern geben | Stern-Knopf beim Kind |
-| Sterne & Belohnungen öffnen | Kachel «Sterne» antippen, dann das Kind wählen |
+| Sternenweg eines Kindes öffnen | in der Kachel «Sterne & Ziele» auf ein Poster des Kindes tippen |
+| Zum anderen Kind wechseln | oben im Sternenweg auf das Foto des anderen Kindes tippen |
+| Foto einer Belohnung ändern | im Sternenweg auf die Belohnung am Ende des Wegs tippen → «Bei Google suchen» oder Bildlink einfügen |
+| Ämtli nur einmal | beim Hinzufügen «1× Nur einmal» wählen |
 | Aufgaben, Ziele, Eltern-Code einstellen | in der Kinder-Ansicht auf ⚙️ |
-| Belohnung festlegen oder einlösen | auf die Sterne oder die Belohnung tippen |
+| Belohnung festlegen oder einlösen | im Sternenweg auf die Belohnung am Ende des Wegs tippen |
 | Lieblingsessen markieren | im Essen-Fenster auf das Herz tippen; ✕ bei einem Vorschlag = nicht mehr vorschlagen |
 
 ## Einstellungen der Karte
